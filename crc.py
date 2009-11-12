@@ -65,7 +65,6 @@ class CRC(object):
         tbl = {}
         for i in range(1 << 8):
             register = self.__reflect(i, 8)
-            register = register << 0
             for j in range(8):
                 if register & 128 != 0:
                     register = (register << 1) ^ 0x31
@@ -78,10 +77,18 @@ class CRC(object):
     def calc ( self, hexstring ):
         tbl = self.tbl
         str = unhexlify(hexstring)
-        register = self.__reflect(0x0, 8)
+        register = 0x0
         for c in str:
             tblidx   = (register ^ ord(c)) & 0xff
             register = ((register >> 8) ^ tbl[tblidx]) & 255
-        return "%x" % register
+        return "%02x" % register
 
+    def check ( self, hexstring ):
+        data = hexstring[:-2]
+        crc  = hexstring[-2:]
+        if crc == self.calc(data):
+            return True
+        else:
+            return False
+       
 ## <<EOF>>
