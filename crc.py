@@ -48,6 +48,11 @@ class CRC(object):
     XorOut      = 0x0
 
     http://www.ross.net/crc/download/crc_v3.txt
+
+    >>> import crc
+    >>> crc = crc.CRC()
+    >>> crc.calc('FD15ED09')
+    'f4'
     """
 
     def __init__ ( self ):
@@ -90,5 +95,9 @@ class CRC(object):
             return True
         else:
             return False
-       
+
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()
+
 ## <<EOF>>
