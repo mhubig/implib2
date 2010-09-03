@@ -52,7 +52,7 @@ class CRC(object):
     >>> import crc
     >>> crc = crc.CRC()
     >>> crc.calc('FD15ED09')
-    'f4'
+    'f3'
     """
 
     def __init__ ( self ):

@@ -1,5 +1,6 @@
 #!/usr/bin/python
-#
+# -*- coding: UTF-8 -*-
+
 # TODO: Invent some nice general error handling
 #
 
@@ -7,29 +8,9 @@ import binascii, time, sys
 import threading, thread, Queue
 
 from bluetooth import *
-from select    import *
-from crc       import CRC
-
-class Timeout ( threading.Thread ):
-    
-    def __init__ ( self, queue, timeout  ):
-        self.__queue   = queue
-        self.__timeout = timeout
-        threading.Thread.__init__(self)
-
-    def run(self):
-        count = 0
-        while count < self.__timeout:
-
-	    if not self.__queue.empty():
-                item = self.__queue.get()
-                if item == 'exit':
-                    thread.exit()
-        
-            time.sleep(1)
-            count += 1
-        
-        thread.interrupt_main()
+from select import *
+from crc import CRC
+from timeout import Timeout
 
 def find(devname):
     """ Discovers a BT device of name 'devname' and saves its HW-Address.
