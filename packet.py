@@ -3,6 +3,7 @@
 
 import binascii
 from crc import CRC
+from tools import Tools
 
 class PacketError(Exception):
     def __init__(self, value):
@@ -24,7 +25,7 @@ class Packet(object):
     >>> stuff['header']
     {'state': '0xfd', 'cmd': '0x15', 'length': 5, 'serno': 0}
     >>> stuff['data']
-    {'no_param': '0x1', 'ad_param': '0x0', 'param': '7739'}
+    '01007739'
     >>> packet = p.pack(serno=30521,cmd=0x15)
     >>> stuff = p.unpack(packet)
     >>> stuff['header']
@@ -33,11 +34,12 @@ class Packet(object):
     """
     
     def __init__(self):
-         self._crc  = CRC()
-    
+         self._crc = CRC()
+         self._t = Tools()
+       
     def _hexhex(self,str):
         return hex(int(str, 16))
-    
+       
     def _cut_header(self, packet):
         # Cut's out the header. The header is
         # within the first 7 bytes.
@@ -62,19 +64,42 @@ class Packet(object):
         return packet[data_start:data_end]
 
     def _split_data(self, data):
+        # useless for unpacking recived packages, corse
+        # the format depends on the command ... ;-(
         no_param = self._hexhex(data[0:2])
         ad_param = self._hexhex(data[2:4])
         param = data[4:]
         return {'no_param': no_param, 'ad_param': ad_param, 'param': param}
-    
-    def _pack_data(self, no_param, param, ad_param=None):
-        if not ad_param: ad_param = '00'
+
+    def _pack_data(self, no_param, param=None, ad_param=None):
+        # param is optional and ad_param, if not
+        # explicit given, is always '00'
         no_param = '%02X' % no_param
-        param = '%X' % param
-        data = no_param + ad_param + param
-        data = data + self._crc.calc(data)
-        return data       
-    
+        if not ad_param: ad_param = '00'
+        if not param:
+            data = no_param + ad_param
+            data = data + self._crc.calc(data)
+        else:
+            param = '%02X' % param
+            data = no_param + ad_param + param
+            data = data + self._crc.calc(data)
+        return data
+
+    def _check_header(self,header):
+        if not self._crc.check(header):
+            raise PacketError("Package with faulty header CRC!")
+        status = header[0:2]
+        if status not in ['00','fd']:
+            raise PacketError("Package with error status: %s!" % status)
+        return header[:-2]
+
+    def _check_data(self,data):
+        if not self._crc.check(data):
+            raise PacketError("Package with faulty data CRC!")
+        if len(data) > 504:
+            raise PacketError("Data block bigger than 252Bytes!")
+        return data[:-2]
+
     def _check(self, packet):
         # check if the package is faulty, since there are
         # packages without data and only header, headle them
@@ -87,26 +112,17 @@ class Packet(object):
             data   = self._cut_data(packet)
 
         data_length = 2 * int(packet[4:6], 16)
-             
-        if not self._crc.check(header):
-            raise PacketError("Received a package with faulty header!")
-                   
+        header = self._check_header(header)
+
         if not data:
             if not data_length == 0:
                 raise PacketError("Length of data block shold be zero!")
         else:
-            if len(data) > 504:
-                raise PacketError("Data block bigger than 252Bytes!")
             if len(data) != data_length:
                 raise PacketError("Length of data block dosn't match!")
-            if not self._crc.check(data):
-                raise PacketError("Received a package with faulty data!")
-            data = data[:-2] # remove CRC
-                
-        header = header[:-2] # remove CRC
-        
+            data = self._check_data(data)
         return header, data
-         
+
     def pack(self, serno, cmd, no_param=None, param=None, ad_param=None):
         """ Funktion to create an IMPBUS package.
         
@@ -118,7 +134,7 @@ class Packet(object):
         serno = '%06X' % serno
         cmd = '%02X' % cmd
         serno = serno[4:6] + serno[2:4] + serno[0:2]
-        
+
         if no_param:
             data = self._pack_data(no_param, param, ad_param)
             length = '%02X' % (len(data) / 2)
@@ -130,9 +146,9 @@ class Packet(object):
             header = state + cmd + length + serno
             header = header + self._crc.calc(header)
             packet = header
-        
+
         return binascii.a2b_hex(packet)
-        
+
     def unpack(self, packet):
         """ Funktion to unfold an IMPBUS package.
         
@@ -143,10 +159,9 @@ class Packet(object):
         packet = binascii.b2a_hex(packet)
         header, data = self._check(packet)
         header = self._split_header(header)
-        if data: data = self._split_data(data)
         
         return {'header': header, 'data': data}
-    
+
 if __name__ == "__main__":
     import doctest
     doctest.testmod()
