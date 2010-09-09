@@ -38,7 +38,16 @@ class Commands(BaseCommands,Communication,Responce):
         BaseCommands.__init__(self)
         Communication.__init__(self)
         Responce.__init__(self)
-     
+    
+    def measure_moist(self,serial):
+        pass
+    
+    def measure_temp(self,serial):
+        pass
+        
+    def set_serial(self,serial):
+        pass
+    
 if __name__ == "__main__":
     import doctest
     doctest.testmod()

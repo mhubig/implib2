@@ -31,8 +31,14 @@ class ResponceError(Exception):
 
 class Responce(Packet):
     def __init__(self):
+        Packet.__init__(self)
+        
+    def set_responce(self):
         pass
-       
+    
+    def get_responce(self):
+        pass
+    
 if __name__ == "__main__":
     import doctest
     doctest.testmod()
