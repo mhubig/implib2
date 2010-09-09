@@ -10,65 +10,8 @@ class BaseCommandsError(Exception):
     def __str__(self):
         return repr(self.value)
 
-class BaseCommands_BUS(Packet):
-    """ COMMANDS TO CONTROL BUS.
-    
-    After building-up a IMP232N-bus, it is necessary for the master to find
-    out, which slaves are connected to the bus. This class provides the needed
-    low level commands.
-    """
-    def __init__(self):
-        Packet.__init__(self)
-    
-    def get_long_acknowledge(self,serno,comm=None):
-        """ Command to PING a specific module.
-        
-        This command with the number 2 will call up the slave which is
-        addressed by its serial number. In return, the slave replies with
-        a complete address block. It can be used to test the presence of
-        a module in conjunction with the quality of the bus connection.
-        """
-        packet = self.pack(serno=serno,cmd=0x02)
-        if not comm:
-            packet = self.unpack(packet)
-            print(packet['header'])
-            print(packet['data'])
-            serno = 0
-        else:
-            response = comm.talk(packet)
-            packet = self.unpack(response)
-            header = packet['header']
-            serno = header['serno']
-        return serno
-    
-    def get_short_acknowledge(self,serno,comm=None):
-        pass
-    
-    def get_negative_acknowledge(self,comm=None):
-        """ Command to identify a single module.
-        
-        This command is used to identify a single module on the bus which
-        serial number is unknown. It is a broadcast command and serves to
-        get the serial number of the module.
-        """
-        packet = self.pack(serno=16777215,cmd=0x08)
-        if not comm:
-            packet = self.unpack(packet)
-            print(packet['header'])
-            print(packet['data'])
-            serno = 0
-        else:
-            response = comm.talk(packet)
-            packet = self.unpack(response)
-            data = packet['data']
-            serno = data[4:6] + data[2:4] + data[0:2]
-        return serno
-        
-    def get_acknowledge_for_serial_number_range(self,range,comm=None):
-        pass
-        
-class BaseCommands_Param(Packet):
-    """ COMMANDS TO TRANSFER PARAMETERS
+class BaseCommands(Packet):
+    """ COMMANDS TO CONTROL BUS AND TRANSFER PARAMETERS
     
     The main commands to transfer parameters are Get and Set Parameters.
     Get Parameters means information transport from slave to master and
@@ -125,8 +68,8 @@ class BaseCommands_Param(Packet):
     For more details please refer to the "Developers Manual, Data Transmission
     Protocol for IMPBUS2, 2008-11-18".
     
-    >>> from basecommands import BaseCommands_Param as BCP
-    >>> b = BCP()
+    >>> from basecommands import BaseCommands
+    >>> b = BaseCommands()
     >>> b.get_parameter(31002,'SYSTEM_PARAMETER_TABLE','SerialNum')
     >>> b.get_parameter(31002,10,'SerialNum')
     >>> b.set_parameter(31002,'SYSTEM_PARAMETER_TABLE','SerialNum',31002)
@@ -496,7 +439,54 @@ class BaseCommands_Param(Packet):
             self.ACTION_PARAMETER_TABLE,
             self.MEASURE_PARAMETER_TABLE,
             self.TP_MOIST_PARAMETER_TABLE]
+    
+    def get_long_acknowledge(self,serno,comm=None):
+        """ Command to PING a specific module.
         
+        This command with the number 2 will call up the slave which is
+        addressed by its serial number. In return, the slave replies with
+        a complete address block. It can be used to test the presence of
+        a module in conjunction with the quality of the bus connection.
+        """
+        packet = self.pack(serno=serno,cmd=0x02)
+        if not comm:
+            packet = self.unpack(packet)
+            print(packet['header'])
+            print(packet['data'])
+            serno = 0
+        else:
+            response = comm.talk(packet)
+            packet = self.unpack(response)
+            header = packet['header']
+            serno = header['serno']
+        return serno
+    
+    def get_short_acknowledge(self,serno,comm=None):
+        pass
+    
+    def get_negative_acknowledge(self,comm=None):
+        """ Command to identify a single module.
+        
+        This command is used to identify a single module on the bus which
+        serial number is unknown. It is a broadcast command and serves to
+        get the serial number of the module.
+        """
+        packet = self.pack(serno=16777215,cmd=0x08)
+        if not comm:
+            packet = self.unpack(packet)
+            print(packet['header'])
+            print(packet['data'])
+            serno = 0
+        else:
+            response = comm.talk(packet)
+            packet = self.unpack(response)
+            data = packet['data']
+            serno = data[4:6] + data[2:4] + data[0:2]
+        return serno
+        
+    def get_acknowledge_for_serial_number_range(self,range,comm=None):
+        pass
+    
     def get_parameter(self,serno,table,param):
         param_tables = self.param_tables
         
