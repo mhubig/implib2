@@ -1,7 +1,26 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-
-import binascii
+#
+# Copyright (c) 2009-2012, Markus Hubig <mhubig@imko.de>
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+# 
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+#
 from packet import Packet,PacketError
 
 class BaseCommandsError(Exception):
@@ -11,7 +30,14 @@ class BaseCommandsError(Exception):
         return repr(self.value)
 
 class BaseCommands(Packet):
-    """ COMMANDS TO CONTROL BUS AND TRANSFER PARAMETERS
+    """ COMMANDS TO CONTROL BUS.
+    
+    After building-up a IMP232N-bus, it is necessary for the master to find
+    out, which slaves are connected to the bus. This class provides the needed
+    low level commands like get_long_acknowledge, get_short_acknowledge and
+    get_negative_acknowledge.
+    
+    COMMANDS TO CONTROL BUS AND TRANSFER PARAMETERS
     
     The main commands to transfer parameters are Get and Set Parameters.
     Get Parameters means information transport from slave to master and
@@ -67,13 +93,6 @@ class BaseCommands(Packet):
     
     For more details please refer to the "Developers Manual, Data Transmission
     Protocol for IMPBUS2, 2008-11-18".
-    
-    >>> from basecommands import BaseCommands
-    >>> b = BaseCommands()
-    >>> b.get_parameter(31002,'SYSTEM_PARAMETER_TABLE','SerialNum')
-    >>> b.get_parameter(31002,10,'SerialNum')
-    >>> b.set_parameter(31002,'SYSTEM_PARAMETER_TABLE','SerialNum',31002)
-    >>> b.set_parameter(31002,11,'SerialNum',31003)
     """
     def __init__(self):
         Packet.__init__(self)
@@ -440,58 +459,131 @@ class BaseCommands(Packet):
             self.MEASURE_PARAMETER_TABLE,
             self.TP_MOIST_PARAMETER_TABLE]
     
-    def get_long_acknowledge(self,serno,comm=None):
+    def get_long_acknowledge(self,serno):
         """ Command to PING a specific module.
         
         This command with the number 2 will call up the slave which is
         addressed by its serial number. In return, the slave replies with
         a complete address block. It can be used to test the presence of
         a module in conjunction with the quality of the bus connection.
+        
+        >>> from basecommands import BaseCommands
+        >>> import binascii
+        >>> b = BaseCommands()
+        >>> p = b.get_long_acknowledge(31001)
+        >>> print binascii.b2a_hex(p)
+        fd02001979007b
         """
         packet = self.pack(serno=serno,cmd=0x02)
-        if not comm:
-            packet = self.unpack(packet)
-            print(packet['header'])
-            print(packet['data'])
-            serno = 0
-        else:
-            response = comm.talk(packet)
-            packet = self.unpack(response)
-            header = packet['header']
-            serno = header['serno']
-        return serno
+        return packet
     
-    def get_short_acknowledge(self,serno,comm=None):
-        pass
+    def get_short_acknowledge(self,serno):
+        """ GET SHORT ACKNOWLEDGE
+
+        This command will call up the slave which is addressed by its serial
+        number. In return, the slave replies by just one byte: The CRC of it's
+        serial number. It is the shortest possible command without the transfer
+        of any data block and the only one without a complete address block. It
+        can be used to test the presence of a module.
+        
+        >>> from basecommands import BaseCommands
+        >>> import binascii
+        >>> b = BaseCommands()
+        >>> p = b.get_short_acknowledge(31001)
+        >>> print binascii.b2a_hex(p)
+        fd0400197900e7
+        """
+        packet = self.pack(serno=serno,cmd=0x04)
+        return packet
+          
+    def get_acknowledge_for_serial_number_range(self,range):
+        """ GET ACKNOWLEDGE FOR SERIAL NUMBER RANGE
+
+        This command is very similar to the get_short_acknowledge command.
+        However, it addresses not just one single serial number, but a serial
+        number range. This value of byte 4 to byte 6 symbolizes a whole range
+        according to the following pattern:
+        
+        +-----------+-------------+----------+---------------------+
+        | High byte | Medium byte | Low byte |       Range         |
+        +-----------+-------------+----------+---------------------+
+        | 01000000  | 00000000    | 00000000 | 0x000000 - 0x7FFFFF |
+        +-----------+-------------+----------+---------------------+
+        | 11000000  | 00000000    | 00000000 | 0x800000 - 0xFFFFFF |
+        +-----------+-------------+----------+---------------------+
+        | usw.      |             |          |                     |
+        
+        The lowest "1" is not a part of the value but the (right) mark where
+        the relevant value ends. All bits left of this mark are relevant, all
+        bits right of this mark are non-relevant, including the mark itself.
+        
+        All modules within thus indicated range are addressed and will
+        respond. The master can just detect if there is no response, which
+        means that there is no slave within this range, or if there is a
+        response of one or more slaves. The range must then be halved more
+        and more to refine the search.
+        
+        two examples:
+        =============
+        
+        start range: 10000000 00000000 00000000
+        shift mark:   1000000 00000000 00000000
+        lower half:  01000000 00000000 00000000 (old mark gets 0)
+        higher half: 11000000 00000000 00000000 (old mark gets 1)
+        
+        start range: 11100000 00000000 00000000
+        shift mark:     10000 00000000 00000000
+        lower half:  11010000 00000000 00000000 (old mark gets 0)
+        higher half: 11110000 00000000 00000000 (old mark gets 1)
+        
+        >>> from basecommands import BaseCommands
+        >>> import binascii
+        >>> b = BaseCommands()
+        >>> serno = int(0b111100000000000000000000)
+        >>> p = b.get_acknowledge_for_serial_number_range(serno)
+        >>> print binascii.b2a_hex(p)
+        fd06000000f0d0
+        """
+        packet = self.pack(serno=range,cmd=0x06)
+        return packet
     
-    def get_negative_acknowledge(self,comm=None):
-        """ Command to identify a single module.
+    def get_negative_acknowledge(self):
+        """ GET NEGATIVE ACKNOWLEDGE
         
         This command is used to identify a single module on the bus which
         serial number is unknown. It is a broadcast command and serves to
         get the serial number of the module.
+        
+        >>> from basecommands import BaseCommands
+        >>> import binascii
+        >>> b = BaseCommands()
+        >>> p = b.get_negative_acknowledge()
+        >>> print binascii.b2a_hex(p)
+        fd0800ffffff60
         """
         packet = self.pack(serno=16777215,cmd=0x08)
-        if not comm:
-            packet = self.unpack(packet)
-            print(packet['header'])
-            print(packet['data'])
-            serno = 0
-        else:
-            response = comm.talk(packet)
-            packet = self.unpack(response)
-            data = packet['data']
-            serno = data[4:6] + data[2:4] + data[0:2]
-        return serno
+        return packet
         
-    def get_acknowledge_for_serial_number_range(self,range,comm=None):
-        pass
-    
     def get_parameter(self,serno,table,param):
+        """ COMMAND TO READ A PARAMETER.
+        
+        Command to read a parameter from one of the different parameter
+        tables in the slave module.
+        
+        >>> from basecommands import BaseCommands
+        >>> import binascii
+        >>> b = BaseCommands()
+        >>> p = b.get_parameter(31002,'SYSTEM_PARAMETER_TABLE','SerialNum')
+        >>> print binascii.b2a_hex(p)
+        fd0a031a7900290100c4
+        >>> p = b.get_parameter(31002,10,'SerialNum')
+        >>> print binascii.b2a_hex(p)
+        fd0a031a7900290100c4
+        """
         param_tables = self.param_tables
         
-        # select the right table by its name or parameter
-        # group get command number.
+        # select the right table by it's name or parameter
+        # group get-command-number.
         if type(table) is int:
             table = [t for t in param_tables if t['Table']['Get'] == table]
         elif type(table) is str:
@@ -506,11 +598,30 @@ class BaseCommands(Packet):
         
         cmd = table['Table']['Get']
         no_param = table[param]['No']
-        packet = self.pack(serno, cmd, no_param)
+        packet = self.pack(serno,cmd,no_param)
         
-        return binascii.b2a_hex(packet)
+        return packet
             
     def set_parameter(self,serno,table,param,value):
+        """ COMMAND TO SET A PARAMETER.
+        
+        Command to write a parameter to one of the different parameter
+        tables in the slave module. It will checkt if the value has the
+        right type and if this parameter is writable, according tho the
+        tables.
+        
+        TODO: Check the value!
+        
+        >>> from basecommands import BaseCommands
+        >>> import binascii
+        >>> b = BaseCommands()
+        >>> p = b.set_parameter(31002,'SYSTEM_PARAMETER_TABLE','SerialNum',31002)
+        >>> print binascii.b2a_hex(p)
+        fd0b051a7900ed0100791a68
+        >>> p = b.set_parameter(31002,11,'SerialNum',31003)
+        >>> print binascii.b2a_hex(p)
+        fd0b051a7900ed0100791b36
+        """
         param_tables = self.param_tables
         
         # select the right table by its name or parameter
@@ -530,10 +641,66 @@ class BaseCommands(Packet):
         cmd = table['Table']['Set']
         no_param = table[param]['No']
         param = value
-        packet = self.pack(serno, cmd, no_param, param)
+        packet = self.pack(serno,cmd,no_param,param)
         
-        return binascii.b2a_hex(packet)
+        return packet
+
+    def do_tdr_scan(self,serno,start,end,span,count):
+        """ DO TDR SCAN
         
+        Before using this command, the event TDRScan must be entered
+        through writing the parameter Event in Action Parameter to
+        1.Then read the parameter again to see if the event has been
+        successfully entered. If 0x81(129) is returned, it is successful.
+        This command may be carried out now. If 0x01(1) is returned, this
+        means that the event has not been entered. This should be checked
+        until 0x81 is gotten.
+        
+        >>> from basecommands import BaseCommands
+        >>> import binascii
+        >>> b = BaseCommands()
+        >>> p = b.do_tdr_scan(30001,1,126,2,64)
+        >>> print binascii.b2a_hex(p)
+        fd1e00317500da
+        """
+        start = "%02X" % start
+        end = "%02X" % end
+        span = "%02X" % span
+        count = "%04X" % count
+        param = start + end + span + count
+        packet = self.pack(serno,0x1e,no_param=None,ad_param=None,param=param)
+        return packet
+        
+    def get_epr_image(self,serno,pagenr):
+        """ VERY SPECIAL COMMAND.
+        
+        >>> from basecommands import BaseCommands
+        >>> import binascii
+        >>> b = BaseCommands()
+        >>> p = b.get_epr_image(30001,7)
+        >>> print binascii.b2a_hex(p)
+        fd1e00317500da
+        """
+        pagenr = '%02X' % pagenr
+        param = 'FF' + pagenr
+        packet = self.pack(serno,0x1e,no_param=None,ad_param=None,param=param)
+        return packet
+        
+    def set_epr_image(self,serno,pagenr,page):
+        """ VERY SPECIAL COMMAND.
+        
+        >>> from basecommands import BaseCommands
+        >>> import binascii
+        >>> b = BaseCommands()
+        >>> p = b.set_epr_image(30001,7,'FFFFFFFFFE000000')
+        >>> print binascii.b2a_hex(p)
+        fd1e00317500da
+        """
+        pagenr = '%02X' % pagenr
+        param = 'FF' + pagenr + page
+        packet = self.pack(serno,0x1e,no_param=None,ad_param=None,param=param)
+        return packet
+
 if __name__ == "__main__":
     import doctest
     doctest.testmod()

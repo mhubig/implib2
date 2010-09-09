@@ -21,27 +21,21 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #
-import threading
-import thread
-import Queue
-import time
+import Serial
+import Select
 
-class Timeout(threading.Thread):
+class CommunicationError(Exception):
+    def __init__(self, value):
+        self.value = value
+    def __str__(self):
+        return repr(self.value)
+
+class Communication(Object):
+    """  """
     
-    def __init__ ( self, queue, timeout  ):
-        self.__queue   = queue
-        self.__timeout = timeout
-        threading.Thread.__init__(self)
+    def __init__(self):
+        pass
 
-    def run(self):
-        count = 0
-        while count < self.__timeout:
-            if not self.__queue.empty():
-                item = self.__queue.get()
-                if item == 'exit':
-                    thread.exit()
-        
-            time.sleep(1)
-            count += 1
-        
-        thread.interrupt_main()
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()

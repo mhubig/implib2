@@ -21,27 +21,18 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #
-import threading
-import thread
-import Queue
-import time
+from packet import Packet,PacketError
 
-class Timeout(threading.Thread):
-    
-    def __init__ ( self, queue, timeout  ):
-        self.__queue   = queue
-        self.__timeout = timeout
-        threading.Thread.__init__(self)
+class ResponceError(Exception):
+    def __init__(self, value):
+        self.value = value
+    def __str__(self):
+        return repr(self.value)
 
-    def run(self):
-        count = 0
-        while count < self.__timeout:
-            if not self.__queue.empty():
-                item = self.__queue.get()
-                if item == 'exit':
-                    thread.exit()
-        
-            time.sleep(1)
-            count += 1
-        
-        thread.interrupt_main()
+class Responce(Packet):
+    def __init__(self):
+        pass
+       
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()

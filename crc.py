@@ -22,7 +22,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #
-
 from binascii import unhexlify
 
 class CRC(object):
@@ -99,5 +98,3 @@ class CRC(object):
 if __name__ == "__main__":
     import doctest
     doctest.testmod()
-
-## <<EOF>>
