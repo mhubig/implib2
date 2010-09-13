@@ -34,10 +34,11 @@ class CommandsError(Exception):
 class Commands(BaseCommands,Communication,Responce):
     """ Combines the BaseCommands to some higher level command cascades. """
     
-    def __init__(self):
+    def __init__(self,comm):
         BaseCommands.__init__(self)
         Communication.__init__(self)
         Responce.__init__(self)
+        self.comm = comm
     
     def measure_moist(self,serial):
         pass

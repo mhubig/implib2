@@ -100,7 +100,9 @@ class Packet(object):
             data = no_param + ad_param
             data = data + self._crc.calc(data)
         else:
-            param = '%02X' % param
+            # This is done by the basecommands,
+            # because there I know the length!
+            # param = '%02X' % param
             data = no_param + ad_param + param
             data = data + self._crc.calc(data)
         return data

@@ -99,7 +99,7 @@ class BaseCommands(Packet):
         
         self.SYSTEM_PARAMETER_TABLE = {
             'Table': {'Name': 'SYSTEM_PARAMETER_TABLE', 'Get': 10, 'Set': 11},
-            'SerialNum':   {'No':0x01, 'Type':0x04, 'Status':'OR', 'Length':4},
+            'SerialNum':   {'No':0x01, 'Type':0x04, 'Status':'WR', 'Length':4},
             'HWVersion':   {'No':0x02, 'Type':0x06, 'Status':'OR', 'Length':4},
             'FWVersion':   {'No':0x03, 'Type':0x06, 'Status':'OR', 'Length':4},
             'Baudrate':    {'No':0x04, 'Type':0x02, 'Status':'WR', 'Length':2},
@@ -615,12 +615,13 @@ class BaseCommands(Packet):
         >>> from basecommands import BaseCommands
         >>> import binascii
         >>> b = BaseCommands()
-        >>> p = b.set_parameter(31002,'SYSTEM_PARAMETER_TABLE','SerialNum',31002)
+        >>> p = b.set_parameter(31002,'PROBE_CONFIGURATION_PARAMETER_TABLE',\
+                                'DeviceSerialNum',31003)
         >>> print binascii.b2a_hex(p)
-        fd0b051a7900ed0100791a68
-        >>> p = b.set_parameter(31002,11,'SerialNum',31003)
+        fd11051a79002c0c00791bab
+        >>> p = b.set_parameter(31002,17,'DeviceSerialNum',31003)
         >>> print binascii.b2a_hex(p)
-        fd0b051a7900ed0100791b36
+        fd11051a79002c0c00791bab
         """
         param_tables = self.param_tables
         
@@ -640,9 +641,18 @@ class BaseCommands(Packet):
         
         cmd = table['Table']['Set']
         no_param = table[param]['No']
-        param = value
-        packet = self.pack(serno,cmd,no_param,param)
+        status = table[param]['Status']
+        length = table[param]['Length'] * 2
+        value = '%X' % value
+        value.zfill(length)
         
+        if not status == 'WR':
+            raise BaseCommandsError('Parameter is not writeable!')
+        
+        if not len(value) <= length:
+            raise BaseCommandsError('Parameter has the wrong length!')
+            
+        packet = self.pack(serno,cmd,no_param,value)
         return packet
 
     def do_tdr_scan(self,serno,start,end,span,count):
@@ -674,31 +684,35 @@ class BaseCommands(Packet):
     def get_epr_image(self,serno,pagenr):
         """ VERY SPECIAL COMMAND.
         
+        pagenr shold be a string hex value!
+        
         >>> from basecommands import BaseCommands
         >>> import binascii
         >>> b = BaseCommands()
         >>> p = b.get_epr_image(30001,7)
         >>> print binascii.b2a_hex(p)
-        fd1e00317500da
+        fd3c00317500a1
         """
         pagenr = '%02X' % pagenr
         param = 'FF' + pagenr
-        packet = self.pack(serno,0x1e,no_param=None,ad_param=None,param=param)
+        packet = self.pack(serno,0x3c,no_param=None,ad_param=None,param=param)
         return packet
         
     def set_epr_image(self,serno,pagenr,page):
         """ VERY SPECIAL COMMAND.
+        
+        pagenr shold be a string hex value!
         
         >>> from basecommands import BaseCommands
         >>> import binascii
         >>> b = BaseCommands()
         >>> p = b.set_epr_image(30001,7,'FFFFFFFFFE000000')
         >>> print binascii.b2a_hex(p)
-        fd1e00317500da
+        fd3d003175006c
         """
         pagenr = '%02X' % pagenr
         param = 'FF' + pagenr + page
-        packet = self.pack(serno,0x1e,no_param=None,ad_param=None,param=param)
+        packet = self.pack(serno,0x3d,no_param=None,ad_param=None,param=param)
         return packet
 
 if __name__ == "__main__":
