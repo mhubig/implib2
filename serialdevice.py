@@ -21,11 +21,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #
-from twisted.internet.serialport import SerialPort
+from serial import Serial, SerialException
 from serial import EIGHTBITS, PARITY_ODD, STOPBITS_TWO
 import binascii
 
-class SerialDevice(SerialPort):
+class SerialDevice(Serial):
 
     def __init__(self, port):
         Serial.__init__(self)
@@ -38,6 +38,8 @@ class SerialDevice(SerialPort):
         self.xonxoff = 0
         self.rtscts = 0
         self.dsrdtr = 0
+        self.open()
+        self.flush()
     
     def _write(self, packet):
         fileno = self.fileno()
