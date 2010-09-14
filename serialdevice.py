@@ -21,12 +21,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #
-from serial import Serial, SerialException
+from twisted.internet.serialport import SerialPort
 from serial import EIGHTBITS, PARITY_ODD, STOPBITS_TWO
+import binascii
 
-class SerialDevice(Serial):
+class SerialDevice(SerialPort):
 
-    def __init__(self,port):
+    def __init__(self, port):
         Serial.__init__(self)
         self.port = port
         self.baudrate = 57600
@@ -37,15 +38,12 @@ class SerialDevice(Serial):
         self.xonxoff = 0
         self.rtscts = 0
         self.dsrdtr = 0
-        self.open()
-        self.flush()
     
     def _write(self, packet):
         fileno = self.fileno()
         while True:
-            readable, writeable, excepts = select([], [fileno], [], 0.2)
+            readable, writeable, excepts = select([], [fileno], [], 0.1)
             if fileno in writeable:
-                time.sleep(0.1)
                 length = self.write(packet)
                 break
         return length
@@ -53,10 +51,12 @@ class SerialDevice(Serial):
     def _read(self):
         fileno = self.fileno()
         while True:
-            readable, writeable, excepts = select([], [fileno], [], 0.2)
+            readable, writeable, excepts = select([], [fileno], [], 0.1)
             if fileno in readable:
-                time.sleep(0.1)
-                packet = self.read(260)
+                header = self.read(7)
+                length = int(binascii.b2a_hex(header[3]), 16)
+                data = self.read(length)
+                packet = header + data
                 break
         return packet
     
