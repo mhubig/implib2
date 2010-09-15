@@ -21,45 +21,83 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #
+import os
+import signal
+import binascii
 from serial import Serial, SerialException
 from serial import EIGHTBITS, PARITY_ODD, STOPBITS_TWO
-import binascii
+
+class SerialDeviceError(Exception):
+    def __init__(self, value):
+        self.value = value
+    def __str__(self):
+        return repr(self.value)
 
 class SerialDevice(Serial):
-
+    """ Wrapper class for pyserial.
+    
+    This class takes care of the settings for the Serial Port and provides
+    a command called talk() which takes care of sending a packet and recieving
+    the answer.
+    """
     def __init__(self, port):
+        self.serial_for_url = port
         Serial.__init__(self)
-        self.port = port
         self.baudrate = 57600
         self.bytesize = EIGHTBITS
         self.parity = PARITY_ODD
         self.stopbits = STOPBITS_TWO
-        self.timeout = 0
         self.xonxoff = 0
         self.rtscts = 0
         self.dsrdtr = 0
+        
+        if os.name == 'posix':
+            self.timeout = 0
+        elif os.name == 'nt':
+            self.timeout = 1
+      
+        # Set the signal handler and a 5-second alarm
+        signal.signal(signal.SIGALRM, self._handler)
+        signal.alarm(5)
         self.open()
         self.flush()
+        signal.alarm(0) # Disable the alarm
+        
+    def _handler(signum, frame):
+        raise SerialDeviceError("Couldn't open device!")
     
     def _write(self, packet):
-        fileno = self.fileno()
-        while True:
-            readable, writeable, excepts = select([], [fileno], [], 0.1)
-            if fileno in writeable:
-                length = self.write(packet)
-                break
+        if os.name == 'posix':
+            fileno = self.fileno()
+            while True:
+                readable, writeable, excepts = select([], [fileno], [], 0.1)
+                if fileno in writeable:
+                    length = self.write(packet)
+                    break
+        elif os.name == 'nt':
+            length = self.write(packet)
         return length
     
     def _read(self):
-        fileno = self.fileno()
-        while True:
-            readable, writeable, excepts = select([], [fileno], [], 0.1)
-            if fileno in readable:
-                header = self.read(7)
-                length = int(binascii.b2a_hex(header[3]), 16)
-                data = self.read(length)
-                packet = header + data
-                break
+        if os.name == 'posix':
+            fileno = self.fileno()
+            while True:
+                readable, writeable, excepts = select([], [fileno], [], 0.1)
+                if fileno in readable:
+                    header = self.read(7)
+                    if len(header) != 7:
+                        raise SerialDeviceError('recieved header packet has false length')
+                    length = int(binascii.b2a_hex(header[3]), 16)
+                    data = self.read(length)
+                    packet = header + data
+                    break
+        elif os.name == 'nt':
+            header = self.read(7)
+            if len(header) != 7:
+                raise SerialDeviceError('recieved header packet has false length')
+            length = int(binascii.b2a_hex(header[3]), 16)
+            data = self.read(length)
+            packet = header + data
         return packet
     
     def talk(self, packet):
