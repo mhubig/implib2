@@ -35,7 +35,7 @@ class Table(yaml.YAMLObject):
     yaml_tag = u'!Table'
     
     def __init__(self, *args, **kwargs):
-        self.__dict__.update(kwargs)
+        self.__dict__.update(kwargs) 
     
     def __repr__(self):
         return "%s(Name=%s)" % (
