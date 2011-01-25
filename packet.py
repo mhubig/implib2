@@ -21,26 +21,23 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #
-import binascii
 from crc import CRC
-from tools import Tools
 
-class PacketError(Exception):
+class PacketException(Exception):
     def __init__(self, value):
         self.value = value
     def __str__(self):
         return repr(self.value)
 
-class Packet(object):
+class Packet(CRC):
     """ Class for packing, unpacking and checking IMPBus packages.
     
     Packing is done be the Packet.pack() funktion and unpacking is
     done be the Packet.unpack() funktion. While unpacking the CRCs
     and the given length of the provided IMPBUS package are checked.
     
-    >>> from packet import Packet,PacketError
     >>> p = Packet()
-    >>> packet = p.pack(serno=0,cmd=0x15,no_param=0x01,param=30521)
+    >>> packet = p.pack(serno=0,cmd=0x15,no_param=0x01,param='7739')
     >>> stuff = p.unpack(packet)
     >>> stuff['header']
     {'state': '0xfd', 'cmd': '0x15', 'length': 5, 'serno': 0}
@@ -54,8 +51,7 @@ class Packet(object):
     """
     
     def __init__(self):
-         self._crc = CRC()
-         self._t = Tools()
+         CRC.__init__(self)
        
     def _hexhex(self,str):
         return hex(int(str, 16))
@@ -71,7 +67,7 @@ class Packet(object):
         state = self._hexhex(header[0:2])
         cmd = self._hexhex(header[2:4])
         length = int(header[4:6], 16)
-        serno = int(header[10:12]+ header[8:10] + header[6:8], 16)
+        serno = int(header[10:12] + header[8:10] + header[6:8], 16)
         return {'state': state, 'cmd': cmd, 'length': length, 'serno': serno}
 
     def _cut_data(self, packet):
@@ -84,7 +80,7 @@ class Packet(object):
         return packet[data_start:data_end]
 
     def _split_data(self, data):
-        # useless for unpacking recived packages, corse
+        # useless for unpacking recived packages, cause
         # the format depends on the command ... ;-(
         no_param = self._hexhex(data[0:2])
         ad_param = self._hexhex(data[2:4])
@@ -92,34 +88,32 @@ class Packet(object):
         return {'no_param': no_param, 'ad_param': ad_param, 'param': param}
 
     def _pack_data(self, no_param, param=None, ad_param=None):
-        # param is optional and ad_param, if not
-        # explicit given, is always '00'
-        no_param = '%02X' % no_param
-        if not ad_param: ad_param = '00'
+        # param is optional and ad_param, if not explicit
+        # given, is always '00' ...
+        no_param = '%02x' % no_param
+        ad_param = '%02x' % ad_param if ad_param else '00'
+  
         if not param:
             data = no_param + ad_param
-            data = data + self._crc.calc(data)
+            data = data + self.calc_crc(data)
         else:
-            # This is done by the basecommands,
-            # because there I know the length!
-            # param = '%02X' % param
             data = no_param + ad_param + param
-            data = data + self._crc.calc(data)
+            data = data + self.calc_crc(data)
         return data
 
     def _check_header(self,header):
-        if not self._crc.check(header):
-            raise PacketError("Package with faulty header CRC!")
+        if not self.check_crc(header):
+            raise PacketException("Package with faulty header CRC!")
         status = header[0:2]
         if status not in ['00','fd']:
-            raise PacketError("Package with error status: %s!" % status)
+            raise PacketException("Package with error status: %s!" % status)
         return header[:-2]
 
     def _check_data(self,data):
-        if not self._crc.check(data):
-            raise PacketError("Package with faulty data CRC!")
+        if not self.check_crc(data):
+            raise PacketException("Package with faulty data CRC!")
         if len(data) > 504:
-            raise PacketError("Data block bigger than 252Bytes!")
+            raise PacketException("Data block bigger than 252Bytes!")
         return data[:-2]
 
     def _check(self, packet):
@@ -138,47 +132,46 @@ class Packet(object):
 
         if not data:
             if not data_length == 0:
-                raise PacketError("Length of data block shold be zero!")
+                raise PacketException("Length of data block shold be zero!")
         else:
             if len(data) != data_length:
-                raise PacketError("Length of data block dosn't match!")
+                raise PacketException("Length of data block dosn't match!")
             data = self._check_data(data)
         return header, data
 
     def pack(self, serno, cmd, no_param=None, param=None, ad_param=None):
-        """ Funktion to create an IMPBUS package.
+        """ Funktion to create an IMPBUS2 package.
         
         Package is created from serial number, command and data
-        string. serno shold be int, cmd hex and data should be a
-        hex-string!
+        string. serno shold be [int/hex], cmd [hex/int] and data
+        should be a hex-string!
         """
-        state = 'FD' # indicates IMP232N protocol version
-        serno = '%06X' % serno
-        cmd = '%02X' % cmd
+        state = 'fd' # indicates IMP232N protocol version
+        serno = '%06x' % serno
+        cmd = '%02x' % cmd
         serno = serno[4:6] + serno[2:4] + serno[0:2]
 
         if no_param:
             data = self._pack_data(no_param, param, ad_param)
-            length = '%02X' % (len(data) / 2)
+            length = '%02x' % (len(data) / 2)
             header = state + cmd + length + serno
-            header = header + self._crc.calc(header)
+            header = header + self.calc_crc(header)
             packet = header + data
         else:
             length = '00'
             header = state + cmd + length + serno
-            header = header + self._crc.calc(header)
+            header = header + self.calc_crc(header)
             packet = header
 
-        return binascii.a2b_hex(packet)
+        return packet
 
     def unpack(self, packet):
-        """ Funktion to unfold an IMPBUS package.
+        """ Funktion to unfold an IMPBUS2 package.
         
-        Package is typically recieved from a connected probe. Returns
-        a dict containing state [hex], command [hex], length [hex], serial
-        number [int] and data [hex-string].
+        Package is typically recieved from a connected probe.
+        Returns a dict containing state [hex], command [hex],
+        length [hex], serial number [int] and data [hex-string].
         """
-        packet = binascii.b2a_hex(packet)
         header, data = self._check(packet)
         header = self._split_header(header)
         

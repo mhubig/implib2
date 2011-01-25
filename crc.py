@@ -22,7 +22,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #
-from binascii import unhexlify
+from binascii import unhexlify as uh
 
 class CRC(object):
     """
@@ -50,14 +50,14 @@ class CRC(object):
 
     >>> import crc
     >>> crc = crc.CRC()
-    >>> crc.calc('FD15ED09')
+    >>> crc.calc_crc('FD15ED09')
     'f3'
     """
 
-    def __init__ ( self ):
-        self.tbl = self.__maketbl()
+    def __init__(self):
+        self.tbl = self._maketbl()
 
-    def __reflect ( self, data, width ):
+    def _reflect(self, data, width):
         """ reflect a data word, i.e. reverts the bit order. """
         x = data & 0x01
         for i in range(width - 1):
@@ -65,32 +65,32 @@ class CRC(object):
             x = (x << 1) | (data & 0x01)
         return x
      
-    def __maketbl( self ):
+    def _maketbl(self):
         tbl = {}
         for i in range(1 << 8):
-            register = self.__reflect(i, 8)
+            register = self._reflect(i, 8)
             for j in range(8):
                 if register & 128 != 0:
                     register = (register << 1) ^ 0x31
                 else:
                     register = (register << 1)
-            register = self.__reflect(register, 8)
+            register = self._reflect(register, 8)
             tbl[i] = register & 255
         return tbl
 
-    def calc ( self, hexstring ):
+    def calc_crc(self, hex_string):
         tbl = self.tbl
-        str = unhexlify(hexstring)
+        str = uh(hex_string)
         register = 0x0
         for c in str:
             tblidx   = (register ^ ord(c)) & 0xff
             register = ((register >> 8) ^ tbl[tblidx]) & 255
         return "%02x" % register
 
-    def check ( self, hexstring ):
-        data = hexstring[:-2]
-        crc  = hexstring[-2:]
-        if crc == self.calc(data):
+    def check_crc(self, hex_string):
+        data = hex_string[:-2]
+        crc  = hex_string[-2:]
+        if crc == self.calc_crc(data):
             return True
         else:
             return False

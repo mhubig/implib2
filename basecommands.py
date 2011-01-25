@@ -21,8 +21,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #
-from tables import Tables, TablesError
-from packet import Packet, PacketError
+from tables import Tables, TablesException
+from packet import Packet, PacketException
 
 class BaseCommandsError(Exception):
     def __init__(self, value):
@@ -107,11 +107,9 @@ class BaseCommands(Packet, Tables):
         a complete address block. It can be used to test the presence of
         a module in conjunction with the quality of the bus connection.
         
-        >>> from basecommands import BaseCommands
-        >>> import binascii
         >>> b = BaseCommands()
         >>> p = b.get_long_acknowledge(31001)
-        >>> print binascii.b2a_hex(p)
+        >>> print p
         fd02001979007b
         """
         packet = self.pack(serno=serno,cmd=0x02)
@@ -126,11 +124,9 @@ class BaseCommands(Packet, Tables):
         of any data block and the only one without a complete address block. It
         can be used to test the presence of a module.
         
-        >>> from basecommands import BaseCommands
-        >>> import binascii
         >>> b = BaseCommands()
         >>> p = b.get_short_acknowledge(31001)
-        >>> print binascii.b2a_hex(p)
+        >>> print p
         fd0400197900e7
         """
         packet = self.pack(serno=serno,cmd=0x04)
@@ -176,12 +172,10 @@ class BaseCommands(Packet, Tables):
         lower half:  11010000 00000000 00000000 (old mark gets 0)
         higher half: 11110000 00000000 00000000 (old mark gets 1)
         
-        >>> from basecommands import BaseCommands
-        >>> import binascii
         >>> b = BaseCommands()
         >>> serno = int(0b111100000000000000000000)
         >>> p = b.get_acknowledge_for_serial_number_range(serno)
-        >>> print binascii.b2a_hex(p)
+        >>> print p
         fd06000000f0d0
         """
         packet = self.pack(serno=range,cmd=0x06)
@@ -194,11 +188,9 @@ class BaseCommands(Packet, Tables):
         serial number is unknown. It is a broadcast command and serves to
         get the serial number of the module.
         
-        >>> from basecommands import BaseCommands
-        >>> import binascii
         >>> b = BaseCommands()
         >>> p = b.get_negative_acknowledge()
-        >>> print binascii.b2a_hex(p)
+        >>> print p
         fd0800ffffff60
         """
         packet = self.pack(serno=16777215,cmd=0x08)
@@ -210,16 +202,11 @@ class BaseCommands(Packet, Tables):
         Command to read a parameter from one of the different parameter
         tables in the slave module.
         
-        >>> from basecommands import BaseCommands
-        >>> import binascii
         >>> b = BaseCommands()
         >>> p = b.get_parameter(31002,'SYSTEM_PARAMETER_TABLE','SerialNum')
-        >>> print binascii.b2a_hex(p)
+        >>> print p
         fd0a031a7900290100c4
         """
-        
-        if not self.has_table(table):
-            raise BaseCommandsError('Could not find spezified Table!')
         
         cmd = self.get_table_get_command(table)
         param_no = self.get_parameter_no(table,param)
@@ -237,22 +224,16 @@ class BaseCommands(Packet, Tables):
         
         TODO: Check the value!
         
-        >>> from basecommands import BaseCommands
-        >>> import binascii
         >>> b = BaseCommands()
         >>> p = b.set_parameter(31002,'PROBE_CONFIGURATION_PARAMETER_TABLE',\
                                 'DeviceSerialNum',31003)
-        >>> print binascii.b2a_hex(p)
+        >>> print p
         fd11051a79002c0c00791bab
         """
-        
-        if not self.has_table(table):
-            raise BaseCommandsError('Could not find spezified Table!')
-        
         cmd = self.get_table_set_command(table)
-        param_no = self.get_parameter_no(table,param)
+        no_param = self.get_parameter_no(table,param)
         length = self.get_parameter_length(table,param)
-        value = '%X' % value
+        value = '%x' % value
         value.zfill(length)
         
         if not self.parameter_writable(table,param):
@@ -261,7 +242,7 @@ class BaseCommands(Packet, Tables):
         if not len(value) <= length:
             raise BaseCommandsError('Parameter has the wrong length!')
         
-        packet = self.pack(serno,cmd,param_no,value)
+        packet = self.pack(serno,cmd,no_param,value)
         return packet
         
     def do_tdr_scan(self,serno,start,end,span,count):
@@ -275,11 +256,9 @@ class BaseCommands(Packet, Tables):
         means that the event has not been entered. This should be checked
         until 0x81 is gotten.
         
-        >>> from basecommands import BaseCommands
-        >>> import binascii
         >>> b = BaseCommands()
         >>> p = b.do_tdr_scan(30001,1,126,2,64)
-        >>> print binascii.b2a_hex(p)
+        >>> print p
         fd1e00317500da
         """
         start = "%02X" % start
@@ -290,37 +269,33 @@ class BaseCommands(Packet, Tables):
         packet = self.pack(serno,0x1e,no_param=None,ad_param=None,param=param)
         return packet
     
-    def get_epr_image(self,serno,pagenr):
+    def get_epr_image(self,serno,page_nr):
         """ VERY SPECIAL COMMAND.
         
-        pagenr shold be a string hex value!
+        pagenr should be a string hex value!
         
-        >>> from basecommands import BaseCommands
-        >>> import binascii
         >>> b = BaseCommands()
         >>> p = b.get_epr_image(30001,7)
-        >>> print binascii.b2a_hex(p)
+        >>> print p
         fd3c00317500a1
         """
-        pagenr = '%02X' % pagenr
-        param = 'FF' + pagenr
+        page_nr = '%02X' % page_nr
+        param = 'FF' + page_nr
         packet = self.pack(serno,0x3c,no_param=None,ad_param=None,param=param)
         return packet
     
-    def set_epr_image(self,serno,pagenr,page):
+    def set_epr_image(self,serno,page_nr,page):
         """ VERY SPECIAL COMMAND.
         
-        pagenr shold be a string hex value!
+        pagenr should be a string hex value!
         
-        >>> from basecommands import BaseCommands
-        >>> import binascii
         >>> b = BaseCommands()
         >>> p = b.set_epr_image(30001,7,'FFFFFFFFFE000000')
-        >>> print binascii.b2a_hex(p)
+        >>> print p
         fd3d003175006c
         """
-        pagenr = '%02X' % pagenr
-        param = 'FF' + pagenr + page
+        page_nr = '%02X' % page_nr
+        param = 'FF' + page_nr + page
         packet = self.pack(serno,0x3d,no_param=None,ad_param=None,param=param)
         return packet
 

@@ -22,7 +22,7 @@
 # THE SOFTWARE.
 #
 import os
-import yaml
+from yaml import YAMLObject, load_all
 
 try:
     from yaml import CLoader as Loader
@@ -30,7 +30,7 @@ try:
 except ImportError:
     from yaml import Loader, Dumper
 
-class Table(yaml.YAMLObject):
+class Table(YAMLObject):
     """Spezialized Class for wraping YAML Data structures to python objects"""
     yaml_tag = u'!Table'
     
@@ -50,7 +50,7 @@ class Table(yaml.YAMLObject):
     def _get_parameter(self, param):
         return getattr(self, param)
 
-class TablesError(Exception):
+class TablesException(Exception):
     def __init__(self, value):
         self.value = value
     def __str__(self):
@@ -59,20 +59,18 @@ class TablesError(Exception):
 class Tables(object):
     """
     >>> t = Tables()
-    >>> t.has_parameter('SYSTEM_PARAMETER_TABLE','SerialNum')
-    True
     >>> t.parameter_writable('SYSTEM_PARAMETER_TABLE','SerialNum')
     True
     >>> t.get_parameter_length('SYSTEM_PARAMETER_TABLE','SerialNum')
-    4
+    8
     >>> t.get_parameter_type('SYSTEM_PARAMETER_TABLE','SerialNum')
-    '0x04'
+    4
     >>> t.get_parameter_no('SYSTEM_PARAMETER_TABLE','SerialNum')
-    '0x01'
+    1
     >>> t.get_table_get_command('SYSTEM_PARAMETER_TABLE')
-    '0x0a'
+    10
     >>> t.get_table_set_command('SYSTEM_PARAMETER_TABLE')
-    '0x0b'
+    11
     """
     def __init__(self):
         self._file = 'tables.yaml'
@@ -80,7 +78,7 @@ class Tables(object):
     
     def _loadTables(self):
         with open(self._file) as stream:
-            tables = self._yamlProjector(yaml.load_all(stream, Loader=Loader))
+            tables = self._yamlProjector(load_all(stream, Loader=Loader))
             for table in tables:
                 setattr(self, table, tables[table])
         self.mtime = os.stat(self._file).st_mtime
@@ -106,10 +104,10 @@ class Tables(object):
         if self._modified(): self._loadTables()
         
         if not self._has_table(table):
-            raise TablesError("ERROR: Table '%s' not known!" % table)
+            raise TablesException("ERROR: Table '%s' not known!" % table)
         
         if not self._has_parameter(table, param):
-            raise TablesError("ERROR: Table '%s' has no parameter '%s'!"
+            raise TablesException("ERROR: Table '%s' has no parameter '%s'!"
                 % (table,param))
         
         return getattr(self, table)._get_parameter(param)
