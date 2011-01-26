@@ -21,23 +21,53 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #
-from packet import Packet,PacketError
+from packet import Packet, PacketExceptions
 
-class ResponceError(Exception):
+class BaseResponceException(Exception):
     def __init__(self, value):
         self.value = value
     def __str__(self):
         return repr(self.value)
 
-class Responce(Packet):
+class BaseResponce(Packet):
     def __init__(self):
         Packet.__init__(self)
         
-    def set_responce(self):
+    def responce_get_long_acknowledge(self, packet):
+        responce = self.unpack(packet)
+        return responce['serno']
+        
+    def responce_get_short_acknowledge(self, packet):
+        # not a standart responce packet, just the CRC of the serial
         pass
-    
-    def get_responce(self):
+        
+    def responce_get_acknowledge_for_serial_number_range(self, packet):
+        # not a standart responce packet, just the CRC of the serial
         pass
+        
+    def responce_get_negative_acknowledge(self, packet):
+        responce = self.unpack(packet)
+        return responce['serno']
+        
+    def responce_get_parameter(self, packet):
+        responce = self.unpack(packet)
+        return responce['serno'], responce['cmd'], responce['data']
+        
+    def responce_set_parameter(self, packet):
+        responce = self.unpack(packet)
+        return responce['serno'], responce['cmd']
+        
+    def responce_do_tdr_scan(self, packet):
+        responce = self.unpack(packet)
+        return responce['serno'], responce['cmd'], responce['data']
+        
+    def responce_get_epr_image(self, packet):
+        responce = self.unpack(packet)
+        return responce['serno'], responce['cmd'], responce['data']
+        
+    def responce_set_erp_image(self, packet):
+        responce = self.unpack(packet)
+        return responce['serno'], responce['cmd']
     
 if __name__ == "__main__":
     import doctest

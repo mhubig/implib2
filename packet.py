@@ -105,7 +105,7 @@ class Packet(CRC):
         if not self.check_crc(header):
             raise PacketException("Package with faulty header CRC!")
         status = header[0:2]
-        if status not in ['00','fd']:
+        if status not in ['00','fd', 'ff']:
             raise PacketException("Package with error status: %s!" % status)
         return header[:-2]
 
@@ -175,7 +175,7 @@ class Packet(CRC):
         header, data = self._check(packet)
         header = self._split_header(header)
         
-        return {'header': header, 'data': data}
+        return header.update({'data': data})
 
 if __name__ == "__main__":
     import doctest
