@@ -55,6 +55,34 @@ class Commands(SerialPort, BaseCommands, BaseResponce):
         BaseResponce.__init__(self)
         SerialDevice.__init__(self, port)
     
+    def _divide_and_conquer(self, low, high, found):
+        """ Recursiv divide-and-conquer algorythm to scan the IMPBUS.
+        
+        Divides the 24bit address range [0 - 16777215] in equal parts
+        and uses the get_acknowledge_for_serial_number_range() methode
+        to sort out the rages without a module. The found module serials
+        are stored in the parameter list 'found'.
+        """
+        # if we have only two serials left check them direct.
+        if high-low == 1:
+            if self.short_probe_module(high):
+                found.append(high)
+            if short_probe_module(low):
+                self.found.append(low)
+            return True
+        else:
+            # calculate the broadcast address for range [low-high] and check
+            # if there are some modules whithin the range, abort if not!
+            broadcast = low + (high-low+1)/2
+            if not self.get_acknowledge_for_serial_number_range(broadcast):
+                return False
+            
+        # divide-and-conquer by splitting the range into two pices. 
+        mid = (low + high)/2
+        self._divide_and_conquer(low, mid, found)
+        self._divide_and_conquer(mid+1, high, found)
+        return True
+    
     ####################################
     # Initialize the bus communication #
     ####################################
@@ -112,7 +140,23 @@ class Commands(SerialPort, BaseCommands, BaseResponce):
     #################################
     
     def scan_bus(self):
-        pass
+        """ High level command to scan the IMPBUS for connected probes.
+        
+        This command is very similar to the short_probe_module()
+        one. However, it addresses not just one single serial number,
+        but a serial number range. This value of byte 4 to byte 6
+        symbolizes a whole range.
+        
+        It's basiclly just a small wrapper for _divide_and_conquer().
+        For details see the provided docstring of _divide_and_conquer.
+        Usable like this:
+        
+        >>> c = Commands('/dev/ttyS0')
+        >>> modules = c.scan_bus()
+        """
+        found = list()
+        self._divide_and_conquer(0, 16777215, found)
+        return found
     
     def probe_module(self, serno):
         package = self.get_long_acknowledge(serno)
