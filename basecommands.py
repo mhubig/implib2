@@ -24,7 +24,7 @@
 from tables import Tables, TablesException
 from packet import Packet, PacketException
 
-class BaseCommandsError(Exception):
+class BaseCommandsException(Exception):
     def __init__(self, value):
         self.value = value
     def __str__(self):
@@ -100,7 +100,7 @@ class BaseCommands(Packet, Tables):
         Tables.__init__(self)
         
     def get_long_acknowledge(self,serno):
-        """ Command to PING a specific module.
+        """ GET LONG ACKNOWLEDGE
         
         This command with the number 2 will call up the slave which is
         addressed by its serial number. In return, the slave replies with
@@ -237,10 +237,10 @@ class BaseCommands(Packet, Tables):
         value.zfill(length)
         
         if not self.parameter_writable(table,param):
-            raise BaseCommandsError('Parameter is not writeable!')
+            raise BaseCommandsException('Parameter is not writeable!')
         
         if not len(value) <= length:
-            raise BaseCommandsError('Parameter has the wrong length!')
+            raise BaseCommandsException('Parameter has the wrong length!')
         
         packet = self.pack(serno,cmd,no_param,value)
         return packet

@@ -73,7 +73,9 @@ class Tables(object):
     11
     """
     def __init__(self):
-        self._file = 'tables.yaml'
+        tbl_file = os.path.abspath(__file__)
+        tbl_file = os.path.dirname(tbl_file)
+        self._file = os.path.join(tbl_file, 'tables.yaml')
         self._loadTables()
     
     def _loadTables(self):

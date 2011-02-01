@@ -21,6 +21,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #
+import time
+from binascii import b2a_hex as b2a
 from serialdevice import SerialDevice, SerialDeviceException 
 from basecommands import BaseCommands, BaseCommandsException
 from baseresponce import BaseResponce, BaseResponceException
@@ -31,7 +33,7 @@ class CommandsException(Exception):
     def __str__(self):
         return repr(self.value)
 
-class Commands(SerialPort, BaseCommands, BaseResponce):
+class Commands(SerialDevice, BaseCommands, BaseResponce):
     """ Class to combine the basic IMPBUS2 commands to
         higher level command cascades.
         
@@ -50,7 +52,8 @@ class Commands(SerialPort, BaseCommands, BaseResponce):
     >>> impbus.close_device()
     """
     
-    def __init__(self):
+    def __init__(self, port):
+        self.DEBUG = False
         BaseCommands.__init__(self)
         BaseResponce.__init__(self)
         SerialDevice.__init__(self, port)
@@ -63,18 +66,17 @@ class Commands(SerialPort, BaseCommands, BaseResponce):
         to sort out the rages without a module. The found module serials
         are stored in the parameter list 'found'.
         """
-        # if we have only two serials left check them direct.
-        if high-low == 1:
+        # if we have only one serial left check them direct.
+        if high == low:
             if self.short_probe_module(high):
                 found.append(high)
-            if short_probe_module(low):
-                self.found.append(low)
-            return True
+                return True
+            return False
         else:
             # calculate the broadcast address for range [low-high] and check
             # if there are some modules whithin the range, abort if not!
             broadcast = low + (high-low+1)/2
-            if not self.get_acknowledge_for_serial_number_range(broadcast):
+            if not self.probe_range(broadcast):
                 return False
             
         # divide-and-conquer by splitting the range into two pices. 
@@ -106,34 +108,30 @@ class Commands(SerialPort, BaseCommands, BaseResponce):
         # trying to set baudrate at 1200
         self.ser.baudrate = 1200
         self.open_device()
-        self.set_parameter()
-        package = self.set_parameter(address, table, baudrate)
-        bytes_send = self.write(package)
+        package = self.set_parameter(address, table, parameter, baudrate)
+        bytes_send = self.write_package(package)
         self.close_device()
         
         # trying to set baudrate at 2400
         self.ser.baudrate = 2400
         self.open_device()
-        self.set_parameter()
-        package = self.set_parameter(address, table, baudrate)
-        bytes_send = self.write(package)
+        package = self.set_parameter(address, table, parameter, baudrate)
+        bytes_send = self.write_package(package)
         self.close_device()
         
         # trying to set baudrate at 4800
         self.ser.baudrate = 4800
         self.open_device()
-        self.set_parameter()
-        package = self.set_parameter(address, table, baudrate)
-        bytes_send = self.write(package)
+        package = self.set_parameter(address, table, parameter, baudrate)
+        bytes_send = self.write_package(package)
         self.close_device()
         
         # trying to set baudrate at 9600
         self.ser.baudrate = 9600
         self.open_device()
-        self.set_parameter()
-        package = self.set_parameter(address, table, baudrate)
-        bytes_send = self.write(package)
-        self.close_device()
+        package = self.set_parameter(address, table, parameter, baudrate)
+        bytes_send = self.write_package(package)
+        time.sleep(0.2)
     
     #################################
     # finding connected modules     #
@@ -160,58 +158,74 @@ class Commands(SerialPort, BaseCommands, BaseResponce):
     
     def probe_module(self, serno):
         package = self.get_long_acknowledge(serno)
-        bytes_send = self.write(package)
-        
+        bytes_send = self.write_package(package)
+        if self.DEBUG: print "Probing SerNo:", serno
         # Trying to get a respoce ...
-        try:
-            bytes_recv = self.read()
-        except:
-            bytes_recv = None
-        
+        bytes_recv = self.read_package()
         if not bytes_recv:
-            return False    
-        else:
-            responce = self.responce_get_long_acknowledge(bytes_recv)
-            if not serno == responce:
-                raise CommandsException("Couldn't PING that serial number!")
-        
-        return True
-    
+            return False
+        time.sleep(0.12)
+        return self.responce_get_long_acknowledge(bytes_recv)
+            
     def short_probe_module(self, serno):
+        if self.DEBUG: print "Probing SerNo:", serno
         package = self.get_short_acknowledge(serno)
-        crc = self.calc_crc(serno)
-        bytes_send = self.write(package)
-        
+        serno = self._reflect_bytes('%06x' % serno)
+        # send package
+        bytes_send = self.write_package(package)
+        time.sleep(0.02)
         # Trying to get a respoce ...
-        try:
-            responce = self.ser.read(1)
-        except:
-            responce = None
-        
-        if not crc == responce:
-            raise CommandsException("Couldn't PING that serial number!")
-        
+        responce = b2a(self.ser.read(1))
+        if not self.check_crc(serno+responce):
+            return False
+        if self.DEBUG: print "---> Responce: %s" % responce 
+        time.sleep(0.12)
         return True
-    
-    #################################
-    # change the module settings    #  
-    #################################
-    
-    
+        
+    def probe_range(self, broadcast):
+        package = self.get_acknowledge_for_serial_number_range(broadcast)
+        bytes_send = self.write_package(package)
+        time.sleep(0.1)
+        #responce = self.ser.read(1)
+        if not self.read_something():
+            if self.DEBUG: print "No Module seen at range %s" % broadcast
+            return False
+        if self.DEBUG: print "Module seen at range %s" % broadcast
+        time.sleep(0.12)
+        return True
     
     #################################
     # getting data from the modules #
     #################################
+    
+    def get_hw_version(self, serno):
+        package = self.get_parameter(serno, 'SYSTEM_PARAMETER_TABLE', 'HWVersion')
+        bytes_send = self.write_package(package)
+        responce = self.read_package()
+        return responce
     
     def measure_moist(self, serno):
         pass
     
     def measure_temp(self, serno):
         pass
-        
+
+    #################################
+    # change the module settings    #  
+    #################################
+
     def set_serial(self, serno):
         pass
     
 if __name__ == "__main__":
-    import doctest
-    doctest.testmod()
+    #import doctest
+    #doctest.testmod()
+    c = Commands('/dev/tty.usbserial-A700eQFp')
+    c.synchronise_bus()
+    c.DEBUG = True
+    #print c.scan_bus()
+    print c.get_hw_version(31193)
+    #print 'Serno Int: 31193'
+    #print 'Serno Hex: %08x' % 31193
+    #print 'Serno Reflected: %s' % c._reflect_byte('%08x' % 31193)
+    #print 'Serno CRC: %s' % c.calc_crc(c._reflect_byte('%08x' % 31193))

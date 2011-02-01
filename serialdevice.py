@@ -22,10 +22,12 @@
 # THE SOFTWARE.
 #
 import os
+import time
 import signal
-from singleton import Singleton
+#from singleton import Singleton
 from binascii import b2a_hex as b2a
 from binascii import a2b_hex as a2b
+from select import select
 from serial import serial_for_url, Serial, SerialException
 from serial import EIGHTBITS, PARITY_ODD, STOPBITS_TWO
 
@@ -35,21 +37,21 @@ class SerialDeviceException(Exception):
     def __str__(self):
         return repr(self.value)
 
-class SerialDevice(Singleton):
+class SerialDevice(object):
     """ Class for sending and recieving IMPBUS2 Packets via a serial line.
     
     This class takes care of the settings for the Serial Port and provides
     the commands write, read and one called talk() which takes care of sending
     a packet and recieving the answer.
     """
-    def __init__(self, port, baudrate=57600):
+    def __init__(self, port, baudrate=9600):
         self.DEBUG = False
         self.ser = serial_for_url(port)
         self.ser.baudrate = baudrate
         self.ser.bytesize = EIGHTBITS
         self.ser.parity = PARITY_ODD
         self.ser.stopbits = STOPBITS_TWO
-        self.ser.timeout = None
+        self.ser.timeout = 0
         self.ser.xonxoff = 0
         self.ser.rtscts = 0
         self.ser.dsrdtr = 0
@@ -64,7 +66,7 @@ class SerialDevice(Singleton):
         raise SerialDeviceException("Writing to device timed out!")
         
     def _read_device_handler(self, signum, frame):
-        raise SerialDeviceException("Reading to device timed out!")
+        raise SerialDeviceException("Reading from device timed out!")
     
     def open_device(self):
         # Set the signal handler and a 2-seconds alarm
@@ -82,48 +84,125 @@ class SerialDevice(Singleton):
         self.ser.close()
         signal.alarm(0) # Disable the alarm
     
-    def write(self, packet):
+    def write_package(self, packet):
+        """ Writes IMPBUS2 packet to the serial line.
+        
+        Packet must be a pre-build HEX string. Returns the
+        length in Bytes of the string written. 
         """
-        Writes a IMPBUS2 packet to the serial line. Packet is a prebuild
-        HEX string. Returns the length in Bytes of the string written. 
-        """
+        # Set the signal handler and a 2-seconds alarm
+        signal.signal(signal.SIGALRM, self._write_device_handler)
+        signal.alarm(2)
+        # getting the fileno for select()
         fileno = self.ser.fileno()
         while True:
             readable, writeable, excepts = select([], [fileno], [], 0.1)
             if fileno in writeable:
-                # Set the signal handler and a 2-seconds alarm
-                signal.signal(signal.SIGALRM, self._write_device_handler)
-                signal.alarm(2)
                 length = self.ser.write(a2b(packet))
-                signal.alarm(0) # Disable the alarm
                 break
+        signal.alarm(0) # Disable the alarm
         return length
     
-    def read(self):
+    def read_package(self):
+        """ Read IMPBUS2 packet from serial line.
+        
+        It automatically calculates the length from the header
+        information and Returns the recieved packet as HEX string.
         """
-        Reads a IMPBUS2 packet from the serial Line. It automatically
-        calculates the length from the header information. Returns the
-        recieved packet as a HEX string.
-        """
-        fileno = self.fileno()
+        # Set the signal handler and a 2-seconds alarm
+        signal.signal(signal.SIGALRM, self._read_device_handler)
+        signal.alarm(2)
+        # getting the fileno for select()
+        fileno = self.ser.fileno()
         while True:
-            readable, writeable, excepts = select([], [fileno], [], 0.1)
+            readable, writeable, excepts = select([fileno], [], [], 0.1)
             if fileno in readable:
-                # Set the signal handler and a 2-seconds alarm
-                signal.signal(signal.SIGALRM, self._read_device_handler)
-                signal.alarm(2)
-                header = self.ser.read(7)
-                length = int(b2a(header[3]), 16)
-                data = self.ser.read(length)
+                header = ''
+                data = ''
+                # read header
+                while len(header) < 7:
+                    header += self.ser.read()
+                length = int(b2a(header)[2], 16)
+                #read data
+                while len(data) < length:
+                    data += self.ser.read()
                 packet = header + data
-                signal.alarm(0) # Disable the alarm
                 break
-        return packet
+        signal.alarm(0) # Disable the alarm
+        return b2a(packet)
+        
+    def read_package_test(self):
+        """ Read IMPBUS2 packet from serial line.
+
+        It automatically calculates the length from the header
+        information and Returns the recieved packet as HEX string.
+        """
+        # Set the signal handler and a 2-seconds alarm
+        signal.signal(signal.SIGALRM, self._read_device_handler)
+        signal.alarm(2)
+        
+        # read header, always 7 bytes
+        header = ''
+        while len(header) < 7:
+            header += self.ser.read()
+        length = int(b2a(header)[2], 16)
+        
+        # read data, length is known from header
+        data = ''
+        while len(data) < length:
+            data += self.ser.read()
+        
+        signal.alarm(0) # Disable the alarm
+        
+        packet = header + data
+        return b2a(packet)
+        
+    def read_bytes(self, length):
+        """ Tries to read <length>-bytes from the serial line.
+        
+        Methode to read a given amount of byter from the serial
+        line. Returns the result as HEX string.
+        """
+        # Set the signal handler and a 2-seconds alarm
+        signal.signal(signal.SIGALRM, self._read_device_handler)
+        signal.alarm(2)
+        # getting the fileno for select()
+        fileno = self.ser.fileno()
+        while True:
+            readable, writeable, excepts = select([fileno], [], [], 0.1)
+            if fileno in readable:
+                bytes = ''
+                while len(stuff) < length:
+                    bytes += self.ser.read()
+                break
+        signal.alarm(0) # Disable the alarm
+        return b2a(bytes)
+    
+    def read_something(self,wait=0.02):
+        """ Tries to read _one_ byte from the serial line.
+        
+        This methode shold be as fast as possible. Returns
+        True or False. Useable for scanning the bus. 
+        """
+        #time.sleep(wait)
+        # Set the signal handler and a 2-seconds alarm
+        signal.signal(signal.SIGALRM, self._read_device_handler)
+        signal.alarm(2)
+        # getting the fileno for select()
+        fileno = self.ser.fileno()
+        while True:
+            readable, writeable, excepts = select([fileno], [], [], 0.1)
+            if fileno in readable:
+                stuff = self.ser.read()
+                break
+        signal.alarm(0) # Disable the alarm
+        if not stuff: return False
+        return True
     
     def talk(self, packet):
-        """Writes an IMPBUS2 Package and reads the responce"""
-        self.write(packet)
-        responce = self.read()
+        """Writes an IMPBUS2 Package and reads the responce packet"""
+        self.write_packet(packet)
+        responce = self.read_packet()
         return responce
     
 if __name__ == "__main__":

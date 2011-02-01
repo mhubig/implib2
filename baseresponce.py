@@ -21,7 +21,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #
-from packet import Packet, PacketExceptions
+from packet import Packet, PacketException
 
 class BaseResponceException(Exception):
     def __init__(self, value):

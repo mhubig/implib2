@@ -55,7 +55,23 @@ class Packet(CRC):
        
     def _hexhex(self,str):
         return hex(int(str, 16))
-       
+    
+    def _reflect_bytes(self, data):
+        """
+        reflect a hex asscii string, i.e. reverts the byte order.
+        """
+        reflected = ''
+        length = len(data)
+
+        if not length % 2 == 0:
+            raise CommandsException(
+                "ERROR: Odd length of string to refelct bytewise: '%s'" % data)
+
+        while length > 0:
+            reflected += data[length-2:length]
+            length = length - 2
+        return reflected
+    
     def _cut_header(self, packet):
         # Cut's out the header. The header is
         # within the first 7 bytes.
@@ -67,7 +83,7 @@ class Packet(CRC):
         state = self._hexhex(header[0:2])
         cmd = self._hexhex(header[2:4])
         length = int(header[4:6], 16)
-        serno = int(header[10:12] + header[8:10] + header[6:8], 16)
+        serno = int(self._reflect_bytes(header[6:12]), 16)
         return {'state': state, 'cmd': cmd, 'length': length, 'serno': serno}
 
     def _cut_data(self, packet):
@@ -149,7 +165,7 @@ class Packet(CRC):
         state = 'fd' # indicates IMP232N protocol version
         serno = '%06x' % serno
         cmd = '%02x' % cmd
-        serno = serno[4:6] + serno[2:4] + serno[0:2]
+        serno = self._reflect_bytes(serno)
 
         if no_param:
             data = self._pack_data(no_param, param, ad_param)
