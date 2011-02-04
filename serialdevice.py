@@ -47,6 +47,7 @@ class SerialDevice(object):
     def __init__(self, port, baudrate=9600):
         self.DEBUG = False
         self.ser = serial_for_url(port)
+        self.ser.nonblocking()
         self.ser.baudrate = baudrate
         self.ser.bytesize = EIGHTBITS
         self.ser.parity = PARITY_ODD
@@ -93,45 +94,11 @@ class SerialDevice(object):
         # Set the signal handler and a 2-seconds alarm
         signal.signal(signal.SIGALRM, self._write_device_handler)
         signal.alarm(2)
-        # getting the fileno for select()
-        fileno = self.ser.fileno()
-        while True:
-            readable, writeable, excepts = select([], [fileno], [], 0.1)
-            if fileno in writeable:
-                length = self.ser.write(a2b(packet))
-                break
+        length = self.ser.write(a2b(packet))
         signal.alarm(0) # Disable the alarm
         return length
-    
+        
     def read_package(self):
-        """ Read IMPBUS2 packet from serial line.
-        
-        It automatically calculates the length from the header
-        information and Returns the recieved packet as HEX string.
-        """
-        # Set the signal handler and a 2-seconds alarm
-        signal.signal(signal.SIGALRM, self._read_device_handler)
-        signal.alarm(2)
-        # getting the fileno for select()
-        fileno = self.ser.fileno()
-        while True:
-            readable, writeable, excepts = select([fileno], [], [], 0.1)
-            if fileno in readable:
-                header = ''
-                data = ''
-                # read header
-                while len(header) < 7:
-                    header += self.ser.read()
-                length = int(b2a(header)[2], 16)
-                #read data
-                while len(data) < length:
-                    data += self.ser.read()
-                packet = header + data
-                break
-        signal.alarm(0) # Disable the alarm
-        return b2a(packet)
-        
-    def read_package_test(self):
         """ Read IMPBUS2 packet from serial line.
 
         It automatically calculates the length from the header
@@ -140,21 +107,23 @@ class SerialDevice(object):
         # Set the signal handler and a 2-seconds alarm
         signal.signal(signal.SIGALRM, self._read_device_handler)
         signal.alarm(2)
+        fileno = self.ser.fileno()
+        while True:
+            readable, writeable, excepts = select([fileno], [], [], 0.1)
+            if fileno in readable:
+                # read header, always 7 bytes
+                header = ''
+                while len(header) < 7:
+                    header += self.ser.read()
+                length = int(b2a(header)[4:6], 16)
         
-        # read header, always 7 bytes
-        header = ''
-        while len(header) < 7:
-            header += self.ser.read()
-        length = int(b2a(header)[2], 16)
-        
-        # read data, length is known from header
-        data = ''
-        while len(data) < length:
-            data += self.ser.read()
-        
+                # read data, length is known from header
+                data = ''
+                while len(data) < length:
+                    data += self.ser.read()
+                packet = header + data
+                break
         signal.alarm(0) # Disable the alarm
-        
-        packet = header + data
         return b2a(packet)
         
     def read_bytes(self, length):
@@ -167,34 +136,27 @@ class SerialDevice(object):
         signal.signal(signal.SIGALRM, self._read_device_handler)
         signal.alarm(2)
         # getting the fileno for select()
-        fileno = self.ser.fileno()
-        while True:
-            readable, writeable, excepts = select([fileno], [], [], 0.1)
-            if fileno in readable:
-                bytes = ''
-                while len(stuff) < length:
-                    bytes += self.ser.read()
-                break
+        fileno = self.ser.fileno()            
+        bytes = ''
+        while len(bytes) < length:
+            #while not self.ser.inWaiting(): pass
+            b = self.ser.read()
+            if b:
+                bytes += self.ser.read()
+                print b2a(b)
         signal.alarm(0) # Disable the alarm
         return b2a(bytes)
-    
-    def read_something(self,wait=0.02):
-        """ Tries to read _one_ byte from the serial line.
         
+    def read_something(self):
+        """ Tries to read _one_ byte from the serial line.
+
         This methode shold be as fast as possible. Returns
         True or False. Useable for scanning the bus. 
         """
-        #time.sleep(wait)
         # Set the signal handler and a 2-seconds alarm
         signal.signal(signal.SIGALRM, self._read_device_handler)
         signal.alarm(2)
-        # getting the fileno for select()
-        fileno = self.ser.fileno()
-        while True:
-            readable, writeable, excepts = select([fileno], [], [], 0.1)
-            if fileno in readable:
-                stuff = self.ser.read()
-                break
+        stuff = self.ser.read()
         signal.alarm(0) # Disable the alarm
         if not stuff: return False
         return True

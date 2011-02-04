@@ -164,7 +164,7 @@ class Commands(SerialDevice, BaseCommands, BaseResponce):
         bytes_recv = self.read_package()
         if not bytes_recv:
             return False
-        time.sleep(0.12)
+        time.sleep(0.2)
         return self.responce_get_long_acknowledge(bytes_recv)
             
     def short_probe_module(self, serno):
@@ -179,19 +179,18 @@ class Commands(SerialDevice, BaseCommands, BaseResponce):
         if not self.check_crc(serno+responce):
             return False
         if self.DEBUG: print "---> Responce: %s" % responce 
-        time.sleep(0.12)
+        time.sleep(0.2)
         return True
         
     def probe_range(self, broadcast):
         package = self.get_acknowledge_for_serial_number_range(broadcast)
         bytes_send = self.write_package(package)
-        time.sleep(0.1)
-        #responce = self.ser.read(1)
+        time.sleep(0.018)
         if not self.read_something():
             if self.DEBUG: print "No Module seen at range %s" % broadcast
             return False
         if self.DEBUG: print "Module seen at range %s" % broadcast
-        time.sleep(0.12)
+        time.sleep(0.2)
         return True
     
     #################################
@@ -200,8 +199,23 @@ class Commands(SerialDevice, BaseCommands, BaseResponce):
     
     def get_hw_version(self, serno):
         package = self.get_parameter(serno, 'SYSTEM_PARAMETER_TABLE', 'HWVersion')
-        bytes_send = self.write_package(package)
-        responce = self.read_package()
+        print package
+        try:
+            bytes_send = self.write_package(package)
+            responce = self.read_package()
+        except SerialDeviceException:
+            return None
+        time.sleep(0.25)
+        return responce
+    
+    def get_fw_version(self, serno):
+        package = self.get_parameter(serno, 'SYSTEM_PARAMETER_TABLE', 'FWVersion')
+        try:
+            bytes_send = self.write_package(package)
+            responce = self.read_package()
+        except SerialDeviceException:
+            return None
+        time.sleep(0.25)
         return responce
     
     def measure_moist(self, serno):
@@ -224,7 +238,9 @@ if __name__ == "__main__":
     c.synchronise_bus()
     c.DEBUG = True
     #print c.scan_bus()
-    print c.get_hw_version(31193)
+    print c.get_hw_version(30328)
+    #print c.get_fw_version(31193)
+    #print c.get_hw_version(15333599)
     #print 'Serno Int: 31193'
     #print 'Serno Hex: %08x' % 31193
     #print 'Serno Reflected: %s' % c._reflect_byte('%08x' % 31193)

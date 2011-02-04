@@ -22,7 +22,7 @@
 # THE SOFTWARE.
 #
 import os
-from yaml import YAMLObject, load_all
+from yaml import load_all
 
 try:
     from yaml import CLoader as Loader
@@ -30,108 +30,75 @@ try:
 except ImportError:
     from yaml import Loader, Dumper
 
-class Table(YAMLObject):
-    """Spezialized Class for wraping YAML Data structures to python objects"""
-    yaml_tag = u'!Table'
-    
-    def __init__(self, *args, **kwargs):
-        self.__dict__.update(kwargs) 
-    
-    def __repr__(self):
-        return "%s(Name=%s)" % (
-            self.__class__.__name__, self.get_name())
-    
-    def get_name(self):
-        return self.Table['Name']
-    
-    def _has_parameter(self, param):
-        return self.__dict__.has_key(param)
-    
-    def _get_parameter(self, param):
-        return getattr(self, param)
+class Row(type):
+    def __new__(cls, name, bases, dct):
+        return type.__new__(cls, name, bases, dct)
 
-class TablesException(Exception):
-    def __init__(self, value):
-        self.value = value
-    def __str__(self):
-        return repr(self.value)
+    def __init__(cls, name, bases, dct):
+        super(Row, cls).__init__(name, bases, dct)
+
+    def check_length(cls, value):
+        if not len(value) == cls.Length*2: return False
+        return True
+    
+    # TODO: implement a type check
+    def check_type(cls, value):
+        return True
+        
+    def check_writeable(cls):
+        if cls.Status != 'WR': return False
+        return True
+           
+class Table(type):
+    def __new__(cls, name, bases, dct):
+        default_rows = {'ConfigID' : 0xfb, 'TableSize': 0xfc,
+                        'Parameter': 0xfd, 'DataSize' : 0xfe,
+                        'TableData': 0xff}
+        for key, value in default_rows.items():
+            entrys = {'No': value, 'Type': 0x02, 'Status': 'OR', 'Length': 2}
+            dct.update({key: Row(key, (object,), entrys)})
+        return type.__new__(cls, name, bases, dct)
+        
+    def __init__(cls, name, bases, dct):
+        super(Table, cls).__init__(name, bases, dct)
 
 class Tables(object):
-    """
-    >>> t = Tables()
-    >>> t.parameter_writable('SYSTEM_PARAMETER_TABLE','SerialNum')
+    """ Class containing all the IMPBUS2 parameter Tables.
+    
+    This Class reads the YAML file containing all the parameter
+    tables of the IMPBUS2 secification and builds a nested class
+    structur of it. You can use introspection to brows thru the
+    Tables.
+    
+    >>> t = Tables('tables.yaml')
+    >>> t.ACTION_PARAMETER_TABLE.ConfigID.No
+    251
+    >>> t.ACTION_PARAMETER_TABLE.ConfigID.check_length('0000')
     True
-    >>> t.get_parameter_length('SYSTEM_PARAMETER_TABLE','SerialNum')
-    8
-    >>> t.get_parameter_type('SYSTEM_PARAMETER_TABLE','SerialNum')
-    4
-    >>> t.get_parameter_no('SYSTEM_PARAMETER_TABLE','SerialNum')
-    1
-    >>> t.get_table_get_command('SYSTEM_PARAMETER_TABLE')
-    10
-    >>> t.get_table_set_command('SYSTEM_PARAMETER_TABLE')
-    11
+    >>> t.ACTION_PARAMETER_TABLE.ConfigID.check_type('0a')
+    True
+    >>> t.ACTION_PARAMETER_TABLE.ConfigID.check_writeable()
+    False
     """
-    def __init__(self):
-        tbl_file = os.path.abspath(__file__)
-        tbl_file = os.path.dirname(tbl_file)
-        self._file = os.path.join(tbl_file, 'tables.yaml')
-        self._loadTables()
-    
-    def _loadTables(self):
-        with open(self._file) as stream:
-            tables = self._yamlProjector(load_all(stream, Loader=Loader))
-            for table in tables:
-                setattr(self, table, tables[table])
-        self.mtime = os.stat(self._file).st_mtime
-    
-    def _modified(self):
-        return os.stat(self._file).st_mtime != self.mtime
-    
-    def _yamlProjector(self, documents):
-        manifest = {}
-        for table in documents:
-            manifest[table.get_name()] = table
-        return manifest
+    def __init__(self, filename):
+        self._subc = dict()
+        self._build_sub_classes(filename)
         
-    def _has_table(self, table):
-        if self._modified(): self._loadTables()
-        return self.__dict__.has_key(table)
-    
-    def _has_parameter(self, table, param):
-        if self._modified(): self._loadTables()
-        return getattr(self, table)._has_parameter(param)
-    
-    def _get_parameter(self, table, param):
-        if self._modified(): self._loadTables()
-        
-        if not self._has_table(table):
-            raise TablesException("ERROR: Table '%s' not known!" % table)
-        
-        if not self._has_parameter(table, param):
-            raise TablesException("ERROR: Table '%s' has no parameter '%s'!"
-                % (table,param))
-        
-        return getattr(self, table)._get_parameter(param)
-    
-    def parameter_writable(self, table, param):
-        return self._get_parameter(table, param)['Status'] == 'WR'
-    
-    def get_parameter_length(self, table, param):
-        return self._get_parameter(table, param)['Length'] * 2
-    
-    def get_parameter_type(self, table, param):
-        return self._get_parameter(table, param)['Type']
-    
-    def get_parameter_no(self, table, param):
-        return self._get_parameter(table, param)['No']
-    
-    def get_table_get_command(self, table):
-        return self._get_parameter(table, 'Table')['Get']
-    
-    def get_table_set_command(self, table):
-        return self._get_parameter(table, 'Table')['Set']
-    
+        for subc in self._subc: 
+            setattr(self, subc, self._subc[subc])
+
+    def _build_sub_classes(self, filename):
+        dir_name = os.path.abspath(__file__)
+        dir_name = os.path.dirname(dir_name)
+        filename = os.path.join(dir_name, filename)
+        with open(filename) as stream:
+            for table in load_all(stream, Loader=Loader):
+                name = table['Table']['Name']
+                rows = dict()
+                for row in table:
+                    rows.update({row : Row(row, (object,), table[row])})
+                self._subc.update({name : Table(name, (object,), rows)})
+
 if __name__ == "__main__":
     import doctest
     doctest.testmod()
