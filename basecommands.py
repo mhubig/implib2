@@ -207,9 +207,9 @@ class BaseCommands(Packet, Tables):
         >>> print p
         fd0a031a7900290100c4
         """
-        
-        cmd = self.get_table_get_command(table)
-        param_no = self.get_parameter_no(table,param)
+        table = getattr(self, table)
+        cmd   = getattr(table, 'Table')
+        param = getattr(table, param)
         packet = self.pack(serno,cmd,param_no)
         
         return packet
