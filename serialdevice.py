@@ -96,6 +96,7 @@ class SerialDevice(object):
         signal.alarm(2)
         length = self.ser.write(a2b(packet))
         signal.alarm(0) # Disable the alarm
+        time.sleep(0.018)
         return length
         
     def read_package(self):

@@ -133,9 +133,9 @@ class Commands(SerialDevice, BaseCommands, BaseResponce):
         bytes_send = self.write_package(package)
         time.sleep(0.2)
     
-    #################################
-    # finding connected modules     #
-    #################################
+    #############################
+    # finding connected modules #
+    #############################
     
     def scan_bus(self):
         """ High level command to scan the IMPBUS for connected probes.
@@ -173,7 +173,6 @@ class Commands(SerialDevice, BaseCommands, BaseResponce):
         serno = self._reflect_bytes('%06x' % serno)
         # send package
         bytes_send = self.write_package(package)
-        time.sleep(0.02)
         # Trying to get a respoce ...
         responce = b2a(self.ser.read(1))
         if not self.check_crc(serno+responce):
@@ -185,7 +184,6 @@ class Commands(SerialDevice, BaseCommands, BaseResponce):
     def probe_range(self, broadcast):
         package = self.get_acknowledge_for_serial_number_range(broadcast)
         bytes_send = self.write_package(package)
-        time.sleep(0.018)
         if not self.read_something():
             if self.DEBUG: print "No Module seen at range %s" % broadcast
             return False
@@ -193,36 +191,49 @@ class Commands(SerialDevice, BaseCommands, BaseResponce):
         time.sleep(0.2)
         return True
     
-    #################################
-    # getting data from the modules #
-    #################################
+    #######################################
+    # reading data from the module tables #
+    #######################################
     
-    def get_hw_version(self, serno):
-        package = self.get_parameter(serno, 'SYSTEM_PARAMETER_TABLE', 'HWVersion')
-        print package
+    def get_serial(self, serno):
         try:
+            package = self.get_parameter(serno, 'SYSTEM_PARAMETER_TABLE', 'SerialNum')
             bytes_send = self.write_package(package)
             responce = self.read_package()
         except SerialDeviceException:
             return None
-        time.sleep(0.25)
+        time.sleep(0.2)
+        return responce
+    
+    def get_hw_version(self, serno):
+        try:
+            package = self.get_parameter(serno, 'SYSTEM_PARAMETER_TABLE', 'HWVersion')
+            bytes_send = self.write_package(package)
+            responce = self.read_package()
+        except SerialDeviceException:
+            return None
+        time.sleep(0.2)
         return responce
     
     def get_fw_version(self, serno):
-        package = self.get_parameter(serno, 'SYSTEM_PARAMETER_TABLE', 'FWVersion')
         try:
+            package = self.get_parameter(serno, 'SYSTEM_PARAMETER_TABLE', 'FWVersion')
             bytes_send = self.write_package(package)
             responce = self.read_package()
         except SerialDeviceException:
             return None
-        time.sleep(0.25)
+        time.sleep(0.2)
         return responce
-    
-    def measure_moist(self, serno):
-        pass
-    
-    def measure_temp(self, serno):
-        pass
+
+    def get_table(self, serno, table):
+        try:
+            package = self.get_parameter(serno, table, 'GetData')
+            bytes_send = self.write_package(package)
+            responce = self.read_package()
+        except SerialDeviceException:
+            return None
+        time.sleep(0.2)
+        return responce
 
     #################################
     # change the module settings    #  
@@ -237,11 +248,10 @@ if __name__ == "__main__":
     c = Commands('/dev/tty.usbserial-A700eQFp')
     c.synchronise_bus()
     c.DEBUG = True
-    #print c.scan_bus()
-    print c.get_hw_version(30328)
-    #print c.get_fw_version(31193)
-    #print c.get_hw_version(15333599)
-    #print 'Serno Int: 31193'
-    #print 'Serno Hex: %08x' % 31193
-    #print 'Serno Reflected: %s' % c._reflect_byte('%08x' % 31193)
-    #print 'Serno CRC: %s' % c.calc_crc(c._reflect_byte('%08x' % 31193))
+    modules = c.scan_bus()
+    for module in modules:
+        print c.get_serial(module)
+        print c.get_hw_version(module)
+        print c.get_fw_version(module)
+        print c.get_table(module, 'SYSTEM_PARAMETER_TABLE')
+    

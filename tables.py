@@ -29,7 +29,7 @@ class Row(type):
     def check_type(cls, value):
         return True
 
-    def check_writeable(cls):
+    def writeable(cls):
         if cls.Status != 'WR': return False
         return True
 
@@ -53,6 +53,12 @@ class Table(YAMLObject):
         return "%s(Name=%s)" % (
             self.__class__.__name__, self.Table.Name)
 
+class TablesException(Exception):
+    def __init__(self, value):
+        self.value = value
+    def __str__(self):
+        return repr(self.value)
+
 class Tables(object):
     """ Class containing all the IMPBUS2 parameter Tables.
 
@@ -61,7 +67,7 @@ class Tables(object):
     structur of it. You can use introspection to brows thru the
     Tables.
 
-    >>> t = Tables('tables.yaml')
+    >>> t = Tables()
     >>> t.ACTION_PARAMETER_TABLE.ConfigID.No
     251
     >>> t.ACTION_PARAMETER_TABLE.ConfigID.check_length('0000')
@@ -71,13 +77,13 @@ class Tables(object):
     >>> t.ACTION_PARAMETER_TABLE.ConfigID.check_writeable()
     False
     """
-    def __init__(self, filename):
+    def __init__(self, filename='tables.yaml'):
         self._file = self._normalize(filename)
         self._add_sub_classes()
 
     def _normalize(self, filename):
-        dir_name = os.path.abspath(__file__)
-        dir_name = os.path.dirname(dir_name)
+        abs_path = os.path.abspath(__file__)
+        dir_name = os.path.dirname(abs_path)
         return os.path.join(dir_name, filename)
 
     def _add_sub_classes(self):

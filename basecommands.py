@@ -112,8 +112,7 @@ class BaseCommands(Packet, Tables):
         >>> print p
         fd02001979007b
         """
-        packet = self.pack(serno=serno,cmd=0x02)
-        return packet
+        return self.pack(serno=serno,cmd=0x02)
         
     def get_short_acknowledge(self,serno):
         """ GET SHORT ACKNOWLEDGE
@@ -129,8 +128,7 @@ class BaseCommands(Packet, Tables):
         >>> print p
         fd0400197900e7
         """
-        packet = self.pack(serno=serno,cmd=0x04)
-        return packet
+        return self.pack(serno=serno,cmd=0x04)
         
     def get_acknowledge_for_serial_number_range(self,range):
         """ GET ACKNOWLEDGE FOR SERIAL NUMBER RANGE
@@ -178,8 +176,7 @@ class BaseCommands(Packet, Tables):
         >>> print p
         fd06000000f0d0
         """
-        packet = self.pack(serno=range,cmd=0x06)
-        return packet
+        return self.pack(serno=range,cmd=0x06)
         
     def get_negative_acknowledge(self):
         """ GET NEGATIVE ACKNOWLEDGE
@@ -193,14 +190,13 @@ class BaseCommands(Packet, Tables):
         >>> print p
         fd0800ffffff60
         """
-        packet = self.pack(serno=16777215,cmd=0x08)
-        return packet
+        return self.pack(serno=16777215,cmd=0x08)
         
     def get_parameter(self,serno,table,param):
         """ COMMAND TO READ A PARAMETER.
         
-        Command to read a parameter from one of the different parameter
-        tables in the slave module.
+        Command to read a parameter from one of the different
+        parameter tables in the slave module.
         
         >>> b = BaseCommands()
         >>> p = b.get_parameter(31002,'SYSTEM_PARAMETER_TABLE','SerialNum')
@@ -208,11 +204,8 @@ class BaseCommands(Packet, Tables):
         fd0a031a7900290100c4
         """
         table = getattr(self, table)
-        cmd   = getattr(table, 'Table')
         param = getattr(table, param)
-        packet = self.pack(serno,cmd,param_no)
-        
-        return packet
+        return self.pack(serno, table.Table.Get, param.No)
     
     def set_parameter(self,serno,table,param,value):
         """ COMMAND TO SET A PARAMETER.
@@ -230,20 +223,19 @@ class BaseCommands(Packet, Tables):
         >>> print p
         fd11051a79002c0c00791bab
         """
-        cmd = self.get_table_set_command(table)
-        no_param = self.get_parameter_no(table,param)
-        length = self.get_parameter_length(table,param)
-        value = '%x' % value
-        value.zfill(length)
+        table = getattr(self, table)
+        param = getattr(table, param)
         
-        if not self.parameter_writable(table,param):
+        value = '%x' % value
+        value.zfill(param.Length)
+        
+        if not param.writeable():
             raise BaseCommandsException('Parameter is not writeable!')
         
-        if not len(value) <= length:
+        if not len(value)/2 == param.Length:
             raise BaseCommandsException('Parameter has the wrong length!')
         
-        packet = self.pack(serno,cmd,no_param,value)
-        return packet
+        return self.pack(serno, table.Table.Set, param.No, value)
         
     def do_tdr_scan(self,serno,start,end,span,count):
         """ DO TDR SCAN
@@ -266,8 +258,7 @@ class BaseCommands(Packet, Tables):
         span = "%02X" % span
         count = "%04X" % count
         param = start + end + span + count
-        packet = self.pack(serno,0x1e,no_param=None,ad_param=None,param=param)
-        return packet
+        return self.pack(serno,0x1e,no_param=None,ad_param=None,param=param)
     
     def get_epr_image(self,serno,page_nr):
         """ VERY SPECIAL COMMAND.
@@ -281,8 +272,7 @@ class BaseCommands(Packet, Tables):
         """
         page_nr = '%02X' % page_nr
         param = 'FF' + page_nr
-        packet = self.pack(serno,0x3c,no_param=None,ad_param=None,param=param)
-        return packet
+        return self.pack(serno,0x3c,no_param=None,ad_param=None,param=param)
     
     def set_epr_image(self,serno,page_nr,page):
         """ VERY SPECIAL COMMAND.
@@ -296,8 +286,7 @@ class BaseCommands(Packet, Tables):
         """
         page_nr = '%02X' % page_nr
         param = 'FF' + page_nr + page
-        packet = self.pack(serno,0x3d,no_param=None,ad_param=None,param=param)
-        return packet
+        return self.pack(serno,0x3d,no_param=None,ad_param=None,param=param)
 
 if __name__ == "__main__":
     import doctest
