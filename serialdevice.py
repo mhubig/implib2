@@ -107,22 +107,19 @@ class SerialDevice(object):
         # Set the signal handler and a 2-seconds alarm
         signal.signal(signal.SIGALRM, self._read_device_handler)
         signal.alarm(2)
-        fileno = self.ser.fileno()
-        while True:
-            readable, writeable, excepts = select([fileno], [], [], 0.1)
-            if fileno in readable:
-                # read header, always 7 bytes
-                header = ''
-                while len(header) < 7:
-                    header += self.ser.read()
-                length = int(b2a(header)[4:6], 16)
         
-                # read data, length is known from header
-                data = ''
-                while len(data) < length:
-                    data += self.ser.read()
-                packet = header + data
-                break
+        # read header, always 7 bytes
+        header = ''
+        while len(header) < 7:
+            header += self.ser.read()
+        length = int(b2a(header)[4:6], 16)
+        
+        # read data, length is known from header
+        data = ''
+        while len(data) < length:
+            data += self.ser.read()
+        
+        packet = header + data
         signal.alarm(0) # Disable the alarm
         return b2a(packet)
         
@@ -139,11 +136,7 @@ class SerialDevice(object):
         fileno = self.ser.fileno()            
         bytes = ''
         while len(bytes) < length:
-            #while not self.ser.inWaiting(): pass
-            b = self.ser.read()
-            if b:
                 bytes += self.ser.read()
-                print b2a(b)
         signal.alarm(0) # Disable the alarm
         return b2a(bytes)
         

@@ -1,5 +1,10 @@
----
+--- !Table
 Table:         {Name: SYSTEM_PARAMETER_TABLE, Get: 10, Set: 11}
+ConfigID:      {'No': 0xfb, Type: 0x02, Status: OR, Length: 2}
+TableSize:     {'No': 0xfc, Type: 0x02, Status: OR, Length: 2}
+DataSize:      {'No': 0xfe, Type: 0x02, Status: OR, Length: 2}
+GetParam:      {'No': 0xfd, Type: 0x02, Status: OR, Length: 2}
+GetData:       {'No': 0xff, Type: 0x02, Status: OR, Length: 2}
 SerialNum:     {'No': 0x01, Type: 0x04, Status: WR, Length: 4}
 HWVersion:     {'No': 0x02, Type: 0x06, Status: OR, Length: 4}
 FWVersion:     {'No': 0x03, Type: 0x06, Status: OR, Length: 4}
@@ -9,8 +14,13 @@ ModuleCode:    {'No': 0x06, Type: 0x02, Status: OR, Length: 2}
 ModuleInfo1:   {'No': 0x07, Type: 0x00, Status: WR, Length: 1}
 ModuleInfo2:   {'No': 0x08, Type: 0x00, Status: WR, Length: 1}
 
----
+--- !Table
 Table:             {Name: DEVICE_CONFIGURATION_PARAMETER_TABLE, Get: 12, Set: 13}
+ConfigID:          {'No': 0xfb, Type: 0x02, Status: OR, Length: 2}
+TableSize:         {'No': 0xfc, Type: 0x02, Status: OR, Length: 2}
+DataSize:          {'No': 0xfe, Type: 0x02, Status: OR, Length: 2}
+GetParam:          {'No': 0xfd, Type: 0x02, Status: OR, Length: 2}
+GetData:           {'No': 0xff, Type: 0x02, Status: OR, Length: 2}
 MeasMode:          {'No': 0x01, Type: 0x00, Status: WR, Length: 1}
 MeasTimes:         {'No': 0x02, Type: 0x00, Status: WR, Length: 1}
 SleepTimeInModeC:  {'No': 0x03, Type: 0x04, Status: WR, Length: 4}
@@ -24,7 +34,7 @@ TempAnalogAdjust:  {'No': 0x0a, Type: 0x00, Status: WR, Length: 1}
 TMsMode:           {'No': 0x0b, Type: 0x02, Status: WR, Length: 2}
 EPRByteLen:        {'No': 0x0c, Type: 0x02, Status: OR, Length: 2}
 
----
+--- !Table
 Table:             {Name: DEVICE_CALIBRATION_PARAMETER_TABLE, Get: 14, Set: 15}
 ASICTempCorr:      {'No': 0x01, Type: 0x86, Status: OR, Length: 24}
 ASICTCStartTemp:   {'No': 0x02, Type: 0x01, Status: OR, Length: 1}
@@ -34,8 +44,13 @@ ASICTCSpanTemp:    {'No': 0x05, Type: 0x00, Status: OR, Length: 1}
 ECZeroOffset:      {'No': 0x06, Type: 0x06, Status: OR, Length: 4}
 ECDivisor:         {'No': 0x07, Type: 0x06, Status: OR, Length: 4}
 
----
+--- !Table
 Table:                  {Name: PROBE_CONFIGURATION_PARAMETER_TABLE, Get: 16, Set: 17}
+ConfigID:               {'No': 0xfb, Type: 0x02, Status: OR, Length: 2}
+TableSize:              {'No': 0xfc, Type: 0x02, Status: OR, Length: 2}
+DataSize:               {'No': 0xfe, Type: 0x02, Status: OR, Length: 2}
+GetParam:               {'No': 0xfd, Type: 0x02, Status: OR, Length: 2}
+GetData:                {'No': 0xff, Type: 0x02, Status: OR, Length: 2}
 SearchGradient:         {'No': 0x01, Type: 0x02, Status: OR, Length: 2}
 StartThreshold:         {'No': 0x02, Type: 0x00, Status: OR, Length: 1}
 GradHighLowDistance:    {'No': 0x03, Type: 0x00, Status: OR, Length: 1}
@@ -46,13 +61,18 @@ ASICWarmPulse:          {'No': 0x07, Type: 0x02, Status: OR, Length: 2}
 MinValidTp:             {'No': 0x08, Type: 0x06, Status: WR, Length: 4}
 MaxValidTp:             {'No': 0x09, Type: 0x06, Status: WR, Length: 4}
 ProbeType:              {'No': 0x0a, Type: 0x00, Status: OR, Length: 1}
-ProbeNo:                {'No': 0x0b, Type: 0x00, Status: WR, Length: 1}
+Probe'No':                {'No': 0x0b, Type: 0x00, Status: WR, Length: 1}
 DeviceSerialNum:        {'No': 0x0c, Type: 0x04, Status: WR, Length: 4}
 TempSensorCoeff:        {'No': 0x0d, Type: 0x86, Status: WR, Length: 24}
 TempSensorADCode:       {'No': 0x0e, Type: 0x82, Status: WR, Length: 12}
  
----
+--- !Table
 Table:          {Name: PROBE_CALIBRATION_PARAMETER_TABLE, Get: 18, Set: 19}
+ConfigID:       {'No': 0xfb, Type: 0x02, Status: OR, Length: 2}
+TableSize:      {'No': 0xfc, Type: 0x02, Status: OR, Length: 2}
+DataSize:       {'No': 0xfe, Type: 0x02, Status: OR, Length: 2}
+GetParam:       {'No': 0xfd, Type: 0x02, Status: OR, Length: 2}
+GetData:        {'No': 0xff, Type: 0x02, Status: OR, Length: 2}
 BasicCoeff:     {'No': 0x01, Type: 0x86, Status: WR, Length: 24} 
 StdCoeff:       {'No': 0x02, Type: 0x86, Status: WR, Length: 24}
 DefaultCalItem: {'No': 0x03, Type: 0x00, Status: WR, Length: 1}
@@ -186,8 +206,13 @@ TemCoeff15:     {'No': 0x82, Type: 0x86, Status: WR, Length: 24}
 DenID15:        {'No': 0x83, Type: 0x02, Status: WR, Length: 2}
 DenCoeff15:     {'No': 0x84, Type: 0x85, Status: WR, Length: 24}
 
----
+--- !Table
 Table:          {Name: ACTION_PARAMETER_TABLE, Get: 20, Set: 21}
+ConfigID:       {'No': 0xfb, Type: 0x02, Status: OR, Length: 2}
+TableSize:      {'No': 0xfc, Type: 0x02, Status: OR, Length: 2}
+DataSize:       {'No': 0xfe, Type: 0x02, Status: OR, Length: 2}
+GetParam:       {'No': 0xfd, Type: 0x02, Status: OR, Length: 2}
+GetData:        {'No': 0xff, Type: 0x02, Status: OR, Length: 2}
 SysErr:         {'No': 0x01, Type: 0x00, Status: OR, Length: 1}
 AppErr:         {'No': 0x02, Type: 0x00, Status: OR, Length: 1}
 Event:          {'No': 0x03, Type: 0x00, Status: WR, Length: 1}
@@ -200,8 +225,13 @@ SupportPW:      {'No': 0x09, Type: 0x02, Status: WR, Length: 1}
 PowerVolt:      {'No': 0x0a, Type: 0x06, Status: WR, Length: 1}
 SelfTest:       {'No': 0x0b, Type: 0x80, Status: OR, Length: 1}
 
----
+--- !Table
 Table:              {Name: MEASURE_PARAMETER_TABLE, Get: 22, Set: 23}
+ConfigID:           {'No': 0xfb, Type: 0x02, Status: OR, Length: 2}
+TableSize:          {'No': 0xfc, Type: 0x02, Status: OR, Length: 2}
+DataSize:           {'No': 0xfe, Type: 0x02, Status: OR, Length: 2}
+GetParam:           {'No': 0xfd, Type: 0x02, Status: OR, Length: 2}
+GetData:            {'No': 0xff, Type: 0x02, Status: OR, Length: 2}
 MeasureCount:       {'No': 0x01, Type: 0x04, Status: OR, Length: 4}
 CalcucCount:        {'No': 0x02, Type: 0x06, Status: OR, Length: 4}
 CountWithASICTC:    {'No': 0x03, Type: 0x06, Status: OR, Length: 4}
@@ -219,8 +249,13 @@ Density:            {'No': 0x0e, Type: 0x06, Status: OR, Length: 4}
 Info1:              {'No': 0x0f, Type: 0x06, Status: OR, Length: 4}
 Info2:              {'No': 0x10, Type: 0x06, Status: OR, Length: 4}
 
----
+--- !Table
 Table:      {Name: TP_MOIST_PARAMETER_TABLE, Get: 24, Set: 25}
+ConfigID:   {'No': 0xfb, Type: 0x02, Status: OR, Length: 2}
+TableSize:  {'No': 0xfc, Type: 0x02, Status: OR, Length: 2}
+DataSize:   {'No': 0xfe, Type: 0x02, Status: OR, Length: 2}
+GetParam:   {'No': 0xfd, Type: 0x02, Status: OR, Length: 2}
+GetData:    {'No': 0xff, Type: 0x02, Status: OR, Length: 2}
 Point000:   {'No': 0x01, Type: 0x86, Status: WR, Length: 8}
 Point001:   {'No': 0x02, Type: 0x86, Status: WR, Length: 8}
 Point002:   {'No': 0x03, Type: 0x86, Status: WR, Length: 8}
