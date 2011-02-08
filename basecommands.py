@@ -215,19 +215,19 @@ class BaseCommands(Packet, Tables):
         right type and if this parameter is writable, according tho the
         tables.
         
-        TODO: Check the value!
+        TODO: Check the value type!
         
         >>> b = BaseCommands()
         >>> p = b.set_parameter(31002,'PROBE_CONFIGURATION_PARAMETER_TABLE',\
                                 'DeviceSerialNum',31003)
         >>> print p
-        fd11051a79002c0c00791bab
+        fd11071a79002b0c000000791bc4
         """
         table = getattr(self, table)
         param = getattr(table, param)
         
         value = '%x' % value
-        value.zfill(param.Length)
+        value = value.zfill(param.Length*2)
         
         if not param.writeable():
             raise BaseCommandsException('Parameter is not writeable!')
