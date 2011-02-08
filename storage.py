@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# -*- coding: UTF-8 -*-
+# encoding: utf-8
 """
 Copyright (c) 2009-2012, Markus Hubig <mhubig@imko.de>
 
@@ -22,13 +22,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
-class Singleton(object):
-    def __new__(cls, *args, **kwds):
-        it = cls.__dict__.get("__it__")
-        if it is not None:
-            return it
-        cls.__it__ = it = object.__new__(cls)
-        it.init(*args, **kwds)
-        return it
-    def init(self, *args, **kwds):
+import SQLAlchemy
+
+class storage:
+    def __init__(self):
         pass
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod()
