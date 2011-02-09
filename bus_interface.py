@@ -25,32 +25,26 @@ THE SOFTWARE.
 import time
 from binascii import b2a_hex as b2a
 from serialdevice import SerialDevice, SerialDeviceException 
-from basecommands import BaseCommands, BaseCommandsException
-from baseresponce import BaseResponce, BaseResponceException
+from buscommands import BusCommands, BusCommandsException
+from busresponce import BusResponce, BusResponceException
 
-class CommandsException(Exception):
+class IMPBusException(Exception):
     def __init__(self, value):
         self.value = value
     def __str__(self):
         return repr(self.value)
 
-class Commands(SerialDevice, BaseCommands, BaseResponce):
-    """ Class to combine the basic IMPBUS2 commands to
-        higher level command cascades.
-        
-        Befor using any other command you first have to
-        call init_bus() to get the device up and all modules
-        talking at the same baudrate!
+class IMPBus(SerialDevice, BaseCommands, BaseResponce):
+    """ 
+    Class to combine the basic IMPBUS2 commands to higher level
+    command cascades. Befor using any other command you first
+    have to call init_bus() to get the device up and all modules
+    talking at the same baudrate!
     
-    >>> impbus = Commands('/dev/ttyS0')
-    >>> impbus.synchronise_bus()
-    >>> impbus.scan_bus()
-    [71562, 72366, 77654]
-    >>> impbus.measure_moist('71562')
-    {'value': 77, 'unit': '%'}
-    >>> impbus.measure_temp('77654')
-    {'value': 23, 'unit': '°C'}
-    >>> impbus.close_device()
+    >>> bus = IMPBus('loop://')
+    >>> bus.DEBUG = True
+    >>> bus.synchronise_bus()
+    IMPBus instance initialized!
     """
     
     def __init__(self, port):
@@ -58,6 +52,8 @@ class Commands(SerialDevice, BaseCommands, BaseResponce):
         BaseCommands.__init__(self)
         BaseResponce.__init__(self)
         SerialDevice.__init__(self, port)
+        if self.DEBUG == TRUE:
+            print "IMPBus instance initialized!"
     
     def _divide_and_conquer(self, low, high, found):
         """ Recursiv divide-and-conquer algorythm to scan the IMPBUS.
@@ -100,6 +96,9 @@ class Commands(SerialDevice, BaseCommands, BaseResponce):
         rates (1200-2400-4800-9600). There must be a delay of at least 500ms
         after each command! The SM-modules understands one of these commands
         and will switch to the desired baud rate.
+        
+        >>> bus = IMPBus('/dev/tty.usbserial-A700eQFp')
+        >>> bus.synchronise_bus()
         """
         
         table = 'SYSTEM_PARAMETER_TABLE'
@@ -138,7 +137,7 @@ class Commands(SerialDevice, BaseCommands, BaseResponce):
     # finding connected modules #
     #############################
     
-    def scan_bus(self):
+    def scan_bus(self, minserial=0, maxserial=16777215):
         """ High level command to scan the IMPBUS for connected probes.
         
         This command is very similar to the short_probe_module()
@@ -150,14 +149,26 @@ class Commands(SerialDevice, BaseCommands, BaseResponce):
         For details see the provided docstring of _divide_and_conquer.
         Usable like this:
         
-        >>> c = Commands('/dev/ttyS0')
-        >>> modules = c.scan_bus()
+        >>> bus = IMPBus('loop://')
+        >>> bus.DEBUG = True
+        >>> modules = bus.scan_bus(minserial=0, maxserial=2)
         """
         found = list()
-        self._divide_and_conquer(0, 16777215, found)
+        self._divide_and_conquer(minserial, maxserial, found)
         return found
     
-    def probe_module(self, serno):
+    def probe_module_long(self, serno):
+        """ PROBE MODULE (LONGCOMMAND)
+        
+        This command with will call up the slave which is addressed
+        by its serial number. In return, the slave replies with a
+        complete address block. It can be used to test the presence
+        of a module in conjunction with the quality of the bus connection.
+        
+        >>> bus = IMPBus('loop://')
+        >>> bus.DEBUG = True
+        >>> bus.probe_module_long(0)
+        """
         package = self.get_long_acknowledge(serno)
         bytes_send = self.write_package(package)
         if self.DEBUG: print "Probing SerNo:", serno
@@ -168,7 +179,20 @@ class Commands(SerialDevice, BaseCommands, BaseResponce):
         time.sleep(0.2)
         return self.responce_get_long_acknowledge(bytes_recv)
             
-    def short_probe_module(self, serno):
+    def probe_module_short(self, serno):
+        """ PROBE MODULE (SHORTCOMMAND)
+        
+        This command will call up the slave which is addressed
+        by its serial number. In return, the slave replies by
+        just one byte: The CRC of its serial number. It is the
+        shortest possible command without the transfer of any
+        data block and the only one without a complete address
+        block. It can be used to test the presence of a module.
+        
+        >>> bus = IMPBus('loop://')
+        >>> bus.DEBUG = True
+        >>> bus.probe_module_short(0)
+        """
         if self.DEBUG: print "Probing SerNo:", serno
         package = self.get_short_acknowledge(serno)
         serno = self._reflect_bytes('%06x' % serno)
@@ -183,6 +207,22 @@ class Commands(SerialDevice, BaseCommands, BaseResponce):
         return True
         
     def probe_range(self, broadcast):
+        """ PROBE ADDRESSRANGE
+        
+        This command is very similar to the previous one. However,
+        it addresses not just one single serial number, but a serial
+        number range. This value of byte 4 to byte 6 symbolizes a
+        whole range according to a broacast pattern. For more details
+        refer to the doctring of get_acknowledge_for_serial_number_range()
+        or the the "Developers Manual, Data Transmission Protocol for
+        IMPBUS2, 2008-11-18".
+        
+        >>> bus = IMPBus('loop://')
+        >>> bus.DEBUG = True
+        >>> bus.probe_range(16777215)
+        Module seen at range 16777215
+        True
+        """
         package = self.get_acknowledge_for_serial_number_range(broadcast)
         bytes_send = self.write_package(package)
         if not self.read_something():
@@ -192,67 +232,6 @@ class Commands(SerialDevice, BaseCommands, BaseResponce):
         time.sleep(0.2)
         return True
     
-    #######################################
-    # reading data from the module tables #
-    #######################################
-    
-    def get_serial(self, serno):
-        try:
-            package = self.get_parameter(serno, 'SYSTEM_PARAMETER_TABLE', 'SerialNum')
-            bytes_send = self.write_package(package)
-            responce = self.read_package()
-        except SerialDeviceException:
-            return None
-        time.sleep(0.2)
-        return responce
-    
-    def get_hw_version(self, serno):
-        try:
-            package = self.get_parameter(serno, 'SYSTEM_PARAMETER_TABLE', 'HWVersion')
-            bytes_send = self.write_package(package)
-            responce = self.read_package()
-        except SerialDeviceException:
-            return None
-        time.sleep(0.2)
-        return responce
-    
-    def get_fw_version(self, serno):
-        try:
-            package = self.get_parameter(serno, 'SYSTEM_PARAMETER_TABLE', 'FWVersion')
-            bytes_send = self.write_package(package)
-            responce = self.read_package()
-        except SerialDeviceException:
-            return None
-        time.sleep(0.2)
-        return responce
-
-    def get_table(self, serno, table):
-        try:
-            package = self.get_parameter(serno, table, 'GetData')
-            bytes_send = self.write_package(package)
-            responce = self.read_package()
-        except SerialDeviceException:
-            return None
-        time.sleep(0.2)
-        return responce
-
-    #################################
-    # change the module settings    #  
-    #################################
-
-    def set_serial(self, serno):
-        pass
-    
 if __name__ == "__main__":
-    #import doctest
-    #doctest.testmod()
-    c = Commands('/dev/tty.usbserial-A700eQFp')
-    c.synchronise_bus()
-    c.DEBUG = True
-    modules = c.scan_bus()
-    for module in modules:
-        print c.get_serial(module)
-        print c.get_hw_version(module)
-        print c.get_fw_version(module)
-        print c.get_table(module, 'SYSTEM_PARAMETER_TABLE')
-    
+    import doctest
+    doctest.testmod()
