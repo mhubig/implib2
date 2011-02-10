@@ -1,32 +1,30 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 """
-Copyright (c) 2009-2012, Markus Hubig <mhubig@imko.de>
+Copyright (C) 2011, Markus Hubig <mhubig@imko.de>
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+This file is part of IMPLib2.
 
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
+IMPLib2 is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as
+published by the Free Software Foundation, either version 3 of
+the License, or (at your option) any later version.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
+IMPLib2 is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public
+License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 
 import time
 from binascii import b2a_hex as b2a
-from serialdevice import SerialDevice, SerialDeviceException 
-from buscommands import BusCommands, BusCommandsException
-from busresponce import BusResponce, BusResponceException
+from modules_interface import Modules, ModulesException
+from bus_commands import BusCommands, BusCommandsException
+from bus_responces import BusResponces, BusResponcesException
+from imp_serialdevice import IMPSerialDevice, IMPSerialDeviceException 
 
 class IMPBusException(Exception):
     def __init__(self, value):
@@ -43,17 +41,13 @@ class IMPBus(SerialDevice, BaseCommands, BaseResponce):
     
     >>> bus = IMPBus('loop://')
     >>> bus.DEBUG = True
-    >>> bus.synchronise_bus()
-    IMPBus instance initialized!
     """
     
     def __init__(self, port):
         self.DEBUG = False
-        BaseCommands.__init__(self)
-        BaseResponce.__init__(self)
-        SerialDevice.__init__(self, port)
-        if self.DEBUG == TRUE:
-            print "IMPBus instance initialized!"
+        BusCommands.__init__(self)
+        BusResponce.__init__(self)
+        IMPSerialDevice.__init__(self, port)
     
     def _divide_and_conquer(self, low, high, found):
         """ Recursiv divide-and-conquer algorythm to scan the IMPBUS.
@@ -97,8 +91,13 @@ class IMPBus(SerialDevice, BaseCommands, BaseResponce):
         after each command! The SM-modules understands one of these commands
         and will switch to the desired baud rate.
         
-        >>> bus = IMPBus('/dev/tty.usbserial-A700eQFp')
-        >>> bus.synchronise_bus()
+        >>> bus = IMPBus('loop://')
+        >>> bus.DEBUG = True
+        >>> bus.synchronise_bus(9600)
+        Set baudrate with 1200baud!
+        Set baudrate with 2400baud!
+        Set baudrate with 4800baud!
+        Set baudrate with 9600baud!
         """
         
         table = 'SYSTEM_PARAMETER_TABLE'
@@ -106,6 +105,7 @@ class IMPBus(SerialDevice, BaseCommands, BaseResponce):
         address = 16777215
         
         # trying to set baudrate at 1200
+        if self.DEBUG: print "Set baudrate with 1200baud!"
         self.ser.baudrate = 1200
         self.open_device()
         package = self.set_parameter(address, table, parameter, baudrate)
@@ -113,6 +113,7 @@ class IMPBus(SerialDevice, BaseCommands, BaseResponce):
         self.close_device()
         
         # trying to set baudrate at 2400
+        if self.DEBUG: print "Set baudrate with 2400baud!"
         self.ser.baudrate = 2400
         self.open_device()
         package = self.set_parameter(address, table, parameter, baudrate)
@@ -120,6 +121,7 @@ class IMPBus(SerialDevice, BaseCommands, BaseResponce):
         self.close_device()
         
         # trying to set baudrate at 4800
+        if self.DEBUG: print "Set baudrate with 4800baud!"
         self.ser.baudrate = 4800
         self.open_device()
         package = self.set_parameter(address, table, parameter, baudrate)
@@ -127,6 +129,7 @@ class IMPBus(SerialDevice, BaseCommands, BaseResponce):
         self.close_device()
         
         # trying to set baudrate at 9600
+        if self.DEBUG: print "Set baudrate with 9600baud!"
         self.ser.baudrate = 9600
         self.open_device()
         package = self.set_parameter(address, table, parameter, baudrate)
@@ -153,9 +156,16 @@ class IMPBus(SerialDevice, BaseCommands, BaseResponce):
         >>> bus.DEBUG = True
         >>> modules = bus.scan_bus(minserial=0, maxserial=2)
         """
-        found = list()
-        self._divide_and_conquer(minserial, maxserial, found)
-        return found
+        sernos = list()
+        modules = list()
+        self._divide_and_conquer(minserial, maxserial, sernos)
+        
+        if len(sernos) == 0:
+            return modules
+            
+        for serno in sernos:
+            modules.append(Module(serno, self))
+        return modules
     
     def probe_module_long(self, serno):
         """ PROBE MODULE (LONGCOMMAND)
@@ -168,6 +178,7 @@ class IMPBus(SerialDevice, BaseCommands, BaseResponce):
         >>> bus = IMPBus('loop://')
         >>> bus.DEBUG = True
         >>> bus.probe_module_long(0)
+        0
         """
         package = self.get_long_acknowledge(serno)
         bytes_send = self.write_package(package)
@@ -192,6 +203,7 @@ class IMPBus(SerialDevice, BaseCommands, BaseResponce):
         >>> bus = IMPBus('loop://')
         >>> bus.DEBUG = True
         >>> bus.probe_module_short(0)
+        >>> True
         """
         if self.DEBUG: print "Probing SerNo:", serno
         package = self.get_short_acknowledge(serno)

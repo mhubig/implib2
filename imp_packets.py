@@ -1,43 +1,40 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 """
-Copyright (c) 2009-2012, Markus Hubig <mhubig@imko.de>
+Copyright (C) 2011, Markus Hubig <mhubig@imko.de>
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+This file is part of IMPLib2.
 
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
+IMPLib2 is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as
+published by the Free Software Foundation, either version 3 of
+the License, or (at your option) any later version.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
+IMPLib2 is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public
+License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 
-from crc import CRC
+from tools_crc import CRC
 
-class PacketException(Exception):
+class IMPPacketsException(Exception):
     def __init__(self, value):
         self.value = value
     def __str__(self):
         return repr(self.value)
 
-class Packet(CRC):
+class IMPPackets(CRC):
     """ Class for packing, unpacking and checking IMPBus packages.
     
     Packing is done be the Packet.pack() funktion and unpacking is
     done be the Packet.unpack() funktion. While unpacking the CRCs
     and the given length of the provided IMPBUS package are checked.
     
-    >>> p = Packet()
+    >>> p = IMPPacket()
     >>> packet = p.pack(serno=0,cmd=0x15,no_param=0x01,param='7739')
     >>> stuff = p.unpack(packet)
     >>> stuff['header']
@@ -52,7 +49,8 @@ class Packet(CRC):
     """
     
     def __init__(self):
-         CRC.__init__(self)
+        self.DEBUG = False
+        CRC.__init__(self)
        
     def _hexhex(self,str):
         return hex(int(str, 16))
