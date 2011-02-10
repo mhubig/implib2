@@ -3,7 +3,8 @@
 """
 Copyright (C) 2011, Markus Hubig <mhubig@imko.de>
 
-This file is part of IMPLib2.
+This file is part of IMPLib2 a small Python library implementing
+the IMPBUS-2 data transmission protocol.
 
 IMPLib2 is free software: you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as
@@ -27,7 +28,7 @@ class ModuleResponcesException(Exception):
     def __str__(self):
         return repr(self.value)
 
-class ModuleResponces(Packet):
+class ModuleResponces(IMPPackets):
     def __init__(self):
         self.DEBUG = True
         IMPPackets.__init__(self)

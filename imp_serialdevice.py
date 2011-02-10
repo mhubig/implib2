@@ -3,7 +3,8 @@
 """
 Copyright (C) 2011, Markus Hubig <mhubig@imko.de>
 
-This file is part of IMPLib2.
+This file is part of IMPLib2 a small Python library implementing
+the IMPBUS-2 data transmission protocol.
 
 IMPLib2 is free software: you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as
@@ -56,16 +57,16 @@ class IMPSerialDevice(object):
         self.ser.dsrdtr = 0
     
     def _open_device_handler(self, signum, frame):
-        raise SerialDeviceException("Couldn't open device!")
+        raise IMPSerialDeviceException("Couldn't open device!")
         
     def _close_device_handler(self, signum, frame):
-        raise SerialDeviceException("Couldn't close device!")
+        raise IMPSerialDeviceException("Couldn't close device!")
     
     def _write_device_handler(self, signum, frame):
-        raise SerialDeviceException("Writing to device timed out!")
+        raise IMPSerialDeviceException("Writing to device timed out!")
         
     def _read_device_handler(self, signum, frame):
-        raise SerialDeviceException("Reading from device timed out!")
+        raise IMPSerialDeviceException("Reading from device timed out!")
     
     def open_device(self):
         # Set the signal handler and a 2-seconds alarm

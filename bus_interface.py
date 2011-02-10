@@ -3,7 +3,8 @@
 """
 Copyright (C) 2011, Markus Hubig <mhubig@imko.de>
 
-This file is part of IMPLib2.
+This file is part of IMPLib2 a small Python library implementing
+the IMPBUS-2 data transmission protocol.
 
 IMPLib2 is free software: you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as
@@ -21,7 +22,7 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 
 import time
 from binascii import b2a_hex as b2a
-from modules_interface import Modules, ModulesException
+from module_interface import Module, ModuleException
 from bus_commands import BusCommands, BusCommandsException
 from bus_responces import BusResponces, BusResponcesException
 from imp_serialdevice import IMPSerialDevice, IMPSerialDeviceException 
@@ -32,7 +33,7 @@ class IMPBusException(Exception):
     def __str__(self):
         return repr(self.value)
 
-class IMPBus(SerialDevice, BaseCommands, BaseResponce):
+class IMPBus(IMPSerialDevice, BusCommands, BusResponces):
     """ 
     Class to combine the basic IMPBUS2 commands to higher level
     command cascades. Befor using any other command you first
@@ -46,7 +47,7 @@ class IMPBus(SerialDevice, BaseCommands, BaseResponce):
     def __init__(self, port):
         self.DEBUG = False
         BusCommands.__init__(self)
-        BusResponce.__init__(self)
+        BusResponces.__init__(self)
         IMPSerialDevice.__init__(self, port)
     
     def _divide_and_conquer(self, low, high, found):
@@ -59,7 +60,7 @@ class IMPBus(SerialDevice, BaseCommands, BaseResponce):
         """
         # if we have only one serial left check them direct.
         if high == low:
-            if self.short_probe_module(high):
+            if self.probe_module_short(high):
                 found.append(high)
                 return True
             return False
@@ -164,7 +165,7 @@ class IMPBus(SerialDevice, BaseCommands, BaseResponce):
             return modules
             
         for serno in sernos:
-            modules.append(Module(serno, self))
+            modules.append(Module(self, serno))
         return modules
     
     def probe_module_long(self, serno):

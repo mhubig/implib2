@@ -2,7 +2,8 @@
 """
 Copyright (C) 2011, Markus Hubig <mhubig@imko.de>
 
-This file is part of IMPLib2.
+This file is part of IMPLib2 a small Python library implementing
+the IMPBUS-2 data transmission protocol.
 
 IMPLib2 is free software: you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as
@@ -20,15 +21,15 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 
 from imp_packets import IMPPackets, IMPPacketsException
 
-class BusResponceException(Exception):
+class BusResponcesException(Exception):
     def __init__(self, value):
         self.value = value
     def __str__(self):
         return repr(self.value)
 
-class BusResponce(Packet):
+class BusResponces(IMPPackets):
     def __init__(self):
-        Packet.__init__(self)
+        IMPPackets.__init__(self)
         
     def responce_get_long_acknowledge(self, packet):
         responce = self.unpack(packet)
