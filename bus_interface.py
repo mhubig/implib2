@@ -166,6 +166,7 @@ class IMPBus(IMPSerialDevice, BusCommands, BusResponces):
             
         for serno in sernos:
             modules.append(Module(self, serno))
+        time.sleep(0.5)
         return modules
     
     def probe_module_long(self, serno):

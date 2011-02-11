@@ -45,13 +45,17 @@ class IMPSerialDevice(object):
     """
     def __init__(self, port, baudrate=9600):
         self.DEBUG = False
-        self.ser = serial_for_url(port)
-        #self.ser.nonblocking()
+        
+        try:
+            self.ser = serial_for_url(port)
+        except SerialException as e:
+            raise IMPSerialDeviceException(e.message)
+        
         self.ser.baudrate = baudrate
         self.ser.bytesize = EIGHTBITS
         self.ser.parity = PARITY_ODD
         self.ser.stopbits = STOPBITS_TWO
-        self.ser.timeout = 0
+        self.ser.timeout = None # Wait forever
         self.ser.xonxoff = 0
         self.ser.rtscts = 0
         self.ser.dsrdtr = 0
@@ -104,21 +108,18 @@ class IMPSerialDevice(object):
         It automatically calculates the length from the header
         information and Returns the recieved packet as HEX string.
         """
+        self.ser.timeout = None # Wait forever
+        
         # Set the signal handler and a 2-seconds alarm
         signal.signal(signal.SIGALRM, self._read_device_handler)
         signal.alarm(2)
         
         # read header, always 7 bytes
-        header = ''
-        while len(header) < 7:
-            header += self.ser.read()
+        header = self.ser.read(7)
         length = int(b2a(header)[4:6], 16)
         
         # read data, length is known from header
-        data = ''
-        while len(data) < length:
-            data += self.ser.read()
-        
+        data = self.ser.read(length)
         packet = header + data
         signal.alarm(0) # Disable the alarm
         return b2a(packet)
@@ -129,14 +130,12 @@ class IMPSerialDevice(object):
         Methode to read a given amount of byter from the serial
         line. Returns the result as HEX string.
         """
+        self.ser.timeout = None # Wait forever
+        
         # Set the signal handler and a 2-seconds alarm
         signal.signal(signal.SIGALRM, self._read_device_handler)
         signal.alarm(2)
-        # getting the fileno for select()
-        fileno = self.ser.fileno()            
-        bytes = ''
-        while len(bytes) < length:
-                bytes += self.ser.read()
+        bytes = self.ser.read(length)
         signal.alarm(0) # Disable the alarm
         return b2a(bytes)
         
@@ -146,6 +145,7 @@ class IMPSerialDevice(object):
         This methode shold be as fast as possible. Returns
         True or False. Useable for scanning the bus. 
         """
+        self.ser.timeout = 0
         # Set the signal handler and a 2-seconds alarm
         signal.signal(signal.SIGALRM, self._read_device_handler)
         signal.alarm(2)

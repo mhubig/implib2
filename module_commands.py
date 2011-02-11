@@ -129,10 +129,10 @@ class ModuleCommands(IMPPackets, IMPTables):
         value = value.zfill(param.Length*2)
         
         if not param.writeable():
-            raise BaseCommandsException('Parameter is not writeable!')
+            raise ModuleCommandsException('Parameter is not writeable!')
         
         if not len(value)/2 == param.Length:
-            raise BaseCommandsException('Parameter has the wrong length!')
+            raise ModuleCommandsException('Parameter has the wrong length!')
         
         return self.pack(serno, table.Table.Set, param.No, value)
         

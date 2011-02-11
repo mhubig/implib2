@@ -24,6 +24,7 @@ import time
 from binascii import b2a_hex as b2a
 from module_commands import ModuleCommands, ModuleCommandsException
 from module_responces import ModuleResponces, ModuleResponcesException
+from imp_serialdevice import IMPSerialDeviceException
 
 class ModuleException(Exception):
     def __init__(self, value):
@@ -57,40 +58,66 @@ class Module(ModuleCommands, ModuleResponces):
     
     def get_serial(self):
         try:
+            if self.DEBUG: self._bus.DEBUG = True
             package = self.get_parameter(self._serno, 'SYSTEM_PARAMETER_TABLE', 'SerialNum')
             bytes_send = self._bus.write_package(package)
             responce = self._bus.read_package()
-        except SerialDeviceException:
+        except IMPSerialDeviceException as e:
+            print e.value
             return None
+        finally:
+            if self.DEBUG:
+                print 'Assembled package:', package
+                print 'Bytes send:', bytes_send
+                print 'Module Responce:', responce
         time.sleep(0.2)
         return responce
     
-    def get_hw_version(self, serno):
+    def get_hw_version(self):
         try:
+            if self.DEBUG: self._bus.DEBUG = True
             package = self.get_parameter(self._serno, 'SYSTEM_PARAMETER_TABLE', 'HWVersion')
             bytes_send = self._bus.write_package(package)
             responce = self._bus.read_package()
-        except SerialDeviceException:
+        except IMPSerialDeviceException as e:
+            print e.value
             return None
+        finally:
+            if self.DEBUG:
+                print 'Assembled package:', package
+                print 'Bytes send:', bytes_send
+                print 'Module Responce:', responce
         time.sleep(0.2)
         return responce
     
-    def get_fw_version(self, serno):
+    def get_fw_version(self):
         try:
+            if self.DEBUG: self._bus.DEBUG = True
             package = self.get_parameter(self._serno, 'SYSTEM_PARAMETER_TABLE', 'FWVersion')
             bytes_send = self._bus.write_package(package)
             responce = self._bus.read_package()
-        except SerialDeviceException:
+        except IMPSerialDeviceException as e:
+            print e.value
             return None
+        finally:
+            if self.DEBUG:
+                print 'Assembled package:', package
+                print 'Bytes send:', bytes_send
+                print 'Module Responce:', responce
         time.sleep(0.2)
         return responce
 
     def get_table(self, serno, table):
         try:
+            if self.DEBUG: self._bus.DEBUG = True
             package = self.get_parameter(self._serno, table, 'GetData')
             bytes_send = self._bus.write_package(package)
             responce = self._bus.read_package()
-        except SerialDeviceException:
+            if self.DEBUG:
+                print 'Assembled package:', package
+                print 'Bytes send:', bytes_send
+                print 'Module Responce:', responce
+        except IMPSerialDeviceException:
             return None
         time.sleep(0.2)
         return responce
@@ -99,9 +126,21 @@ class Module(ModuleCommands, ModuleResponces):
     # change the module settings    #  
     #################################
 
-    def set_serial(self):
-        pass
-    
+    def set_serial(self, serno):
+        try:
+            if self.DEBUG: self._bus.DEBUG = True            
+            package = self.set_parameter(self._serno, 'SYSTEM_PARAMETER_TABLE', 'SerialNum', serno)
+            bytes_send = self._bus.write_package(package)
+            responce = self._bus.read_package()
+            if self.DEBUG:
+                print 'Assembled package:', package
+                print 'Bytes send:', bytes_send
+                print 'Module Responce:', responce
+        except IMPSerialDeviceException as e:
+            raise ModuleException(e.value)
+        time.sleep(0.2)
+        return responce
+        
 if __name__ == "__main__":
     import doctest
     doctest.testmod()

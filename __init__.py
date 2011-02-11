@@ -19,3 +19,9 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
+__version__ = '0.01'
+__all__ = ['IMPBus', 'Module', 'Storage']
+
+from imp_storage import Storage
+from bus_interface import IMPBus
+from module_interface import Module

@@ -25,7 +25,7 @@ TableSize:     {'No': 0xfc, Type: 0x02, Status: OR, Length: 2}
 DataSize:      {'No': 0xfe, Type: 0x02, Status: OR, Length: 2}
 GetParam:      {'No': 0xfd, Type: 0x02, Status: OR, Length: 2}
 GetData:       {'No': 0xff, Type: 0x02, Status: OR, Length: 2}
-SerialNum:     {'No': 0x01, Type: 0x04, Status: WR, Length: 4}
+SerialNum:     {'No': 0x01, Type: 0x04, Status: OR, Length: 4}
 HWVersion:     {'No': 0x02, Type: 0x06, Status: OR, Length: 4}
 FWVersion:     {'No': 0x03, Type: 0x06, Status: OR, Length: 4}
 Baudrate:      {'No': 0x04, Type: 0x02, Status: WR, Length: 2}
