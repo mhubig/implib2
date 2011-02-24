@@ -46,6 +46,7 @@ class IMPBus(IMPSerialDevice, BusCommands, BusResponces):
     
     def __init__(self, port):
         self.DEBUG = False
+        self.bus_synced = False
         BusCommands.__init__(self)
         BusResponces.__init__(self)
         IMPSerialDevice.__init__(self, port)
@@ -135,6 +136,8 @@ class IMPBus(IMPSerialDevice, BusCommands, BusResponces):
         self.open_device()
         package = self.set_parameter(address, table, parameter, baudrate)
         bytes_send = self.write_package(package)
+        
+        self.bus_synced = True
         time.sleep(0.2)
     
     #############################
@@ -168,6 +171,12 @@ class IMPBus(IMPSerialDevice, BusCommands, BusResponces):
             modules.append(Module(self, serno))
         time.sleep(0.5)
         return modules
+    
+    def find_single_module(self):
+        package = self.get_negative_acknowledge()
+        bytes_send = self.write_package(package)
+        bytes_recv = self.read_package()
+        return self.responce_get_negative_acknowledge(bytes_recv)
     
     def probe_module_long(self, serno):
         """ PROBE MODULE (LONGCOMMAND)

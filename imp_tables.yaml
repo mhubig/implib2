@@ -241,7 +241,7 @@ EnterSleep:     {'No': 0x05, Type: 0x00, Status: WR, Length: 1}
 StartMeasure:   {'No': 0x06, Type: 0x00, Status: WR, Length: 1}
 ActCalItem:     {'No': 0x07, Type: 0x00, Status: WR, Length: 1}
 Reserved:       {'No': 0x08, Type: 0x00, Status: WR, Length: 1}
-SupportPW:      {'No': 0x09, Type: 0x02, Status: WR, Length: 1}
+SupportPW:      {'No': 0x09, Type: 0x02, Status: WR, Length: 2}
 PowerVolt:      {'No': 0x0a, Type: 0x06, Status: WR, Length: 1}
 SelfTest:       {'No': 0x0b, Type: 0x80, Status: OR, Length: 1}
 

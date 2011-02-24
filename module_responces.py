@@ -19,8 +19,9 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
-
+import struct
 from imp_packets import IMPPackets, IMPPacketsException
+from imp_tables import IMPTables, IMPTablesException
 
 class ModuleResponcesException(Exception):
     def __init__(self, value):
@@ -28,11 +29,16 @@ class ModuleResponcesException(Exception):
     def __str__(self):
         return repr(self.value)
 
-class ModuleResponces(IMPPackets):
+class ModuleResponces(IMPPackets, IMPTables):
     def __init__(self):
-        self.DEBUG = True
+        self.DEBUG = False
         IMPPackets.__init__(self)
-        
+        IMPTables.__init__(self)
+    
+    def _hex2float(self, s):
+        bins = ''.join(chr(int(s[x:x+2], 16)) for x in range(0, len(s), 2))
+        return struct.unpack('>f', bins)[0]
+    
     def responce_get_long_acknowledge(self, packet):
         responce = self.unpack(packet)
         return responce['serno']
@@ -49,13 +55,26 @@ class ModuleResponces(IMPPackets):
         responce = self.unpack(packet)
         return responce['serno']
         
-    def responce_get_parameter(self, packet):
+    def responce_get_parameter(self, packet, table, param):
         responce = self.unpack(packet)
-        return responce['serno'], responce['cmd'], responce['data']
+        data = self._reflect_bytes(responce['data'])
+        table = getattr(self, table)
+        param = getattr(table, param)
+        
+        # 32-bit float
+        if param.Type == 6:
+            data = self._hex2float(data)
+            data = '%.6f' % data
+        
+        # 16-bit unsigned
+        if param.Type == 2:
+            data = int(data, 16)
+            
+        return data
         
     def responce_set_parameter(self, packet):
         responce = self.unpack(packet)
-        return responce['serno'], responce['cmd']
+        return True
         
     def responce_do_tdr_scan(self, packet):
         responce = self.unpack(packet)
@@ -63,7 +82,7 @@ class ModuleResponces(IMPPackets):
         
     def responce_get_epr_image(self, packet):
         responce = self.unpack(packet)
-        return responce['serno'], responce['cmd'], responce['data']
+        return responce['data']
         
     def responce_set_erp_image(self, packet):
         responce = self.unpack(packet)

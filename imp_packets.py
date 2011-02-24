@@ -64,8 +64,7 @@ class IMPPackets(CRC):
         length = len(data)
 
         if not length % 2 == 0:
-            raise CommandsException(
-                "ERROR: Odd length of string to refelct bytewise: '%s'" % data)
+            raise IMPPacketsException("ERROR: Odd length of string: %s" % data)
 
         while length > 0:
             reflected += data[length-2:length]
@@ -113,23 +112,25 @@ class IMPPackets(CRC):
             data = no_param + ad_param
             data = data + self.calc_crc(data)
         else:
+            param = self._reflect_bytes(param)
             data = no_param + ad_param + param
             data = data + self.calc_crc(data)
         return data
 
     def _check_header(self,header):
         if not self.check_crc(header):
-            raise PacketException("Package with faulty header CRC!")
+            raise IMPPacketsException("Package with faulty header CRC!")
         status = header[0:2]
         if status not in ['00','fd', 'ff']:
-            raise PacketException("Package with error status: %s!" % status)
+            raise IMPPacketsException("Package with error status: %i!"
+                % int(status,16))
         return header[:-2]
 
     def _check_data(self,data):
         if not self.check_crc(data):
-            raise PacketException("Package with faulty data CRC!")
-        if len(data) > 504:
-            raise PacketException("Data block bigger than 252Bytes!")
+            raise IMPPacketsException("Package with faulty data CRC!")
+        if len(data[:-2]) > 504:
+            raise IMPPacketsException("Data block bigger than 252Bytes!")
         return data[:-2]
 
     def _check(self, packet):
@@ -148,10 +149,10 @@ class IMPPackets(CRC):
 
         if not data:
             if not data_length == 0:
-                raise PacketException("Length of data block shold be zero!")
+                raise IMPPacketsException("Length of data block shold be zero!")
         else:
             if len(data) != data_length:
-                raise PacketException("Length of data block dosn't match!")
+                raise IMPPacketsException("Length of data block dosn't match!")
             data = self._check_data(data)
         return header, data
 
@@ -190,8 +191,8 @@ class IMPPackets(CRC):
         """
         header, data = self._check(packet)
         header = self._split_header(header)
-        
-        return header.update({'data': data})
+        header['data'] = data
+        return header
 
 if __name__ == "__main__":
     import doctest

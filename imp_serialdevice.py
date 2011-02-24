@@ -77,6 +77,7 @@ class IMPSerialDevice(object):
         signal.signal(signal.SIGALRM, self._open_device_handler)
         signal.alarm(2)
         self.ser.open()
+        if self.DEBUG: print 'Device opened:', self.ser.name
         self.ser.flush()
         signal.alarm(0) # Disable the alarm
         
@@ -86,6 +87,7 @@ class IMPSerialDevice(object):
         signal.alarm(2)
         self.ser.flush()
         self.ser.close()
+        if self.DEBUG: print 'Device closed:', self.ser.name
         signal.alarm(0) # Disable the alarm
     
     def write_package(self, packet):
@@ -97,10 +99,11 @@ class IMPSerialDevice(object):
         # Set the signal handler and a 2-seconds alarm
         signal.signal(signal.SIGALRM, self._write_device_handler)
         signal.alarm(2)
-        length = self.ser.write(a2b(packet))
+        bytes_send = self.ser.write(a2b(packet))
         signal.alarm(0) # Disable the alarm
         time.sleep(0.018)
-        return length
+        if self.DEBUG: print 'Packet send:', packet, 'Length:', bytes_send
+        return bytes_send
         
     def read_package(self):
         """ Read IMPBUS2 packet from serial line.
@@ -116,13 +119,15 @@ class IMPSerialDevice(object):
         
         # read header, always 7 bytes
         header = self.ser.read(7)
+        if self.DEBUG: print 'Header read:', b2a(header)
         length = int(b2a(header)[4:6], 16)
         
         # read data, length is known from header
         data = self.ser.read(length)
-        packet = header + data
+        packet = b2a(header + data)
         signal.alarm(0) # Disable the alarm
-        return b2a(packet)
+        if self.DEBUG: print 'Packet read:', packet, 'Length:', len(packet)/2
+        return packet
         
     def read_bytes(self, length):
         """ Tries to read <length>-bytes from the serial line.
@@ -135,9 +140,10 @@ class IMPSerialDevice(object):
         # Set the signal handler and a 2-seconds alarm
         signal.signal(signal.SIGALRM, self._read_device_handler)
         signal.alarm(2)
-        bytes = self.ser.read(length)
+        bytes = b2a(self.ser.read(length))
         signal.alarm(0) # Disable the alarm
-        return b2a(bytes)
+        if self.DEBUG: print 'Bytes Read:', bytes
+        return bytes
         
     def read_something(self):
         """ Tries to read _one_ byte from the serial line.
@@ -151,7 +157,10 @@ class IMPSerialDevice(object):
         signal.alarm(2)
         stuff = self.ser.read()
         signal.alarm(0) # Disable the alarm
-        if not stuff: return False
+        if not stuff:
+            if self.DEBUG: print 'Byte Read: False'
+            return False
+        if self.DEBUG: print 'Byte Read: True'
         return True
     
     def talk(self, packet):

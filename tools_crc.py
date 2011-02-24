@@ -46,14 +46,13 @@ class CRC(object):
 
     http://www.ross.net/crc/download/crc_v3.txt
 
-    >>> import crc
-    >>> crc = crc.CRC()
+    >>> crc = CRC()
     >>> crc.calc_crc('FD15ED09')
     'f3'
     """
 
     def __init__(self):
-        self.DEBUG = True
+        self.DEBUG = False
         self.tbl = self._maketbl()
 
     def _reflect(self, data, width):

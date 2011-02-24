@@ -22,6 +22,7 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 
 import time
 from binascii import b2a_hex as b2a
+from tools_crc import CRC
 from module_commands import ModuleCommands, ModuleCommandsException
 from module_responces import ModuleResponces, ModuleResponcesException
 from imp_serialdevice import IMPSerialDeviceException
@@ -36,21 +37,66 @@ class Module(ModuleCommands, ModuleResponces):
     """ Class to combine the basic IMPBUS2 commands to
         higher level command cascades.
         
-        Befor using any other command you first have to
-        call init_bus() to get the device up and all modules
-        talking at the same baudrate!
-    
     >>> from bus_interface import IMPBus
     >>> bus = IMPBus('loop://')
-    >>> module = Module(bus, serial)
+    >>> modules = bus.scan_bus()
+    >>> for module in modules:
+    ...     modules.get_serial()
     """
     
     def __init__(self, bus, serno):
         self.DEBUG = False
-        self._serno = serno
+        self._unlocked = False
         self._bus = bus
+        self._serno = serno
+        self._crc = CRC()
         ModuleCommands.__init__(self)
         ModuleResponces.__init__(self)
+    
+    def _unlock(self):
+        # Calculate the SupportPW: calc_crc(serno) + 0x8000
+        passwd = self._reflect_bytes('%08x' % self._serno)
+        passwd = self._crc.calc_crc(passwd)
+        passwd = int(passwd, 16) + 0x8000
+        if self.DEBUG: print 'Unlocking Device, with Password: %s' % hex(passwd)
+        
+        try:
+            package = self.set_parameter(self._serno,
+                'ACTION_PARAMETER_TABLE', 'SupportPW', passwd)
+            self._bus.write_package(package)
+            responce = self._bus.read_package()
+            responce = self.responce_set_parameter(responce)
+        except IMPSerialDeviceException as e:
+            raise ModuleException(e.value)
+        
+        time.sleep(0.2)
+        
+        try:
+            package = self.set_parameter(self._serno,
+                'PROBE_CONFIGURATION_PARAMETER_TABLE', 'ProbeType', 0xFF)
+            self._bus.write_package(package)
+            responce = self._bus.read_package()
+            responce = self.responce_set_parameter(responce)
+        except IMPSerialDeviceException as e:
+            raise ModuleException(e.value)
+        
+        time.sleep(0.2)
+          
+        try:
+            package = self.get_parameter(self._serno,
+                'PROBE_CONFIGURATION_PARAMETER_TABLE', 'ProbeType')
+            bytes_send = self._bus.write_package(package)
+            responce = self._bus.read_package()
+            responce = self.responce_get_parameter(responce,
+                'PROBE_CONFIGURATION_PARAMETER_TABLE', 'ProbeType')
+        except IMPSerialDeviceException as e:
+            raise ModuleException(e.value)
+        
+        if not responce == 'ff':
+            raise ModuleException("Error: Couldn't unlock device!")
+        
+        time.sleep(0.2)
+        self._unlocked = True
     
     #######################################
     # reading data from the module tables #
@@ -58,86 +104,100 @@ class Module(ModuleCommands, ModuleResponces):
     
     def get_serial(self):
         try:
-            if self.DEBUG: self._bus.DEBUG = True
-            package = self.get_parameter(self._serno, 'SYSTEM_PARAMETER_TABLE', 'SerialNum')
+            package = self.get_parameter(self._serno,
+                'SYSTEM_PARAMETER_TABLE', 'SerialNum')
             bytes_send = self._bus.write_package(package)
             responce = self._bus.read_package()
+            responce = self.responce_get_parameter(responce,
+                'SYSTEM_PARAMETER_TABLE', 'SerialNum')
         except IMPSerialDeviceException as e:
-            print e.value
-            return None
-        finally:
-            if self.DEBUG:
-                print 'Assembled package:', package
-                print 'Bytes send:', bytes_send
-                print 'Module Responce:', responce
+            raise ModuleException(e.value)
         time.sleep(0.2)
         return responce
     
     def get_hw_version(self):
         try:
-            if self.DEBUG: self._bus.DEBUG = True
-            package = self.get_parameter(self._serno, 'SYSTEM_PARAMETER_TABLE', 'HWVersion')
+            package = self.get_parameter(self._serno,
+                'SYSTEM_PARAMETER_TABLE', 'HWVersion')
             bytes_send = self._bus.write_package(package)
             responce = self._bus.read_package()
+            responce = self.responce_get_parameter(responce,
+                'SYSTEM_PARAMETER_TABLE', 'HWVersion')
         except IMPSerialDeviceException as e:
-            print e.value
-            return None
-        finally:
-            if self.DEBUG:
-                print 'Assembled package:', package
-                print 'Bytes send:', bytes_send
-                print 'Module Responce:', responce
+            raise ModuleException(e.value)
         time.sleep(0.2)
         return responce
     
     def get_fw_version(self):
         try:
-            if self.DEBUG: self._bus.DEBUG = True
-            package = self.get_parameter(self._serno, 'SYSTEM_PARAMETER_TABLE', 'FWVersion')
+            package = self.get_parameter(self._serno,
+                'SYSTEM_PARAMETER_TABLE', 'FWVersion')
             bytes_send = self._bus.write_package(package)
             responce = self._bus.read_package()
+            responce = self.responce_get_parameter(responce,
+                'SYSTEM_PARAMETER_TABLE', 'FWVersion')
         except IMPSerialDeviceException as e:
-            print e.value
-            return None
-        finally:
-            if self.DEBUG:
-                print 'Assembled package:', package
-                print 'Bytes send:', bytes_send
-                print 'Module Responce:', responce
+            raise ModuleException(e.value)
         time.sleep(0.2)
         return responce
 
-    def get_table(self, serno, table):
+    def get_table(self, table):
         try:
-            if self.DEBUG: self._bus.DEBUG = True
             package = self.get_parameter(self._serno, table, 'GetData')
             bytes_send = self._bus.write_package(package)
             responce = self._bus.read_package()
-            if self.DEBUG:
-                print 'Assembled package:', package
-                print 'Bytes send:', bytes_send
-                print 'Module Responce:', responce
-        except IMPSerialDeviceException:
-            return None
+            responce = self.responce_get_parameter(responce, table, 'GetData')
+        except IMPSerialDeviceException as e:
+            raise ModuleException(e.value)
         time.sleep(0.2)
         return responce
+
+    def get_eeprom(self):
+        if not self._unlocked:
+            self._unlock()
+            
+        try:
+            package = self.get_parameter(self._serno,
+                'DEVICE_CONFIGURATION_PARAMETER_TABLE', 'EPRByteLen')
+            bytes_send = self._bus.write_package(package)
+            responce = self._bus.read_package()
+            eprbytelen = self.responce_get_parameter(responce,
+                'DEVICE_CONFIGURATION_PARAMETER_TABLE', 'GetData')
+            print eprbytelen
+        except IMPSerialDeviceException as e:
+            raise ModuleException(e.value)
+        time.sleep(0.2)
+        
+        eprimg = ''
+        pages = eprbytelen / 252 + 1
+        for page in range(0,pages):    
+            try:
+                package = self.get_epr_image(self._serno, page)
+                bytes_send = self._bus.write_package(package)
+                responce = self._bus.read_package()
+                eprimg += self.responce_get_epr_image(responce)
+            except IMPSerialDeviceException as e:
+                raise ModuleException(e.value)
+                time.sleep(0.2)
+        
+        print len(eprimg) / 2
+        return eprimg
 
     #################################
     # change the module settings    #  
     #################################
 
     def set_serial(self, serno):
+        if not self._unlocked:
+            self._unlock()
         try:
-            if self.DEBUG: self._bus.DEBUG = True            
-            package = self.set_parameter(self._serno, 'SYSTEM_PARAMETER_TABLE', 'SerialNum', serno)
+            package = self.set_parameter(self._serno,
+                'SYSTEM_PARAMETER_TABLE', 'SerialNum', serno)
             bytes_send = self._bus.write_package(package)
             responce = self._bus.read_package()
-            if self.DEBUG:
-                print 'Assembled package:', package
-                print 'Bytes send:', bytes_send
-                print 'Module Responce:', responce
         except IMPSerialDeviceException as e:
             raise ModuleException(e.value)
+        self._serno = serno
         time.sleep(0.2)
         return responce
         
