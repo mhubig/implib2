@@ -60,6 +60,9 @@ class IMPSerialDevice(object):
         self.ser.rtscts = 0
         self.ser.dsrdtr = 0
     
+        # open the device
+        self.open_device()
+    
     def _open_device_handler(self, signum, frame):
         raise IMPSerialDeviceException("Couldn't open device!")
         
@@ -164,7 +167,7 @@ class IMPSerialDevice(object):
         return True
     
     def talk(self, packet):
-        """Writes an IMPBUS2 Package and reads the responce packet"""
+        """ Writes an IMPBUS2 Package and reads the responce packet """
         self.write_packet(packet)
         responce = self.read_packet()
         return responce

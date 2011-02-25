@@ -106,6 +106,9 @@ class IMPBus(IMPSerialDevice, BusCommands, BusResponces):
         parameter = 'Baudrate'
         address = 16777215
         
+        # first close the device
+        self.close_device()
+        
         # trying to set baudrate at 1200
         if self.DEBUG: print "Set baudrate with 1200baud!"
         self.ser.baudrate = 1200

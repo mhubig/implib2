@@ -45,7 +45,8 @@ class BusResponces(IMPPackets):
         
     def responce_get_negative_acknowledge(self, packet):
         responce = self.unpack(packet)
-        return responce['data']
+        responce = self._reflect_bytes(responce['data'][0:6])
+        return int(responce, 16)
         
     def responce_get_parameter(self, packet):
         responce = self.unpack(packet)
