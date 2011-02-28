@@ -113,7 +113,7 @@ class Module(ModuleCommands, ModuleResponces):
         except IMPSerialDeviceException as e:
             raise ModuleException(e.value)
         time.sleep(0.2)
-        return responce
+        return int(responce, 16)
     
     def get_hw_version(self):
         try:

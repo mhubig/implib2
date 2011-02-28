@@ -137,6 +137,37 @@ class BusCommands(IMPPackets, IMPTables):
         """
         return self.pack(serno=16777215,cmd=0x08)
         
+    def set_parameter(self, serno, table, param, value):
+        """ COMMAND TO SET A PARAMETER.
+
+        Command to write a parameter to one of the different parameter
+        tables in the slave module. It will checkt if the value has the
+        right type and if this parameter is writable, according tho the
+        tables.
+
+        TODO: Check the value type!
+
+        >>> module = ModuleCommands()
+        >>> print module.set_parameter(31002,\
+                'PROBE_CONFIGURATION_PARAMETER_TABLE',\
+                'DeviceSerialNum',31003)
+        fd11071a79002b0c000000791bc4
+        """
+        table = getattr(self, table)
+        param = getattr(table, param)
+
+        value = '%x' % value
+        value = value.zfill(param.Length*2)
+
+        #if not param.writeable():
+        #    raise ModuleCommandsException('Parameter is not writeable!')
+
+        if not len(value)/2 == param.Length:
+            raise ModuleCommandsException('Parameter has the wrong length!')
+
+        package = self.pack(serno, table.Table.Set, param.No, value)
+        return package
+        
 if __name__ == "__main__":
     import doctest
     doctest.testmod()

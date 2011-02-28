@@ -44,7 +44,7 @@ class IMPSerialDevice(object):
     a packet and recieving the answer.
     """
     def __init__(self, port, baudrate=9600):
-        self.DEBUG = False
+        self.DEBUG = True
         
         try:
             self.ser = serial_for_url(port)
@@ -104,7 +104,8 @@ class IMPSerialDevice(object):
         signal.alarm(2)
         bytes_send = self.ser.write(a2b(packet))
         signal.alarm(0) # Disable the alarm
-        time.sleep(0.018)
+        #time.sleep(0.018)
+        time.sleep(0.1)
         if self.DEBUG: print 'Packet send:', packet, 'Length:', bytes_send
         return bytes_send
         
