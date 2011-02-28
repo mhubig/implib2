@@ -115,14 +115,24 @@ class IMPSerialDevice(object):
         It automatically calculates the length from the header
         information and Returns the recieved packet as HEX string.
         """
-        self.ser.timeout = None # Wait forever
+        self.ser.timeout = 0 # Wait forever
         
         # Set the signal handler and a 2-seconds alarm
         signal.signal(signal.SIGALRM, self._read_device_handler)
         signal.alarm(2)
         
+        header = ''
+        count = 0
         # read header, always 7 bytes
-        header = self.ser.read(7)
+        while len(header) < 7:
+            byte = self.ser.read()
+            count += 1
+            if len(byte) == 1:
+                header += byte
+                print "Count:", count
+                print "Header:", b2a(header)
+                count = 0
+        
         if self.DEBUG: print 'Header read:', b2a(header)
         length = int(b2a(header)[4:6], 16)
         
