@@ -19,24 +19,41 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
-
-import os
-import time
-import signal
-#from singleton import Singleton
 from binascii import b2a_hex as b2a
 from binascii import a2b_hex as a2b
-from select import select
-from serial import serial_for_url, Serial, SerialException
-from serial import EIGHTBITS, PARITY_ODD, STOPBITS_TWO
+from twisted.internet.protocol import ClientFactory, Protocol
+from twisted.internet import reactor
 
-class IMPSerialDeviceException(Exception):
+class Noisy(Protocol):
+    def __init__(self, delay, data):
+        self.delay = delay
+        self.data = data
+
+    def stop(self):
+        self.transport.unregisterProducer()
+        self.transport.loseConnection()
+        reactor.stop()
+
+    def resumeProducing(self):
+        self.transport.write(self.data)
+
+    def connectionMade(self):
+        self.transport.registerProducer(self, False)
+        reactor.callLater(self.delay, self.stop)
+
+factory = ClientFactory()
+factory.protocol = lambda: Noisy(60, "hello server")
+reactor.connectTCP(host, port, factory)
+reactor.run()
+
+
+class SerialdeviceException(Exception):
     def __init__(self, value):
         self.value = value
     def __str__(self):
         return repr(self.value)
 
-class IMPSerialDevice(object):
+class Serialdevice(object):
     """ Class for sending and recieving IMPBUS2 Packets via a serial line.
     
     This class takes care of the settings for the Serial Port and provides

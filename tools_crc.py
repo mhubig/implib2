@@ -22,6 +22,12 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 
 from binascii import unhexlify as uh
 
+class CRCException(Exception):
+    def __init__(self, value):
+        self.value = value
+    def __str__(self):
+        return repr(self.value)
+
 class CRC(object):
     """
     Class to compute the dallas-1-wire crc of a given hexstring.

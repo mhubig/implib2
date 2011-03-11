@@ -19,13 +19,13 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
-
 import time
 from binascii import b2a_hex as b2a
-from tools_crc import CRC
+from tools_crc import CRC, CRCException
+from tools_eeprom import EPTParser, EPTParserException
+from imp_serialdevice import IMPSerialDeviceException
 from module_commands import ModuleCommands, ModuleCommandsException
 from module_responces import ModuleResponces, ModuleResponcesException
-from imp_serialdevice import IMPSerialDeviceException
 
 class ModuleException(Exception):
     def __init__(self, value):
@@ -153,9 +153,9 @@ class Module(ModuleCommands, ModuleResponces):
         return responce
 
     def get_eeprom(self):
+        eprimg = str()
         if not self._unlocked:
-            self._unlock()
-            
+            self._unlock()        
         try:
             package = self.get_parameter(self._serno,
                 'DEVICE_CONFIGURATION_PARAMETER_TABLE', 'EPRByteLen')
@@ -163,12 +163,9 @@ class Module(ModuleCommands, ModuleResponces):
             responce = self._bus.read_package()
             eprbytelen = self.responce_get_parameter(responce,
                 'DEVICE_CONFIGURATION_PARAMETER_TABLE', 'GetData')
-            print eprbytelen
+            time.sleep(0.2)
         except IMPSerialDeviceException as e:
             raise ModuleException(e.value)
-        time.sleep(0.2)
-        
-        eprimg = ''
         pages = eprbytelen / 252 + 1
         for page in range(0,pages):    
             try:
@@ -176,11 +173,9 @@ class Module(ModuleCommands, ModuleResponces):
                 bytes_send = self._bus.write_package(package)
                 responce = self._bus.read_package()
                 eprimg += self.responce_get_epr_image(responce)
+                time.sleep(0.2)
             except IMPSerialDeviceException as e:
                 raise ModuleException(e.value)
-                time.sleep(0.2)
-        
-        print len(eprimg) / 2
         return eprimg
 
     #################################
@@ -200,6 +195,21 @@ class Module(ModuleCommands, ModuleResponces):
         self._serno = serno
         time.sleep(0.2)
         return responce
+    
+    def set_analog_out(self, value):
+        pass
+        
+    def write_eeprom(self, eeprom_file):
+        eeprom = EPTParser(eeprom_file)
+        for page_nr, page in eeprom:
+            package = self.set_epr_image(self._serno, page_nr, page)
+            try:
+                bytes_send = self._bus.write_package(package)
+                responce = self._bus.read_package()
+                time.sleep(0.1)
+            except IMPSerialDeviceException as e:
+                raise ModuleException(e.value)
+        return eeprom.length
         
 if __name__ == "__main__":
     import doctest
