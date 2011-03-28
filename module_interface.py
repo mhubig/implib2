@@ -64,8 +64,7 @@ class Module(ModuleCommands, ModuleResponces):
             package = self.set_parameter(self._serno,
                 'ACTION_PARAMETER_TABLE', 'SupportPW', passwd)
             self._bus.write_package(package)
-            responce = self._bus.read_package()
-            responce = self.responce_set_parameter(responce)
+            responce = self.responce_set_parameter(self._bus.read_package())
         except IMPSerialDeviceException as e:
             raise ModuleException(e.value)
         
@@ -75,8 +74,7 @@ class Module(ModuleCommands, ModuleResponces):
             package = self.set_parameter(self._serno,
                 'PROBE_CONFIGURATION_PARAMETER_TABLE', 'ProbeType', 0xFF)
             self._bus.write_package(package)
-            responce = self._bus.read_package()
-            responce = self.responce_set_parameter(responce)
+            responce = self.responce_set_parameter(self._bus.read_package())
         except IMPSerialDeviceException as e:
             raise ModuleException(e.value)
         
@@ -86,8 +84,7 @@ class Module(ModuleCommands, ModuleResponces):
             package = self.get_parameter(self._serno,
                 'PROBE_CONFIGURATION_PARAMETER_TABLE', 'ProbeType')
             bytes_send = self._bus.write_package(package)
-            responce = self._bus.read_package()
-            responce = self.responce_get_parameter(responce,
+            responce = self.responce_get_parameter(self._bus.read_package(),
                 'PROBE_CONFIGURATION_PARAMETER_TABLE', 'ProbeType')
         except IMPSerialDeviceException as e:
             raise ModuleException(e.value)
@@ -107,8 +104,7 @@ class Module(ModuleCommands, ModuleResponces):
             package = self.get_parameter(self._serno,
                 'SYSTEM_PARAMETER_TABLE', 'SerialNum')
             bytes_send = self._bus.write_package(package)
-            responce = self._bus.read_package()
-            responce = self.responce_get_parameter(responce,
+            responce = self.responce_get_parameter(self._bus.read_package(),
                 'SYSTEM_PARAMETER_TABLE', 'SerialNum')
         except IMPSerialDeviceException as e:
             raise ModuleException(e.value)
@@ -120,8 +116,7 @@ class Module(ModuleCommands, ModuleResponces):
             package = self.get_parameter(self._serno,
                 'SYSTEM_PARAMETER_TABLE', 'HWVersion')
             bytes_send = self._bus.write_package(package)
-            responce = self._bus.read_package()
-            responce = self.responce_get_parameter(responce,
+            responce = self.responce_get_parameter(self._bus.read_package(),
                 'SYSTEM_PARAMETER_TABLE', 'HWVersion')
         except IMPSerialDeviceException as e:
             raise ModuleException(e.value)
@@ -133,8 +128,7 @@ class Module(ModuleCommands, ModuleResponces):
             package = self.get_parameter(self._serno,
                 'SYSTEM_PARAMETER_TABLE', 'FWVersion')
             bytes_send = self._bus.write_package(package)
-            responce = self._bus.read_package()
-            responce = self.responce_get_parameter(responce,
+            responce = self.responce_get_parameter(self._bus.read_package(),
                 'SYSTEM_PARAMETER_TABLE', 'FWVersion')
         except IMPSerialDeviceException as e:
             raise ModuleException(e.value)
@@ -145,8 +139,8 @@ class Module(ModuleCommands, ModuleResponces):
         try:
             package = self.get_parameter(self._serno, table, 'GetData')
             bytes_send = self._bus.write_package(package)
-            responce = self._bus.read_package()
-            responce = self.responce_get_parameter(responce, table, 'GetData')
+            responce = self.responce_get_parameter(self._bus.read_package(),
+                table, 'GetData')
         except IMPSerialDeviceException as e:
             raise ModuleException(e.value)
         time.sleep(0.2)
@@ -160,8 +154,7 @@ class Module(ModuleCommands, ModuleResponces):
             package = self.get_parameter(self._serno,
                 'DEVICE_CONFIGURATION_PARAMETER_TABLE', 'EPRByteLen')
             bytes_send = self._bus.write_package(package)
-            responce = self._bus.read_package()
-            eprbytelen = self.responce_get_parameter(responce,
+            eprbytelen = self.responce_get_parameter(self._bus.read_package(),
                 'DEVICE_CONFIGURATION_PARAMETER_TABLE', 'GetData')
             time.sleep(0.2)
         except IMPSerialDeviceException as e:
@@ -171,12 +164,71 @@ class Module(ModuleCommands, ModuleResponces):
             try:
                 package = self.get_epr_image(self._serno, page)
                 bytes_send = self._bus.write_package(package)
-                responce = self._bus.read_package()
-                eprimg += self.responce_get_epr_image(responce)
+                eprimg += self.responce_get_epr_image(self._bus.read_package())
                 time.sleep(0.2)
             except IMPSerialDeviceException as e:
                 raise ModuleException(e.value)
         return eprimg
+
+    def get_moist_max_value(self):
+        try:
+            package = self.get_parameter(self._serno,
+                'DEVICE_CONFIGURATION_PARAMETER_TABLE', 'MoistMaxValue')
+            bytes_send = self._bus.write_package(package)
+            responce = self.responce_get_parameter(self._bus.read_package(),
+                'DEVICE_CONFIGURATION_PARAMETER_TABLE', 'MoistMaxValue')
+        except IMPSerialDeviceException as e:
+            raise ModuleException(e.value)
+        time.sleep(0.2)
+        return responce
+
+    def get_moist_max_value(self):
+        try:
+            package = self.get_parameter(self._serno,
+                'DEVICE_CONFIGURATION_PARAMETER_TABLE', 'MoistMaxValue')
+            bytes_send = self._bus.write_package(package)
+            responce = self.responce_get_parameter(self._bus.read_package(),
+                'DEVICE_CONFIGURATION_PARAMETER_TABLE', 'MoistMaxValue')
+        except IMPSerialDeviceException as e:
+            raise ModuleException(e.value)
+        time.sleep(0.2)
+        return responce
+
+    def get_moist_min_value(self):
+        try:
+            package = self.get_parameter(self._serno,
+                'DEVICE_CONFIGURATION_PARAMETER_TABLE', 'MoistMinValue')
+            bytes_send = self._bus.write_package(package)
+            responce = self.responce_get_parameter(self._bus.read_package(),
+                'DEVICE_CONFIGURATION_PARAMETER_TABLE', 'MoistMinValue')
+        except IMPSerialDeviceException as e:
+            raise ModuleException(e.value)
+        time.sleep(0.2)
+        return responce
+
+    def get_temp_max_value(self):
+        try:
+            package = self.get_parameter(self._serno,
+                'DEVICE_CONFIGURATION_PARAMETER_TABLE', 'TempMaxValue')
+            bytes_send = self._bus.write_package(package)
+            responce = self.responce_get_parameter(self._bus.read_package(),
+                'DEVICE_CONFIGURATION_PARAMETER_TABLE', 'TempMaxValue')
+        except IMPSerialDeviceException as e:
+            raise ModuleException(e.value)
+        time.sleep(0.2)
+        return responce
+
+    def get_temp_min_value(self):
+        try:
+            package = self.get_parameter(self._serno,
+                'DEVICE_CONFIGURATION_PARAMETER_TABLE', 'TempMinValue')
+            bytes_send = self._bus.write_package(package)
+            responce = self.responce_get_parameter(self._bus.read_package(),
+                'DEVICE_CONFIGURATION_PARAMETER_TABLE', 'TempMinValue')
+        except IMPSerialDeviceException as e:
+            raise ModuleException(e.value)
+        time.sleep(0.2)
+        return responce
 
     #################################
     # change the module settings    #  
@@ -189,15 +241,56 @@ class Module(ModuleCommands, ModuleResponces):
             package = self.set_parameter(self._serno,
                 'SYSTEM_PARAMETER_TABLE', 'SerialNum', serno)
             bytes_send = self._bus.write_package(package)
-            responce = self._bus.read_package()
+            responce = self.responce_set_parameter(self._bus.read_package())
         except IMPSerialDeviceException as e:
             raise ModuleException(e.value)
         self._serno = serno
         time.sleep(0.2)
         return responce
     
-    def set_analog_out(self, value):
-        pass
+    def set_analog_moist(self, mvolt=500):
+        if not volt in range(0,1000):
+            raise ModuleException('Value out of range!')
+        
+        min = self.get_moist_max_value()
+        max = self.get_moist_min_value()
+        value = (abs(min) + abs(max)) / 1000 * mvolt
+        
+        if not self._unlocked:
+            self._unlock()
+        
+        try:
+            package = self.set_parameter(self._serno,
+                'MEASURE_PARAMETER_TABLE', 'Moist', value)
+            bytes_send = self._bus.write_package(package)
+            responce = self.responce_set_parameter(self._bus.read_package())
+        except IMPSerialDeviceException as e:
+            raise ModuleException(e.value)
+        
+        time.sleep(0.2)
+        return responce
+        
+    def set_analog_temp(self, mvolt=500):
+        if not volt in range(0,1000):
+            raise ModuleException('Value out of range!')
+        
+        min = self.get_temp_max_value()
+        max = self.get_temp_min_value()
+        value = (abs(min) + abs(max)) / 1000 * mvolt
+            
+        if not self._unlocked:
+            self._unlock()
+
+        try:
+            package = self.set_parameter(self._serno,
+                'MEASURE_PARAMETER_TABLE', 'CompTemp', value)
+            bytes_send = self._bus.write_package(package)
+            responce = self.responce_set_parameter(self._bus.read_package())
+        except IMPSerialDeviceException as e:
+            raise ModuleException(e.value)
+
+        time.sleep(0.2)
+        return responce
         
     def write_eeprom(self, eeprom_file):
         eeprom = EPTParser(eeprom_file)
@@ -205,7 +298,7 @@ class Module(ModuleCommands, ModuleResponces):
             package = self.set_epr_image(self._serno, page_nr, page)
             try:
                 bytes_send = self._bus.write_package(package)
-                responce = self._bus.read_package()
+                responce = self.responce_set_parameter(self._bus.read_package())
                 time.sleep(0.1)
             except IMPSerialDeviceException as e:
                 raise ModuleException(e.value)

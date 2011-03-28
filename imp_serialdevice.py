@@ -60,9 +60,6 @@ class IMPSerialDevice(object):
         self.ser.rtscts = 0
         self.ser.dsrdtr = 0
     
-        # open the device
-        self.open_device()
-    
     def _open_device_handler(self, signum, frame):
         raise IMPSerialDeviceException("Couldn't open device!")
         

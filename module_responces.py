@@ -61,15 +61,31 @@ class ModuleResponces(IMPPackets, IMPTables):
         table = getattr(self, table)
         param = getattr(table, param)
         
+        # 8-bit unsigned char
+        if param.Type == 0:
+            #data = struct.unpack('>B',data)
+            data = int(data, 16)
+        
+        # 8-bit signed char
+        if param.Type == 1:
+            #data = struct.unpack('>b',data)
+            data = int(data, 16)
+        
+        # 16-bit unsigned
+        if param.Type == 2:
+            #data = struct.unpack('>B',data)
+            data = int(data, 16)
+        
+        # 16-bit signed
+        if param.Type == 3:
+            #data = struct.unpack('>b',data)
+            data = int(data, 16)
+        
         # 32-bit float
         if param.Type == 6:
             data = self._hex2float(data)
             data = '%.6f' % data
         
-        # 16-bit unsigned
-        if param.Type == 2:
-            data = int(data, 16)
-            
         return data
         
     def responce_set_parameter(self, packet):

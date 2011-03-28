@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: UTF-8 -*-
 """
 Copyright (C) 2011, Markus Hubig <mhubig@imko.de>
 
