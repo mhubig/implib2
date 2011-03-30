@@ -32,10 +32,10 @@ class ParserException(Exception):
 class Parser(object):
     """ Class to parse a EPT file.
     
-    The EPTParser Class has an build in iterator which allowes
+    The Parser Class has an build in iterator which allowes
     to iter about the eeprom pages stored in this class:
     
-    >>> eeprom = EPTParser('test.ept')
+    >>> eeprom = Parser('test.ept')
     >>> buffer = str()
     >>> for nr, page in eeprom:
     ...     buffer += page
@@ -44,7 +44,7 @@ class Parser(object):
     >>> eeprom.comment
     ["Don't change the structure of the file.", 'Comment may be added after ;', 'Note1:', 'Note2:']
     >>> eeprom.version
-    1.120631
+    '1.120631'
     >>> eeprom.date
     datetime.datetime(2011, 2, 28, 17, 11, 55)
     >>> eeprom.length
@@ -64,12 +64,12 @@ class Parser(object):
         self._read_ept()
     
     def __iter__(self):
-        pages = self._eptlength/252
-        if pages*252 < self._eptlength:
-            pages +=1
+        pages = self._eptlength/250
+        if pages*250 < self._eptlength:
+            pages += 1
         for page in range(0, pages):
-            start = page*252*2
-            stop  = start+252*2
+            start = page*250*2
+            stop  = start+250*2
             yield page, self._eptbuffer[start:stop]
     
     def _read_ept(self):
@@ -117,7 +117,7 @@ class Parser(object):
         
     @property
     def version(self):
-        return self._fwversion
+        return "{0:f}".format(self._fwversion)
         
     @property
     def date(self):

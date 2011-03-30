@@ -22,13 +22,13 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 
 from tools_crc import CRC
 
-class IMPPacketsException(Exception):
+class PacketsException(Exception):
     def __init__(self, value):
         self.value = value
     def __str__(self):
         return repr(self.value)
 
-class IMPPackets(CRC):
+class Packets(CRC):
     """ Class for packing, unpacking and checking IMPBus packages.
     
     Packing is done be the Packet.pack() funktion and unpacking is
@@ -64,7 +64,7 @@ class IMPPackets(CRC):
         length = len(data)
 
         if not length % 2 == 0:
-            raise IMPPacketsException("ERROR: Odd length of string: %s" % data)
+            raise PacketsException("ERROR: Odd length of string: %s" % data)
 
         while length > 0:
             reflected += data[length-2:length]
@@ -119,18 +119,18 @@ class IMPPackets(CRC):
 
     def _check_header(self,header):
         if not self.check_crc(header):
-            raise IMPPacketsException("Package with faulty header CRC!")
+            raise PacketsException("Package with faulty header CRC!")
         status = header[0:2]
         if status not in ['00','fd', 'ff']:
-            raise IMPPacketsException("Package with error status: %i!"
+            raise PacketsException("Package with error status: %i!"
                 % int(status,16))
         return header[:-2]
 
     def _check_data(self,data):
         if not self.check_crc(data):
-            raise IMPPacketsException("Package with faulty data CRC!")
+            raise PacketsException("Package with faulty data CRC!")
         if len(data[:-2]) > 504:
-            raise IMPPacketsException("Data block bigger than 252Bytes!")
+            raise PacketsException("Data block bigger than 252Bytes!")
         return data[:-2]
 
     def _check(self, packet):
@@ -149,10 +149,10 @@ class IMPPackets(CRC):
 
         if not data:
             if not data_length == 0:
-                raise IMPPacketsException("Length of data block shold be zero!")
+                raise PacketsException("Length of data block shold be zero!")
         else:
             if len(data) != data_length:
-                raise IMPPacketsException("Length of data block dosn't match!")
+                raise PacketsException("Length of data block dosn't match!")
             data = self._check_data(data)
         return header, data
 

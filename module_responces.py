@@ -20,8 +20,8 @@ You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 import struct
-from imp_packets import IMPPackets, IMPPacketsException
-from imp_tables import IMPTables, IMPTablesException
+from imp_packets import Packets, PacketsException
+from imp_tables import Tables, TablesException
 
 class ModuleResponcesException(Exception):
     def __init__(self, value):
@@ -29,11 +29,11 @@ class ModuleResponcesException(Exception):
     def __str__(self):
         return repr(self.value)
 
-class ModuleResponces(IMPPackets, IMPTables):
+class ModuleResponces(Packets, Tables):
     def __init__(self):
         self.DEBUG = False
-        IMPPackets.__init__(self)
-        IMPTables.__init__(self)
+        Packets.__init__(self)
+        Tables.__init__(self)
     
     def _hex2float(self, s):
         bins = ''.join(chr(int(s[x:x+2], 16)) for x in range(0, len(s), 2))

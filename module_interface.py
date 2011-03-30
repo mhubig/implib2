@@ -249,7 +249,7 @@ class Module(ModuleCommands, ModuleResponces):
         return responce
     
     def set_analog_moist(self, mvolt=500):
-        if not volt in range(0,1000):
+        if not mvolt in range(0,1001):
             raise ModuleException('Value out of range!')
         
         min = self.get_moist_max_value()
@@ -271,7 +271,7 @@ class Module(ModuleCommands, ModuleResponces):
         return responce
         
     def set_analog_temp(self, mvolt=500):
-        if not volt in range(0,1000):
+        if not mvolt in range(0,1001):
             raise ModuleException('Value out of range!')
         
         min = self.get_temp_max_value()

@@ -19,8 +19,8 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
-from imp_tables import IMPTables, IMPTablesException
-from imp_packets import IMPPackets, IMPPacketsException
+from imp_tables import Tables, TablesException
+from imp_packets import Packets, PacketsException
 
 class ModuleCommandsException(Exception):
     def __init__(self, value):
@@ -28,7 +28,7 @@ class ModuleCommandsException(Exception):
     def __str__(self):
         return repr(self.value)
 
-class ModuleCommands(IMPPackets, IMPTables):
+class ModuleCommands(Packets, Tables):
     """ COMMANDS TO CONTROL THE MODULES AND TRANSFER PARAMETERS
     
     The main commands to transfer parameters are Get and Set Parameters.
@@ -88,8 +88,8 @@ class ModuleCommands(IMPPackets, IMPTables):
     """
     def __init__(self):
         self.DEBUG = True
-        IMPTables.__init__(self)
-        IMPPackets.__init__(self)
+        Tables.__init__(self)
+        Packets.__init__(self)
     
     def get_parameter(self, serno, table, param):
         """ COMMAND TO READ A PARAMETER.
@@ -120,7 +120,7 @@ class ModuleCommands(IMPPackets, IMPTables):
         >>> print module.set_parameter(31002,\
                 'PROBE_CONFIGURATION_PARAMETER_TABLE',\
                 'DeviceSerialNum',31003)
-        fd11071a79002b0c000000791bc4
+        fd11071a79002b0c001b790000b0
         """
         table = getattr(self, table)
         param = getattr(table, param)
@@ -166,6 +166,7 @@ class ModuleCommands(IMPPackets, IMPTables):
         
         >>> module = ModuleCommands()
         >>> print module.get_epr_image(30001,0)
+        fd3c0331750029ff0081
         """
         return self.pack(serno,0x3c,no_param=0xff,ad_param=page_nr,param=None)
     
@@ -175,9 +176,12 @@ class ModuleCommands(IMPPackets, IMPTables):
         pagenr should be a string hex value!
         
         >>> module = ModuleCommands()
-        >>> print module.set_epr_image(30001,7,'FFFFFFFFFE000000')
-        fd3d003175006c
+        >>> page = "000000000000000035ffff00"
+        >>> print module.set_epr_image(30001,7,page)
+        fd3d0f317500f6ff0700ffff350000000000000000d9
         """
+        if len(page)/2 > 250:
+            raise ModuleCommandsException("Page data to long, exeeds 250 Bytes!")
         return self.pack(serno,0x3d,no_param=0xff,ad_param=page_nr,param=page)
 
 if __name__ == "__main__":

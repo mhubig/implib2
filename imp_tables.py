@@ -77,13 +77,13 @@ class Table(YAMLObject):
         return "%s(Name=%s)" % (
             self.__class__.__name__, self.Table.Name)
 
-class IMPTablesException(Exception):
+class TablesException(Exception):
     def __init__(self, value):
         self.value = value
     def __str__(self):
         return repr(self.value)
 
-class IMPTables(object):
+class Tables(object):
     """ Class containing all the IMPBUS2 parameter Tables.
 
     This Class reads the YAML file containing all the parameter
@@ -91,7 +91,7 @@ class IMPTables(object):
     structur of it. You can use introspection to brows thru the
     Tables.
 
-    >>> t = IMPTables()
+    >>> t = Tables()
     >>> t.ACTION_PARAMETER_TABLE.ConfigID.No
     251
     >>> t.ACTION_PARAMETER_TABLE.ConfigID.check_length('0000')

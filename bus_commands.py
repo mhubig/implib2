@@ -20,8 +20,8 @@ You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 
-from imp_tables import IMPTables, IMPTablesException
-from imp_packets import IMPPackets, IMPPacketsException
+from imp_tables import Tables, TablesException
+from imp_packets import Packets, PacketsException
 
 class BusCommandsException(Exception):
     def __init__(self, value):
@@ -29,7 +29,7 @@ class BusCommandsException(Exception):
     def __str__(self):
         return repr(self.value)
 
-class BusCommands(IMPPackets, IMPTables):
+class BusCommands(Packets, Tables):
     """ COMMANDS TO CONTROL A IMPBUS2.
     
     After building-up a IMP232N-bus, it is necessary for the master to find
@@ -45,8 +45,8 @@ class BusCommands(IMPPackets, IMPTables):
     """
     def __init__(self):
         self.DEBUG = False
-        IMPPackets.__init__(self)
-        IMPTables.__init__(self)
+        Packets.__init__(self)
+        Tables.__init__(self)
         
     def get_long_acknowledge(self,serno):
         """ GET LONG ACKNOWLEDGE

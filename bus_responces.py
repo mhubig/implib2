@@ -20,7 +20,7 @@ You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 
-from imp_packets import IMPPackets, IMPPacketsException
+from imp_packets import Packets, PacketsException
 
 class BusResponcesException(Exception):
     def __init__(self, value):
@@ -28,9 +28,9 @@ class BusResponcesException(Exception):
     def __str__(self):
         return repr(self.value)
 
-class BusResponces(IMPPackets):
+class BusResponces(Packets):
     def __init__(self):
-        IMPPackets.__init__(self)
+        Packets.__init__(self)
         
     def responce_get_long_acknowledge(self, packet):
         responce = self.unpack(packet)
