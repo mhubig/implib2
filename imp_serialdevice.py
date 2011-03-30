@@ -19,24 +19,19 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
-
-import os
 import time
-import signal
-#from singleton import Singleton
 from binascii import b2a_hex as b2a
 from binascii import a2b_hex as a2b
-from select import select
 from serial import serial_for_url, Serial, SerialException
 from serial import EIGHTBITS, PARITY_ODD, STOPBITS_TWO
 
-class IMPSerialDeviceException(Exception):
+class SerialDeviceException(Exception):
     def __init__(self, value):
         self.value = value
     def __str__(self):
         return repr(self.value)
 
-class IMPSerialDevice(object):
+class SerialDevice(object):
     """ Class for sending and recieving IMPBUS2 Packets via a serial line.
     
     This class takes care of the settings for the Serial Port and provides
@@ -44,7 +39,8 @@ class IMPSerialDevice(object):
     a packet and recieving the answer.
     """
     def __init__(self, port, baudrate=9600):
-        self.DEBUG = False
+        self.DEBUG = True
+        self.TIMEOUT = 2
         
         try:
             self.ser = serial_for_url(port)
@@ -53,42 +49,22 @@ class IMPSerialDevice(object):
         
         self.ser.baudrate = baudrate
         self.ser.bytesize = EIGHTBITS
-        self.ser.parity = PARITY_ODD
+        self.ser.parity   = PARITY_ODD
         self.ser.stopbits = STOPBITS_TWO
-        self.ser.timeout = None # Wait forever
-        self.ser.xonxoff = 0
-        self.ser.rtscts = 0
-        self.ser.dsrdtr = 0
-    
-    def _open_device_handler(self, signum, frame):
-        raise IMPSerialDeviceException("Couldn't open device!")
-        
-    def _close_device_handler(self, signum, frame):
-        raise IMPSerialDeviceException("Couldn't close device!")
-    
-    def _write_device_handler(self, signum, frame):
-        raise IMPSerialDeviceException("Writing to device timed out!")
-        
-    def _read_device_handler(self, signum, frame):
-        raise IMPSerialDeviceException("Reading from device timed out!")
+        self.ser.timeout  = 0 # act nonblocking
+        self.ser.xonxoff  = 0
+        self.ser.rtscts   = 0
+        self.ser.dsrdtr   = 0
     
     def open_device(self):
-        # Set the signal handler and a 2-seconds alarm
-        signal.signal(signal.SIGALRM, self._open_device_handler)
-        signal.alarm(2)
         self.ser.open()
-        if self.DEBUG: print 'Device opened:', self.ser.name
         self.ser.flush()
-        signal.alarm(0) # Disable the alarm
+        if self.DEBUG: print 'Device opened:', self.ser.name
         
     def close_device(self):
-        # Set the signal handler and a 2-seconds alarm
-        signal.signal(signal.SIGALRM, self._close_device_handler)
-        signal.alarm(2)
         self.ser.flush()
         self.ser.close()
         if self.DEBUG: print 'Device closed:', self.ser.name
-        signal.alarm(0) # Disable the alarm
     
     def write_package(self, packet):
         """ Writes IMPBUS2 packet to the serial line.
@@ -96,12 +72,7 @@ class IMPSerialDevice(object):
         Packet must be a pre-build HEX string. Returns the
         length in Bytes of the string written. 
         """
-        # Set the signal handler and a 2-seconds alarm
-        signal.signal(signal.SIGALRM, self._write_device_handler)
-        signal.alarm(2)
         bytes_send = self.ser.write(a2b(packet))
-        signal.alarm(0) # Disable the alarm
-        #time.sleep(0.018)
         time.sleep(0.1)
         if self.DEBUG: print 'Packet send:', packet, 'Length:', bytes_send
         return bytes_send
@@ -112,25 +83,29 @@ class IMPSerialDevice(object):
         It automatically calculates the length from the header
         information and Returns the recieved packet as HEX string.
         """
-        self.ser.timeout = 0 # Wait forever
-        
-        # Set the signal handler and a 2-seconds alarm
-        signal.signal(signal.SIGALRM, self._read_device_handler)
-        signal.alarm(2)
-        
-        header = ''
         # read header, always 7 bytes
-        while len(header) < 7:
-            byte = self.ser.read()
-            if len(byte) == 1:
-                header += byte
+        header = str()
+        length = 7
+        tic = time.time()
+        while (time.time() - tic < self.TIMEOUT) and (len(header) < length): 
+            if self.ser.inWaiting(): header += self.ser.read()
         if self.DEBUG: print 'Header read:', b2a(header)
-        length = int(b2a(header)[4:6], 16)
+        
+        if len(header) < length:
+            raise SerialDeviceException('TimeoutError reading header!')
         
         # read data, length is known from header
-        data = self.ser.read(length)
+        data = str()
+        length = int(b2a(header)[4:6], 16)
+        tic = time.time()
+        while (time.time() - tic < self.TIMEOUT) and (len(data) < length):
+            if self.ser.inWaiting(): data += self.ser.read()
+        if self.DEBUG: print 'Data read:', b2a(data)    
+        
+        if len(header) < length:
+            raise SerialDeviceException('TimeoutError reading data!')
+            
         packet = b2a(header + data)
-        signal.alarm(0) # Disable the alarm
         if self.DEBUG: print 'Packet read:', packet, 'Length:', len(packet)/2
         return packet
         
@@ -140,15 +115,16 @@ class IMPSerialDevice(object):
         Methode to read a given amount of byter from the serial
         line. Returns the result as HEX string.
         """
-        self.ser.timeout = None # Wait forever
+        bytes = str()
+        tic = time.time()
+        while (time.time() - tic < self.TIMEOUT) and (len(bytes) < length): 
+            if self.ser.inWaiting(): bytes += self.ser.read()
+        if self.DEBUG: print 'Bytes read:', b2a(bytes)
         
-        # Set the signal handler and a 2-seconds alarm
-        signal.signal(signal.SIGALRM, self._read_device_handler)
-        signal.alarm(2)
-        bytes = b2a(self.ser.read(length))
-        signal.alarm(0) # Disable the alarm
-        if self.DEBUG: print 'Bytes Read:', bytes
-        return bytes
+        if len(bytes) < length:
+            raise SerialDeviceException('TimeoutError reading header!')
+        
+        return b2a(bytes)
         
     def read_something(self):
         """ Tries to read _one_ byte from the serial line.
@@ -156,23 +132,14 @@ class IMPSerialDevice(object):
         This methode shold be as fast as possible. Returns
         True or False. Useable for scanning the bus. 
         """
-        self.ser.timeout = 0
-        # Set the signal handler and a 2-seconds alarm
-        signal.signal(signal.SIGALRM, self._read_device_handler)
-        signal.alarm(2)
-        stuff = self.ser.read()
-        signal.alarm(0) # Disable the alarm
-        if not stuff:
-            if self.DEBUG: print 'Byte Read: False'
-            return False
-        if self.DEBUG: print 'Byte Read: True'
-        return True
+        state = (len(self.ser.read()) == 1)
+        if self.DEBUG: print 'Byte Read:', state
+        return state
     
     def talk(self, packet):
         """ Writes an IMPBUS2 Package and reads the responce packet """
         self.write_packet(packet)
-        responce = self.read_packet()
-        return responce
+        return self.read_packet()
     
 if __name__ == "__main__":
     import doctest

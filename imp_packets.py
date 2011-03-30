@@ -50,7 +50,7 @@ class IMPPackets(CRC):
     """
     
     def __init__(self):
-        self.DEBUG = False
+        self.DEBUG = True
         CRC.__init__(self)
        
     def _hexhex(self,str):
@@ -167,7 +167,7 @@ class IMPPackets(CRC):
         serno = '%06x' % serno
         cmd = '%02x' % cmd
         serno = self._reflect_bytes(serno)
-
+        
         if no_param:
             data = self._pack_data(no_param, param, ad_param)
             length = '%02x' % (len(data) / 2)

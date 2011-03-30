@@ -23,13 +23,13 @@ import os
 import re
 from datetime import datetime
 
-class EPTParserException(Exception):
+class ParserException(Exception):
     def __init__(self, value):
         self.value = value
     def __str__(self):
         return repr(self.value)
 
-class EPTParser(object):
+class Parser(object):
     """ Class to parse a EPT file.
     
     The EPTParser Class has an build in iterator which allowes

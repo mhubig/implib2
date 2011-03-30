@@ -22,8 +22,8 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 import time
 from binascii import b2a_hex as b2a
 from tools_crc import CRC, CRCException
-from tools_eeprom import EPTParser, EPTParserException
-from imp_serialdevice import IMPSerialDeviceException
+from tools_eeprom import Parser, ParserException
+from imp_serialdevice import SerialDeviceException
 from module_commands import ModuleCommands, ModuleCommandsException
 from module_responces import ModuleResponces, ModuleResponcesException
 
@@ -45,7 +45,7 @@ class Module(ModuleCommands, ModuleResponces):
     """
     
     def __init__(self, bus, serno):
-        self.DEBUG = False
+        self.DEBUG = True
         self._unlocked = False
         self._bus = bus
         self._serno = serno
@@ -65,7 +65,7 @@ class Module(ModuleCommands, ModuleResponces):
                 'ACTION_PARAMETER_TABLE', 'SupportPW', passwd)
             self._bus.write_package(package)
             responce = self.responce_set_parameter(self._bus.read_package())
-        except IMPSerialDeviceException as e:
+        except SerialDeviceException as e:
             raise ModuleException(e.value)
         
         time.sleep(0.2)
@@ -75,7 +75,7 @@ class Module(ModuleCommands, ModuleResponces):
                 'PROBE_CONFIGURATION_PARAMETER_TABLE', 'ProbeType', 0xFF)
             self._bus.write_package(package)
             responce = self.responce_set_parameter(self._bus.read_package())
-        except IMPSerialDeviceException as e:
+        except SerialDeviceException as e:
             raise ModuleException(e.value)
         
         time.sleep(0.2)
@@ -86,10 +86,10 @@ class Module(ModuleCommands, ModuleResponces):
             bytes_send = self._bus.write_package(package)
             responce = self.responce_get_parameter(self._bus.read_package(),
                 'PROBE_CONFIGURATION_PARAMETER_TABLE', 'ProbeType')
-        except IMPSerialDeviceException as e:
+        except SerialDeviceException as e:
             raise ModuleException(e.value)
         
-        if not responce == 'ff':
+        if not responce == 255:
             raise ModuleException("Error: Couldn't unlock device!")
         
         time.sleep(0.2)
@@ -106,7 +106,7 @@ class Module(ModuleCommands, ModuleResponces):
             bytes_send = self._bus.write_package(package)
             responce = self.responce_get_parameter(self._bus.read_package(),
                 'SYSTEM_PARAMETER_TABLE', 'SerialNum')
-        except IMPSerialDeviceException as e:
+        except SerialDeviceException as e:
             raise ModuleException(e.value)
         time.sleep(0.2)
         return int(responce, 16)
@@ -118,7 +118,7 @@ class Module(ModuleCommands, ModuleResponces):
             bytes_send = self._bus.write_package(package)
             responce = self.responce_get_parameter(self._bus.read_package(),
                 'SYSTEM_PARAMETER_TABLE', 'HWVersion')
-        except IMPSerialDeviceException as e:
+        except SerialDeviceException as e:
             raise ModuleException(e.value)
         time.sleep(0.2)
         return responce
@@ -130,7 +130,7 @@ class Module(ModuleCommands, ModuleResponces):
             bytes_send = self._bus.write_package(package)
             responce = self.responce_get_parameter(self._bus.read_package(),
                 'SYSTEM_PARAMETER_TABLE', 'FWVersion')
-        except IMPSerialDeviceException as e:
+        except SerialDeviceException as e:
             raise ModuleException(e.value)
         time.sleep(0.2)
         return responce
@@ -141,7 +141,7 @@ class Module(ModuleCommands, ModuleResponces):
             bytes_send = self._bus.write_package(package)
             responce = self.responce_get_parameter(self._bus.read_package(),
                 table, 'GetData')
-        except IMPSerialDeviceException as e:
+        except SerialDeviceException as e:
             raise ModuleException(e.value)
         time.sleep(0.2)
         return responce
@@ -157,7 +157,7 @@ class Module(ModuleCommands, ModuleResponces):
             eprbytelen = self.responce_get_parameter(self._bus.read_package(),
                 'DEVICE_CONFIGURATION_PARAMETER_TABLE', 'GetData')
             time.sleep(0.2)
-        except IMPSerialDeviceException as e:
+        except SerialDeviceException as e:
             raise ModuleException(e.value)
         pages = eprbytelen / 252 + 1
         for page in range(0,pages):    
@@ -166,7 +166,7 @@ class Module(ModuleCommands, ModuleResponces):
                 bytes_send = self._bus.write_package(package)
                 eprimg += self.responce_get_epr_image(self._bus.read_package())
                 time.sleep(0.2)
-            except IMPSerialDeviceException as e:
+            except SerialDeviceException as e:
                 raise ModuleException(e.value)
         return eprimg
 
@@ -177,7 +177,7 @@ class Module(ModuleCommands, ModuleResponces):
             bytes_send = self._bus.write_package(package)
             responce = self.responce_get_parameter(self._bus.read_package(),
                 'DEVICE_CONFIGURATION_PARAMETER_TABLE', 'MoistMaxValue')
-        except IMPSerialDeviceException as e:
+        except SerialDeviceException as e:
             raise ModuleException(e.value)
         time.sleep(0.2)
         return responce
@@ -189,7 +189,7 @@ class Module(ModuleCommands, ModuleResponces):
             bytes_send = self._bus.write_package(package)
             responce = self.responce_get_parameter(self._bus.read_package(),
                 'DEVICE_CONFIGURATION_PARAMETER_TABLE', 'MoistMaxValue')
-        except IMPSerialDeviceException as e:
+        except SerialDeviceException as e:
             raise ModuleException(e.value)
         time.sleep(0.2)
         return responce
@@ -201,7 +201,7 @@ class Module(ModuleCommands, ModuleResponces):
             bytes_send = self._bus.write_package(package)
             responce = self.responce_get_parameter(self._bus.read_package(),
                 'DEVICE_CONFIGURATION_PARAMETER_TABLE', 'MoistMinValue')
-        except IMPSerialDeviceException as e:
+        except SerialDeviceException as e:
             raise ModuleException(e.value)
         time.sleep(0.2)
         return responce
@@ -213,7 +213,7 @@ class Module(ModuleCommands, ModuleResponces):
             bytes_send = self._bus.write_package(package)
             responce = self.responce_get_parameter(self._bus.read_package(),
                 'DEVICE_CONFIGURATION_PARAMETER_TABLE', 'TempMaxValue')
-        except IMPSerialDeviceException as e:
+        except SerialDeviceException as e:
             raise ModuleException(e.value)
         time.sleep(0.2)
         return responce
@@ -225,7 +225,7 @@ class Module(ModuleCommands, ModuleResponces):
             bytes_send = self._bus.write_package(package)
             responce = self.responce_get_parameter(self._bus.read_package(),
                 'DEVICE_CONFIGURATION_PARAMETER_TABLE', 'TempMinValue')
-        except IMPSerialDeviceException as e:
+        except SerialDeviceException as e:
             raise ModuleException(e.value)
         time.sleep(0.2)
         return responce
@@ -242,7 +242,7 @@ class Module(ModuleCommands, ModuleResponces):
                 'SYSTEM_PARAMETER_TABLE', 'SerialNum', serno)
             bytes_send = self._bus.write_package(package)
             responce = self.responce_set_parameter(self._bus.read_package())
-        except IMPSerialDeviceException as e:
+        except SerialDeviceException as e:
             raise ModuleException(e.value)
         self._serno = serno
         time.sleep(0.2)
@@ -264,7 +264,7 @@ class Module(ModuleCommands, ModuleResponces):
                 'MEASURE_PARAMETER_TABLE', 'Moist', value)
             bytes_send = self._bus.write_package(package)
             responce = self.responce_set_parameter(self._bus.read_package())
-        except IMPSerialDeviceException as e:
+        except SerialDeviceException as e:
             raise ModuleException(e.value)
         
         time.sleep(0.2)
@@ -286,21 +286,25 @@ class Module(ModuleCommands, ModuleResponces):
                 'MEASURE_PARAMETER_TABLE', 'CompTemp', value)
             bytes_send = self._bus.write_package(package)
             responce = self.responce_set_parameter(self._bus.read_package())
-        except IMPSerialDeviceException as e:
+        except SerialDeviceException as e:
             raise ModuleException(e.value)
 
         time.sleep(0.2)
         return responce
         
     def write_eeprom(self, eeprom_file):
-        eeprom = EPTParser(eeprom_file)
+        
+        if not self._unlocked:
+            self._unlock()
+        
+        eeprom = Parser(eeprom_file)
         for page_nr, page in eeprom:
             package = self.set_epr_image(self._serno, page_nr, page)
             try:
                 bytes_send = self._bus.write_package(package)
                 responce = self.responce_set_parameter(self._bus.read_package())
-                time.sleep(0.1)
-            except IMPSerialDeviceException as e:
+                time.sleep(0.2)
+            except SerialDeviceException as e:
                 raise ModuleException(e.value)
         return eeprom.length
         

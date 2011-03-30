@@ -19,13 +19,12 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
-
 import time
 from binascii import b2a_hex as b2a
 from module_interface import Module, ModuleException
 from bus_commands import BusCommands, BusCommandsException
 from bus_responces import BusResponces, BusResponcesException
-from imp_serialdevice import IMPSerialDevice, IMPSerialDeviceException 
+from imp_serialdevice import SerialDevice, SerialDeviceException 
 
 class IMPBusException(Exception):
     def __init__(self, value):
@@ -33,7 +32,7 @@ class IMPBusException(Exception):
     def __str__(self):
         return repr(self.value)
 
-class IMPBus(IMPSerialDevice, BusCommands, BusResponces):
+class IMPBus(SerialDevice, BusCommands, BusResponces):
     """ 
     Class to combine the basic IMPBUS2 commands to higher level
     command cascades. Befor using any other command you first
@@ -45,11 +44,11 @@ class IMPBus(IMPSerialDevice, BusCommands, BusResponces):
     """
     
     def __init__(self, port):
-        self.DEBUG = False
+        self.DEBUG = True
         self.bus_synced = False
         BusCommands.__init__(self)
         BusResponces.__init__(self)
-        IMPSerialDevice.__init__(self, port)
+        SerialDevice.__init__(self, port)
     
     def _divide_and_conquer(self, low, high, found):
         """ Recursiv divide-and-conquer algorythm to scan the IMPBUS.

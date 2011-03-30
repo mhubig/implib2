@@ -87,7 +87,7 @@ class ModuleCommands(IMPPackets, IMPTables):
     Protocol for IMPBUS2, 2008-11-18".
     """
     def __init__(self):
-        self.DEBUG = False
+        self.DEBUG = True
         IMPTables.__init__(self)
         IMPPackets.__init__(self)
     
@@ -178,9 +178,7 @@ class ModuleCommands(IMPPackets, IMPTables):
         >>> print module.set_epr_image(30001,7,'FFFFFFFFFE000000')
         fd3d003175006c
         """
-        page_nr = '%02X' % page_nr
-        param = 'FF' + page_nr + page
-        return self.pack(serno,0x3d,no_param=None,ad_param=None,param=param)
+        return self.pack(serno,0x3d,no_param=0xff,ad_param=page_nr,param=page)
 
 if __name__ == "__main__":
     import doctest
