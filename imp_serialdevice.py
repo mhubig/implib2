@@ -22,7 +22,7 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 import time
 from binascii import b2a_hex as b2a
 from binascii import a2b_hex as a2b
-from serial import serial_for_url, Serial, SerialException
+from serial import Serial, SerialException
 from serial import EIGHTBITS, PARITY_ODD, STOPBITS_TWO
 
 class SerialDeviceException(Exception):
@@ -41,13 +41,17 @@ class SerialDevice(object):
     def __init__(self, port, baudrate=9600):
         self.DEBUG = True
         self.TIMEOUT = 2
+        self.BAUDRATE = baudrate
+        self.PORT = port
         
         try:
-            self.ser = serial_for_url(port)
+            self.ser = Serial()
         except SerialException as e:
             raise SerialDeviceException(e.message)
         
-        self.ser.baudrate = baudrate
+    def open_device(self):
+        self.ser.port     = self.PORT
+        self.ser.baudrate = self.BAUDRATE
         self.ser.bytesize = EIGHTBITS
         self.ser.parity   = PARITY_ODD
         self.ser.stopbits = STOPBITS_TWO
@@ -55,8 +59,6 @@ class SerialDevice(object):
         self.ser.xonxoff  = 0
         self.ser.rtscts   = 0
         self.ser.dsrdtr   = 0
-    
-    def open_device(self):
         self.ser.open()
         self.ser.flush()
         if self.DEBUG: print 'Device opened:', self.ser.name
