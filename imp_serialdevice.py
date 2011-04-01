@@ -45,7 +45,7 @@ class SerialDevice(object):
         try:
             self.ser = serial_for_url(port)
         except SerialException as e:
-            raise IMPSerialDeviceException(e.message)
+            raise SerialDeviceException(e.message)
         
         self.ser.baudrate = baudrate
         self.ser.bytesize = EIGHTBITS
@@ -83,13 +83,14 @@ class SerialDevice(object):
         It automatically calculates the length from the header
         information and Returns the recieved packet as HEX string.
         """
+        
         # read header, always 7 bytes
         header = str()
         length = 7
         tic = time.time()
         while (time.time() - tic < self.TIMEOUT) and (len(header) < length): 
             if self.ser.inWaiting(): header += self.ser.read()
-        if self.DEBUG: print 'Header read:', b2a(header)
+        if self.DEBUG: print 'Header read:', b2a(header), 'Length:', len(header)
         
         if len(header) < length:
             raise SerialDeviceException('TimeoutError reading header!')
@@ -97,12 +98,14 @@ class SerialDevice(object):
         # read data, length is known from header
         data = str()
         length = int(b2a(header)[4:6], 16)
+        print "---> Length:", length
         tic = time.time()
         while (time.time() - tic < self.TIMEOUT) and (len(data) < length):
             if self.ser.inWaiting(): data += self.ser.read()
-        if self.DEBUG: print 'Data read:', b2a(data)    
+        print "Timeout:", time.time() - tic > self.TIMEOUT
+        if self.DEBUG: print 'Data read:', b2a(data), 'Length:', len(data)
         
-        if len(header) < length:
+        if len(data) < length:
             raise SerialDeviceException('TimeoutError reading data!')
             
         packet = b2a(header + data)
