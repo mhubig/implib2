@@ -81,7 +81,7 @@ class IMPBus(SerialDevice, BusCommands, BusResponces):
     # Initialize the bus communication #
     ####################################
     
-    def synchronise_bus(self, baudrate=9600):
+    def synchronise_bus(self, baudrate=96):
         """ IMPBUS BAUDRATE SYNCHRONIZATION
         
         The communication between master and slaves can only be successful
@@ -94,7 +94,7 @@ class IMPBus(SerialDevice, BusCommands, BusResponces):
         
         >>> bus = IMPBus('loop://')
         >>> bus.DEBUG = True
-        >>> bus.synchronise_bus(9600)
+        >>> bus.synchronise_bus(96)
         Set baudrate with 1200baud!
         Set baudrate with 2400baud!
         Set baudrate with 4800baud!
@@ -114,6 +114,7 @@ class IMPBus(SerialDevice, BusCommands, BusResponces):
         self.open_device()
         package = self.set_parameter(address, table, parameter, baudrate)
         bytes_send = self.write_package(package)
+        time.sleep(0.4)
         self.close_device()
         
         # trying to set baudrate at 2400
@@ -122,6 +123,7 @@ class IMPBus(SerialDevice, BusCommands, BusResponces):
         self.open_device()
         package = self.set_parameter(address, table, parameter, baudrate)
         bytes_send = self.write_package(package)
+        time.sleep(0.4)
         self.close_device()
         
         # trying to set baudrate at 4800
@@ -130,6 +132,7 @@ class IMPBus(SerialDevice, BusCommands, BusResponces):
         self.open_device()
         package = self.set_parameter(address, table, parameter, baudrate)
         bytes_send = self.write_package(package)
+        time.sleep(0.4)
         self.close_device()
         
         # trying to set baudrate at 9600
@@ -140,7 +143,7 @@ class IMPBus(SerialDevice, BusCommands, BusResponces):
         bytes_send = self.write_package(package)
         
         self.bus_synced = True
-        time.sleep(0.2)
+        time.sleep(0.5)
     
     #############################
     # finding connected modules #
