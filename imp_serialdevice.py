@@ -39,7 +39,7 @@ class SerialDevice(object):
     a packet and recieving the answer.
     """
     def __init__(self, port, baudrate=9600):
-        self.DEBUG = True
+        self.DEBUG = False
         self.TIMEOUT = 2
         self.BAUDRATE = baudrate
         self.PORT = port
@@ -100,11 +100,9 @@ class SerialDevice(object):
         # read data, length is known from header
         data = str()
         length = int(b2a(header)[4:6], 16)
-        print "---> Length:", length
         tic = time.time()
         while (time.time() - tic < self.TIMEOUT) and (len(data) < length):
             if self.ser.inWaiting(): data += self.ser.read()
-        print "Timeout:", time.time() - tic > self.TIMEOUT
         if self.DEBUG: print 'Data read:', b2a(data), 'Length:', len(data)
         
         if len(data) < length:
