@@ -27,10 +27,7 @@ from bus_responces import BusResponces, BusResponcesException
 from imp_serialdevice import SerialDevice, SerialDeviceException 
 
 class IMPBusException(Exception):
-    def __init__(self, value):
-        self.value = value
-    def __str__(self):
-        return repr(self.value)
+    pass
 
 class IMPBus(SerialDevice, BusCommands, BusResponces):
     """ 
@@ -179,9 +176,12 @@ class IMPBus(SerialDevice, BusCommands, BusResponces):
     
     def find_single_module(self):
         package = self.get_negative_acknowledge()
-        bytes_send = self.write_package(package)
-        bytes_recv = self.read_package()
-        return self.responce_get_negative_acknowledge(bytes_recv)
+        try:
+            bytes_send = self.write_package(package)
+            bytes_recv = self.read_package()
+            return self.responce_get_negative_acknowledge(bytes_recv)
+        except SerialDeviceException, e:
+            return False
     
     def probe_module_long(self, serno):
         """ PROBE MODULE (LONGCOMMAND)

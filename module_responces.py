@@ -24,10 +24,7 @@ from imp_packets import Packets, PacketsException
 from imp_tables import Tables, TablesException
 
 class ModuleResponcesException(Exception):
-    def __init__(self, value):
-        self.value = value
-    def __str__(self):
-        return repr(self.value)
+    pass
 
 class ModuleResponces(Packets, Tables):
     def __init__(self):
@@ -61,35 +58,51 @@ class ModuleResponces(Packets, Tables):
         table = getattr(self, table)
         param = getattr(table, param)
         
+        print data
+        print param.Type
+        
         # 8-bit unsigned char
         if param.Type == 0:
-            #data = struct.unpack('>B',data)
             data = int(data, 16)
         
         # 8-bit signed char
         if param.Type == 1:
-            #data = struct.unpack('>b',data)
             data = int(data, 16)
         
-        # 16-bit unsigned
+        # 16-bit unsigned integer
         if param.Type == 2:
-            #data = struct.unpack('>B',data)
             data = int(data, 16)
         
-        # 16-bit signed
+        # 16-bit signed integer
         if param.Type == 3:
-            #data = struct.unpack('>b',data)
+            data = int(data, 16)
+        
+        # 32-bit unsigned integer 
+        if param.Type == 4:
+            data = int(data, 16)
+        
+        # 32-bit signed integer
+        if param.Type == 5:
             data = int(data, 16)
         
         # 32-bit float
         if param.Type == 6:
             data = self._hex2float(data)
             data = '%.6f' % data
+            
+        # 64-bit double
+        if param.Type == 7:
+            data = data = self._hex2float(data)
+            data = '%.6f' % data
         
         return data
         
-    def responce_set_parameter(self, packet):
+    def responce_set_parameter(self, packet, table):
         responce = self.unpack(packet)
+        table = getattr(self, table)
+        param = getattr(table, "Table")
+        if not int(responce['cmd'],16) == param.Set:
+            raise ModuleResponcesException("CMD doesn't match SetValue of Tbl!")
         return True
         
     def responce_do_tdr_scan(self, packet):
@@ -102,7 +115,9 @@ class ModuleResponces(Packets, Tables):
         
     def responce_set_erp_image(self, packet):
         responce = self.unpack(packet)
-        return responce['serno'], responce['cmd']
+        if not int(responce['cmd'], 16) == 61:
+            raise ModuleResponcesException("CMD doesn't match SetERPImage!")
+        return True
     
 if __name__ == "__main__":
     import doctest

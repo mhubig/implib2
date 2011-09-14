@@ -26,10 +26,7 @@ from serial import Serial, SerialException
 from serial import EIGHTBITS, PARITY_ODD, STOPBITS_TWO
 
 class SerialDeviceException(Exception):
-    def __init__(self, value):
-        self.value = value
-    def __str__(self):
-        return repr(self.value)
+    pass
 
 class SerialDevice(object):
     """ Class for sending and recieving IMPBUS2 Packets via a serial line.
@@ -39,7 +36,7 @@ class SerialDevice(object):
     a packet and recieving the answer.
     """
     def __init__(self, port, baudrate=9600):
-        self.DEBUG = True
+        self.DEBUG = False
         self.TIMEOUT = 2
         self.BAUDRATE = baudrate
         self.PORT = port
@@ -64,9 +61,12 @@ class SerialDevice(object):
         if self.DEBUG: print 'Device opened:', self.ser.name
         
     def close_device(self):
-        self.ser.flush()
-        self.ser.close()
         if self.DEBUG: print 'Device closed:', self.ser.name
+        try:
+            self.ser.flush()
+            self.ser.close()
+        except:
+            pass
     
     def write_package(self, packet):
         """ Writes IMPBUS2 packet to the serial line.
@@ -100,11 +100,9 @@ class SerialDevice(object):
         # read data, length is known from header
         data = str()
         length = int(b2a(header)[4:6], 16)
-        print "---> Length:", length
         tic = time.time()
         while (time.time() - tic < self.TIMEOUT) and (len(data) < length):
             if self.ser.inWaiting(): data += self.ser.read()
-        print "Timeout:", time.time() - tic > self.TIMEOUT
         if self.DEBUG: print 'Data read:', b2a(data), 'Length:', len(data)
         
         if len(data) < length:

@@ -26,3 +26,4 @@ bus = IMPBus(port='/dev/tty.usbserial-A7U970ZP')
 bus.open_device()
 bus.synchronise_bus()
 bus.find_single_module()
+

@@ -23,10 +23,7 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 from tools_crc import CRC
 
 class PacketsException(Exception):
-    def __init__(self, value):
-        self.value = value
-    def __str__(self):
-        return repr(self.value)
+    pass
 
 class Packets(CRC):
     """ Class for packing, unpacking and checking IMPBus packages.
@@ -149,7 +146,7 @@ class Packets(CRC):
 
         if not data:
             if not data_length == 0:
-                raise PacketsException("Length of data block shold be zero!")
+                raise PacketsException("Length of data block should be zero!")
         else:
             if len(data) != data_length:
                 raise PacketsException("Length of data block dosn't match!")

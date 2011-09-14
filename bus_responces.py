@@ -23,10 +23,7 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 from imp_packets import Packets, PacketsException
 
 class BusResponcesException(Exception):
-    def __init__(self, value):
-        self.value = value
-    def __str__(self):
-        return repr(self.value)
+    pass
 
 class BusResponces(Packets):
     def __init__(self):

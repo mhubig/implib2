@@ -28,10 +28,7 @@ from module_commands import ModuleCommands, ModuleCommandsException
 from module_responces import ModuleResponces, ModuleResponcesException
 
 class ModuleException(Exception):
-    def __init__(self, value):
-        self.value = value
-    def __str__(self):
-        return repr(self.value)
+    pass
 
 class Module(ModuleCommands, ModuleResponces):
     """ Class to combine the basic IMPBUS2 commands to
@@ -53,112 +50,119 @@ class Module(ModuleCommands, ModuleResponces):
         ModuleCommands.__init__(self)
         ModuleResponces.__init__(self)
     
+    def _get(self, table, param):
+        """General get_parameter command"""
+        if self.DEBUG: print("get_command: table={0} param={1}".format(table, param))
+        try:
+            package = self.get_parameter(self._serno, table, param)
+            bytes_send = self._bus.write_package(package)
+            responce = self.responce_get_parameter(self._bus.read_package(), table, param)
+        except SerialDeviceException as e:
+            raise ModuleException(e.message)
+        time.sleep(0.2)
+        return responce
+    
+    def _set(self, table, param, value):
+        """General set_parameter command"""
+        if self.DEBUG: print("set_command: table={0} param={1}".format(table, param))
+        try:
+            package = self.set_parameter(self._serno, table, param, value)
+            bytes_send = self._bus.write_package(package)
+            responce = self.responce_set_parameter(self._bus.read_package(), table)
+        except SerialDeviceException as e:
+            raise ModuleException(e.message)
+        time.sleep(0.2)
+        return responce
+    
     def _unlock(self):
+        if self.DEBUG: print("Unlocking Device")
         # Calculate the SupportPW: calc_crc(serno) + 0x8000
         passwd = self._reflect_bytes('%08x' % self._serno)
         passwd = self._crc.calc_crc(passwd)
         passwd = int(passwd, 16) + 0x8000
-        if self.DEBUG: print 'Unlocking Device, with Password: %s' % hex(passwd)
         
-        try:
-            package = self.set_parameter(self._serno,
-                'ACTION_PARAMETER_TABLE', 'SupportPW', passwd)
-            self._bus.write_package(package)
-            responce = self.responce_set_parameter(self._bus.read_package())
-        except SerialDeviceException as e:
-            raise ModuleException(e.value)
+        # Unlock the device with the password
+        table = 'ACTION_PARAMETER_TABLE'
+        param = 'SupportPW'
+        value = passwd
+        self._set(table, param, value)
         
-        time.sleep(0.2)
+        # Test is device is writeable
+        table = 'PROBE_CONFIGURATION_PARAMETER_TABLE'
+        param = 'ProbeType'
+        value = 0xFF
+        self._set(table, param, value)
         
-        try:
-            package = self.set_parameter(self._serno,
-                'PROBE_CONFIGURATION_PARAMETER_TABLE', 'ProbeType', 0xFF)
-            self._bus.write_package(package)
-            responce = self.responce_set_parameter(self._bus.read_package())
-        except SerialDeviceException as e:
-            raise ModuleException(e.value)
+        table = 'PROBE_CONFIGURATION_PARAMETER_TABLE'
+        param = 'ProbeType' 
         
-        time.sleep(0.2)
-          
-        try:
-            package = self.get_parameter(self._serno,
-                'PROBE_CONFIGURATION_PARAMETER_TABLE', 'ProbeType')
-            bytes_send = self._bus.write_package(package)
-            responce = self.responce_get_parameter(self._bus.read_package(),
-                'PROBE_CONFIGURATION_PARAMETER_TABLE', 'ProbeType')
-        except SerialDeviceException as e:
-            raise ModuleException(e.value)
-        
-        if not responce == 255:
+        if not self._get(table, param) == 255:
             raise ModuleException("Error: Couldn't unlock device!")
         
-        time.sleep(0.2)
         self._unlocked = True
     
     #######################################
     # reading data from the module tables #
     #######################################
     
+    def get_table(self, table):
+        param = 'GetData'
+        return self._get(table, param)
+    
     def get_serial(self):
-        try:
-            package = self.get_parameter(self._serno,
-                'SYSTEM_PARAMETER_TABLE', 'SerialNum')
-            bytes_send = self._bus.write_package(package)
-            responce = self.responce_get_parameter(self._bus.read_package(),
-                'SYSTEM_PARAMETER_TABLE', 'SerialNum')
-        except SerialDeviceException as e:
-            raise ModuleException(e.value)
-        time.sleep(0.2)
-        return int(responce, 16)
+        table = 'SYSTEM_PARAMETER_TABLE'
+        param = 'SerialNum'
+        return int(self._get(table, param), 16)
     
     def get_hw_version(self):
-        try:
-            package = self.get_parameter(self._serno,
-                'SYSTEM_PARAMETER_TABLE', 'HWVersion')
-            bytes_send = self._bus.write_package(package)
-            responce = self.responce_get_parameter(self._bus.read_package(),
-                'SYSTEM_PARAMETER_TABLE', 'HWVersion')
-        except SerialDeviceException as e:
-            raise ModuleException(e.value)
-        time.sleep(0.2)
-        return responce
+        table = 'SYSTEM_PARAMETER_TABLE'
+        param = 'HWVersion'
+        return self._get(table, param)
     
     def get_fw_version(self):
-        try:
-            package = self.get_parameter(self._serno,
-                'SYSTEM_PARAMETER_TABLE', 'FWVersion')
-            bytes_send = self._bus.write_package(package)
-            responce = self.responce_get_parameter(self._bus.read_package(),
-                'SYSTEM_PARAMETER_TABLE', 'FWVersion')
-        except SerialDeviceException as e:
-            raise ModuleException(e.value)
-        time.sleep(0.2)
-        return responce
-
-    def get_table(self, table):
-        try:
-            package = self.get_parameter(self._serno, table, 'GetData')
-            bytes_send = self._bus.write_package(package)
-            responce = self.responce_get_parameter(self._bus.read_package(),
-                table, 'GetData')
-        except SerialDeviceException as e:
-            raise ModuleException(e.value)
-        time.sleep(0.2)
-        return responce
-
-    def get_eeprom(self):
+        table = 'SYSTEM_PARAMETER_TABLE'
+        param = 'FWVersion'
+        return self._get(table, param)
+    
+    def get_moist_max_value(self):
+        table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
+        param = 'MoistMaxValue'
+        return self._get(table, param)
+    
+    def get_moist_min_value(self):
+        table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
+        param = 'MoistMinValue'
+        return self._get(table, param)
+    
+    def get_temp_max_value(self):
+        table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
+        param = 'TempMaxValue'
+        return self._get(table, param)
+    
+    def get_temp_min_value(self):
+        table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
+        param = 'TempMinValue'
+        return self._get(table, param)
+    
+    def get_event_mode(self):
+        table = 'ACTION_PARAMETER_TABLE'
+        param = 'Event'
+        return self._get(table, param)
+    
+    def read_eeprom(self):
         eprimg = str()
         if not self._unlocked:
             self._unlock()        
         try:
-            package = self.get_parameter(self._serno,
-                'DEVICE_CONFIGURATION_PARAMETER_TABLE', 'EPRByteLen')
+            table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
+            param = 'EPRByteLen'
+            package = self.get_parameter(self._serno, table, param)
             bytes_send = self._bus.write_package(package)
-            eprbytelen = self.responce_get_parameter(self._bus.read_package(),
-                'DEVICE_CONFIGURATION_PARAMETER_TABLE', 'GetData')
+            # TODO: test! -> is 'GetData' right?
+            eprbytelen = self.responce_get_parameter(self._bus.read_package(), table, 'GetData')
             time.sleep(0.2)
         except SerialDeviceException as e:
-            raise ModuleException(e.value)
+            raise ModuleException(e.message)
         pages = eprbytelen / 252 + 1
         for page in range(0,pages):    
             try:
@@ -167,86 +171,22 @@ class Module(ModuleCommands, ModuleResponces):
                 eprimg += self.responce_get_epr_image(self._bus.read_package())
                 time.sleep(0.2)
             except SerialDeviceException as e:
-                raise ModuleException(e.value)
+                raise ModuleException(e.message)
         return eprimg
-
-    def get_moist_max_value(self):
-        try:
-            package = self.get_parameter(self._serno,
-                'DEVICE_CONFIGURATION_PARAMETER_TABLE', 'MoistMaxValue')
-            bytes_send = self._bus.write_package(package)
-            responce = self.responce_get_parameter(self._bus.read_package(),
-                'DEVICE_CONFIGURATION_PARAMETER_TABLE', 'MoistMaxValue')
-        except SerialDeviceException as e:
-            raise ModuleException(e.value)
-        time.sleep(0.2)
-        return responce
-
-    def get_moist_max_value(self):
-        try:
-            package = self.get_parameter(self._serno,
-                'DEVICE_CONFIGURATION_PARAMETER_TABLE', 'MoistMaxValue')
-            bytes_send = self._bus.write_package(package)
-            responce = self.responce_get_parameter(self._bus.read_package(),
-                'DEVICE_CONFIGURATION_PARAMETER_TABLE', 'MoistMaxValue')
-        except SerialDeviceException as e:
-            raise ModuleException(e.value)
-        time.sleep(0.2)
-        return responce
-
-    def get_moist_min_value(self):
-        try:
-            package = self.get_parameter(self._serno,
-                'DEVICE_CONFIGURATION_PARAMETER_TABLE', 'MoistMinValue')
-            bytes_send = self._bus.write_package(package)
-            responce = self.responce_get_parameter(self._bus.read_package(),
-                'DEVICE_CONFIGURATION_PARAMETER_TABLE', 'MoistMinValue')
-        except SerialDeviceException as e:
-            raise ModuleException(e.value)
-        time.sleep(0.2)
-        return responce
-
-    def get_temp_max_value(self):
-        try:
-            package = self.get_parameter(self._serno,
-                'DEVICE_CONFIGURATION_PARAMETER_TABLE', 'TempMaxValue')
-            bytes_send = self._bus.write_package(package)
-            responce = self.responce_get_parameter(self._bus.read_package(),
-                'DEVICE_CONFIGURATION_PARAMETER_TABLE', 'TempMaxValue')
-        except SerialDeviceException as e:
-            raise ModuleException(e.value)
-        time.sleep(0.2)
-        return responce
-
-    def get_temp_min_value(self):
-        try:
-            package = self.get_parameter(self._serno,
-                'DEVICE_CONFIGURATION_PARAMETER_TABLE', 'TempMinValue')
-            bytes_send = self._bus.write_package(package)
-            responce = self.responce_get_parameter(self._bus.read_package(),
-                'DEVICE_CONFIGURATION_PARAMETER_TABLE', 'TempMinValue')
-        except SerialDeviceException as e:
-            raise ModuleException(e.value)
-        time.sleep(0.2)
-        return responce
-
+    
     #################################
     # change the module settings    #  
     #################################
 
     def set_serial(self, serno):
+        table = 'SYSTEM_PARAMETER_TABLE'
+        param = 'SerialNum'
+        value = serno
+        
+        self._serno = serno
         if not self._unlocked:
             self._unlock()
-        try:
-            package = self.set_parameter(self._serno,
-                'SYSTEM_PARAMETER_TABLE', 'SerialNum', serno)
-            bytes_send = self._bus.write_package(package)
-            responce = self.responce_set_parameter(self._bus.read_package())
-        except SerialDeviceException as e:
-            raise ModuleException(e.value)
-        self._serno = serno
-        time.sleep(0.2)
-        return responce
+        return self._set(table, param, value)
     
     def set_analog_moist(self, mvolt=500):
         if not mvolt in range(0,1001):
@@ -256,19 +196,11 @@ class Module(ModuleCommands, ModuleResponces):
         max = self.get_moist_min_value()
         value = (abs(min) + abs(max)) / 1000 * mvolt
         
+        table = 'MEASURE_PARAMETER_TABLE'
+        param = 'Moist'
         if not self._unlocked:
             self._unlock()
-        
-        try:
-            package = self.set_parameter(self._serno,
-                'MEASURE_PARAMETER_TABLE', 'Moist', value)
-            bytes_send = self._bus.write_package(package)
-            responce = self.responce_set_parameter(self._bus.read_package())
-        except SerialDeviceException as e:
-            raise ModuleException(e.value)
-        
-        time.sleep(0.2)
-        return responce
+        return self._set(table, param, value)
         
     def set_analog_temp(self, mvolt=500):
         if not mvolt in range(0,1001):
@@ -277,37 +209,54 @@ class Module(ModuleCommands, ModuleResponces):
         min = self.get_temp_max_value()
         max = self.get_temp_min_value()
         value = (abs(min) + abs(max)) / 1000 * mvolt
-            
+        table = 'MEASURE_PARAMETER_TABLE'
+        param = 'CompTemp'
+        
         if not self._unlocked:
             self._unlock()
-
-        try:
-            package = self.set_parameter(self._serno,
-                'MEASURE_PARAMETER_TABLE', 'CompTemp', value)
-            bytes_send = self._bus.write_package(package)
-            responce = self.responce_set_parameter(self._bus.read_package())
-        except SerialDeviceException as e:
-            raise ModuleException(e.value)
-
-        time.sleep(0.2)
-        return responce
+        return self._set(table, param, value)
+    
+    def set_event_mode(self, event_mode=0x80):
+        table = 'MEASURE_PARAMETER_TABLE'
+        param = 'CompTemp'
+        value = event_mode
+        
+        if not self._unlocked:
+            self._unlock()
+        #raise ModuleException("Setting event_mode failed!")
+        return self._set(table, param, value)
         
     def write_eeprom(self, eeprom_file):
-        
         if not self._unlocked:
-            self._unlock()
-        
+            self._unlock()        
         eeprom = Parser(eeprom_file)
         for page_nr, page in eeprom:
             package = self.set_epr_image(self._serno, page_nr, page)
             try:
                 bytes_send = self._bus.write_package(package)
-                responce = self.responce_set_parameter(self._bus.read_package())
+                if not self.responce_set_erp_image(self._bus.read_package()):
+                    raise ModuleException("Writing EEPROM Failed")
                 time.sleep(0.2)
             except SerialDeviceException as e:
-                raise ModuleException(e.value)
-        return eeprom.length
+                raise ModuleException(e.message)
+        return True
+
+    #################################
+    # perform measurment commands   #  
+    #################################
+
+    def do_measurement(self):
+        # Event Modes
+        normal_measure  = 0x00
+        trd_scan        = 0x01
+        analog_out      = 0x02
+        asic_tc         = 0x03
+        self_test       = 0x04
+        mat_temp_sensor = 0x05
         
+        print self.get_event_mode()
+        print self.set_event_mode()
+
 if __name__ == "__main__":
     import doctest
     doctest.testmod()
