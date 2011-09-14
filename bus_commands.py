@@ -24,10 +24,7 @@ from imp_tables import Tables, TablesException
 from imp_packets import Packets, PacketsException
 
 class BusCommandsException(Exception):
-    def __init__(self, value):
-        self.value = value
-    def __str__(self):
-        return repr(self.value)
+    pass
 
 class BusCommands(Packets, Tables):
     """ COMMANDS TO CONTROL A IMPBUS2.

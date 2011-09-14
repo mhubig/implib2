@@ -27,10 +27,7 @@ from packet import Packet, PacketException
 from serialdevice import SerialDevice, SerialDeviceException
 
 class SnifferException(Exception):
-    def __init__(self, value):
-        self.value = value
-    def __str__(self):
-        return repr(self.value)
+    pass
 
 class Sniffer(Packet):
     def __init__(self, port_pc, port_bus):

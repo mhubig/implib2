@@ -78,10 +78,7 @@ class Table(YAMLObject):
             self.__class__.__name__, self.Table.Name)
 
 class TablesException(Exception):
-    def __init__(self, value):
-        self.value = value
-    def __str__(self):
-        return repr(self.value)
+    pass
 
 class Tables(object):
     """ Class containing all the IMPBUS2 parameter Tables.

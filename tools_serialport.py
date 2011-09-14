@@ -48,10 +48,7 @@ reactor.run()
 
 
 class SerialdeviceException(Exception):
-    def __init__(self, value):
-        self.value = value
-    def __str__(self):
-        return repr(self.value)
+    pass
 
 class Serialdevice(object):
     """ Class for sending and recieving IMPBUS2 Packets via a serial line.

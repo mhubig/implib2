@@ -24,10 +24,7 @@ import re
 from datetime import datetime
 
 class ParserException(Exception):
-    def __init__(self, value):
-        self.value = value
-    def __str__(self):
-        return repr(self.value)
+    pass
 
 class Parser(object):
     """ Class to parse a EPT file.

@@ -23,10 +23,7 @@ from imp_tables import Tables, TablesException
 from imp_packets import Packets, PacketsException
 
 class ModuleCommandsException(Exception):
-    def __init__(self, value):
-        self.value = value
-    def __str__(self):
-        return repr(self.value)
+    pass
 
 class ModuleCommands(Packets, Tables):
     """ COMMANDS TO CONTROL THE MODULES AND TRANSFER PARAMETERS
