@@ -58,9 +58,6 @@ class ModuleResponces(Packets, Tables):
         table = getattr(self, table)
         param = getattr(table, param)
         
-        print data
-        print param.Type
-        
         # 8-bit unsigned char
         if param.Type == 0:
             data = int(data, 16)

@@ -112,7 +112,7 @@ class Module(ModuleCommands, ModuleResponces):
     def get_serial(self):
         table = 'SYSTEM_PARAMETER_TABLE'
         param = 'SerialNum'
-        return int(self._get(table, param), 16)
+        return self._get(table, param)
     
     def get_hw_version(self):
         table = 'SYSTEM_PARAMETER_TABLE'
@@ -183,10 +183,11 @@ class Module(ModuleCommands, ModuleResponces):
         param = 'SerialNum'
         value = serno
         
-        self._serno = serno
         if not self._unlocked:
             self._unlock()
-        return self._set(table, param, value)
+        state = self._set(table, param, value)
+        self._serno = serno
+        return state
     
     def set_analog_moist(self, mvolt=500):
         if not mvolt in range(0,1001):
