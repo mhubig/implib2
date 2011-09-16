@@ -174,10 +174,10 @@ class Module(ModuleCommands, ModuleResponces):
                 raise ModuleException(e.message)
         return eprimg
     
-    #################################
-    # change the module settings    #  
-    #################################
-
+    ################################
+    # change the module settings   #
+    ################################
+    
     def set_serial(self, serno):
         table = 'SYSTEM_PARAMETER_TABLE'
         param = 'SerialNum'
