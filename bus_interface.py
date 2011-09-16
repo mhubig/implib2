@@ -78,7 +78,7 @@ class IMPBus(SerialDevice, BusCommands, BusResponces):
     # Initialize the bus communication #
     ####################################
     
-    def synchronise_bus(self, baudrate=96):
+    def synchronise_bus(self, baudrate=9600):
         """ IMPBUS BAUDRATE SYNCHRONIZATION
         
         The communication between master and slaves can only be successful
@@ -102,43 +102,49 @@ class IMPBus(SerialDevice, BusCommands, BusResponces):
         parameter = 'Baudrate'
         address = 16777215
         
+        baudrate = baudrate/100
+        if not baudrate in (12, 24, 48, 96):
+            raise IMPBusException("Unknown baudrate!")
+        
         # first close the device
         self.close_device()
         
         # trying to set baudrate at 1200
         if self.DEBUG: print "Set baudrate with 1200baud!"
-        self.ser.baudrate = 1200
-        self.open_device()
+        self.open_device(baudrate=1200)
         package = self.set_parameter(address, table, parameter, baudrate)
+        print package
         bytes_send = self.write_package(package)
         time.sleep(0.4)
         self.close_device()
         
         # trying to set baudrate at 2400
         if self.DEBUG: print "Set baudrate with 2400baud!"
-        self.ser.baudrate = 2400
-        self.open_device()
+        self.open_device(baudrate=2400)
         package = self.set_parameter(address, table, parameter, baudrate)
+        print package
         bytes_send = self.write_package(package)
         time.sleep(0.4)
         self.close_device()
         
         # trying to set baudrate at 4800
         if self.DEBUG: print "Set baudrate with 4800baud!"
-        self.ser.baudrate = 4800
-        self.open_device()
+        self.open_device(baudrate=4800)
         package = self.set_parameter(address, table, parameter, baudrate)
+        print package
         bytes_send = self.write_package(package)
         time.sleep(0.4)
         self.close_device()
         
         # trying to set baudrate at 9600
         if self.DEBUG: print "Set baudrate with 9600baud!"
-        self.ser.baudrate = 9600
-        self.open_device()
+        self.open_device(baudrate=9600)
         package = self.set_parameter(address, table, parameter, baudrate)
+        print package
         bytes_send = self.write_package(package)
+        self.close_device()
         
+        self.open_device(baudrate=baudrate*100)
         self.bus_synced = True
         time.sleep(0.5)
     

@@ -35,10 +35,9 @@ class SerialDevice(object):
     the commands write, read and one called talk() which takes care of sending
     a packet and recieving the answer.
     """
-    def __init__(self, port, baudrate=9600):
+    def __init__(self, port):
         self.DEBUG = False
         self.TIMEOUT = 2
-        self.BAUDRATE = baudrate
         self.PORT = port
         
         try:
@@ -46,9 +45,9 @@ class SerialDevice(object):
         except SerialException as e:
             raise SerialDeviceException(e.message)
         
-    def open_device(self):
+    def open_device(self, baudrate=9600):
         self.ser.port     = self.PORT
-        self.ser.baudrate = self.BAUDRATE
+        self.ser.baudrate = baudrate
         self.ser.bytesize = EIGHTBITS
         self.ser.parity   = PARITY_ODD
         self.ser.stopbits = STOPBITS_TWO
