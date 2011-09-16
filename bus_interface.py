@@ -98,55 +98,59 @@ class IMPBus(SerialDevice, BusCommands, BusResponces):
         Set baudrate with 9600baud!
         """
         
+        address = 16777215
         table = 'SYSTEM_PARAMETER_TABLE'
         parameter = 'Baudrate'
-        address = 16777215
+        value = baudrate/100
         
-        baudrate = baudrate/100
-        if not baudrate in (12, 24, 48, 96):
+        if not value in (12, 24, 48, 96):
             raise IMPBusException("Unknown baudrate!")
         
         # first close the device
         self.close_device()
         
         # trying to set baudrate at 1200
-        if self.DEBUG: print "Set baudrate with 1200baud!"
+        if self.DEBUG:
+            print "Set baudrate to {0} with 1200baud!".format(baudrate)
         self.open_device(baudrate=1200)
-        package = self.set_parameter(address, table, parameter, baudrate)
-        print package
+        package = self.set_parameter(address, table, parameter, value)
         bytes_send = self.write_package(package)
-        time.sleep(0.4)
+        time.sleep(0.5)
         self.close_device()
         
         # trying to set baudrate at 2400
-        if self.DEBUG: print "Set baudrate with 2400baud!"
+        if self.DEBUG:
+            print "Set baudrate to {0} with 2400baud!".format(baudrate)
         self.open_device(baudrate=2400)
-        package = self.set_parameter(address, table, parameter, baudrate)
-        print package
+        package = self.set_parameter(address, table, parameter, value)
         bytes_send = self.write_package(package)
-        time.sleep(0.4)
+        time.sleep(0.5)
         self.close_device()
         
         # trying to set baudrate at 4800
-        if self.DEBUG: print "Set baudrate with 4800baud!"
+        if self.DEBUG:
+            print "Set baudrate to {0} with 4800baud!".format(baudrate)
         self.open_device(baudrate=4800)
-        package = self.set_parameter(address, table, parameter, baudrate)
-        print package
+        package = self.set_parameter(address, table, parameter, value)
         bytes_send = self.write_package(package)
-        time.sleep(0.4)
+        time.sleep(0.5)
         self.close_device()
         
         # trying to set baudrate at 9600
-        if self.DEBUG: print "Set baudrate with 9600baud!"
+        if self.DEBUG:
+            print "Set baudrate to {0} with 9600baud!".format(baudrate)
         self.open_device(baudrate=9600)
-        package = self.set_parameter(address, table, parameter, baudrate)
-        print package
+        package = self.set_parameter(address, table, parameter, value)
         bytes_send = self.write_package(package)
+        time.sleep(0.5)
         self.close_device()
         
-        self.open_device(baudrate=baudrate*100)
+        self.open_device(baudrate=baudrate)
         self.bus_synced = True
-        time.sleep(0.5)
+        if self.DEBUG:
+            print "All modules synced to {0}baud!".format(baudrate)
+        
+        return True
     
     #############################
     # finding connected modules #
@@ -168,6 +172,9 @@ class IMPBus(SerialDevice, BusCommands, BusResponces):
         >>> bus.DEBUG = True
         >>> modules = bus.scan_bus(minserial=0, maxserial=2)
         """
+        
+        if self.DEBUG: print("Scanning bus for connected modules!")
+        
         sernos = list()
         modules = list()
         self._divide_and_conquer(minserial, maxserial, sernos)
@@ -176,8 +183,10 @@ class IMPBus(SerialDevice, BusCommands, BusResponces):
             return modules
             
         for serno in sernos:
+            if self.DEBUG:
+                print("Found module with serno:{0}".format(serno))
             modules.append(Module(self, serno))
-        time.sleep(0.5)
+        
         return modules
     
     def find_single_module(self):

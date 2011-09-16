@@ -66,7 +66,7 @@ class SerialDevice(object):
             self.ser.close()
         except:
             pass
-    
+        
     def write_package(self, packet):
         """ Writes IMPBUS2 packet to the serial line.
         
@@ -80,7 +80,7 @@ class SerialDevice(object):
         
     def read_package(self):
         """ Read IMPBUS2 packet from serial line.
-
+        
         It automatically calculates the length from the header
         information and Returns the recieved packet as HEX string.
         """
@@ -130,19 +130,19 @@ class SerialDevice(object):
         
     def read_something(self):
         """ Tries to read _one_ byte from the serial line.
-
+        
         This methode shold be as fast as possible. Returns
         True or False. Useable for scanning the bus. 
         """
         state = (len(self.ser.read()) == 1)
         if self.DEBUG: print 'Byte Read:', state
         return state
-    
+        
     def talk(self, packet):
         """ Writes an IMPBUS2 Package and reads the responce packet """
         self.write_packet(packet)
         return self.read_packet()
-    
+        
 if __name__ == "__main__":
     import doctest
     doctest.testmod()
