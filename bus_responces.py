@@ -29,40 +29,24 @@ class BusResponces(Packets):
     def __init__(self):
         Packets.__init__(self)
         
-    def responce_get_long_acknowledge(self, packet):
+    def get_long_ack(self,packet,serno):
         responce = self.unpack(packet)
         return responce['serno']
         
-    def responce_get_short_acknowledge(self, packet):
+    def get_short_ack(self,packet,serno):
         # not a standart responce packet, just the CRC of the serial
         pass
         
-    def responce_get_acknowledge_for_serial_number_range(self, packet):
+    def get_range_ack(self,packet):
         # not a standart responce packet, just the CRC of the serial
         pass
         
-    def responce_get_negative_acknowledge(self, packet):
+    def get_negative_ack(self, packet):
         responce = self.unpack(packet)
         responce = self._reflect_bytes(responce['data'][0:6])
         return int(responce, 16)
         
-    def responce_get_parameter(self, packet):
-        responce = self.unpack(packet)
-        return responce['serno'], responce['cmd'], responce['data']
-        
-    def responce_set_parameter(self, packet):
-        responce = self.unpack(packet)
-        return responce['serno'], responce['cmd']
-        
-    def responce_do_tdr_scan(self, packet):
-        responce = self.unpack(packet)
-        return responce['serno'], responce['cmd'], responce['data']
-        
-    def responce_get_epr_image(self, packet):
-        responce = self.unpack(packet)
-        return responce['serno'], responce['cmd'], responce['data']
-        
-    def responce_set_erp_image(self, packet):
+    def set_parameter(self, packet):
         responce = self.unpack(packet)
         return responce['serno'], responce['cmd']
     

@@ -20,6 +20,7 @@ You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 
+import struct
 from tools_crc import CRC
 
 class PacketsException(Exception):
@@ -49,7 +50,17 @@ class Packets(CRC):
     def __init__(self):
         self.DEBUG = True
         CRC.__init__(self)
-       
+        
+        self.data_types = {
+            0x00: '>{0}B', # 8-bit unsigned char
+            0x01: '>{0}b', # 8-bit signed char
+            0x02: '>{0}H', # 16-bit unsigned short
+            0x03: '>{0}h', # 16-bit signed short
+            0x04: '>{0}I', # 32-bit unsigned integer
+            0x05: '>{0}i', # 32-bit signed integer
+            0x06: '>{0}f', # 32-bit float
+            0x07: '>{0}d'} # 64-bit double
+        
     def _hexhex(self,str):
         return hex(int(str, 16))
     
@@ -99,18 +110,22 @@ class Packets(CRC):
         param = data[4:]
         return {'no_param': no_param, 'ad_param': ad_param, 'param': param}
 
-    def _pack_data(self, no_param, param=None, ad_param=None):
-        # param is optional and ad_param, if not explicit
-        # given, is always '00' ...
-        no_param = '%02x' % no_param
-        ad_param = '%02x' % ad_param if ad_param else '00'
+    def _pack_data(self, param_type=0, param_no=0, param=None):
+        # param is optional because of the get commands
+        # UPDATED!
+        param_no = struct.pack('>B', no_param)
+        param_ad = struct.pack('>B', 0)
   
         if not param:
-            data = no_param + ad_param
+            data = param_no + param_ad
             data = data + self.calc_crc(data)
         else:
-            param = self._reflect_bytes(param)
-            data = no_param + ad_param + param
+            param_type = param_type % 80
+            format = self.data_types[param_type]
+            if isinstance(param, (list, tuple, set)):
+                param = pack(format.format(len(param)), param)
+            param = pack(format.format(1), param)
+            data = param_no + param_ad + param
             data = data + self.calc_crc(data)
         return data
 
@@ -153,26 +168,26 @@ class Packets(CRC):
             data = self._check_data(data)
         return header, data
 
-    def pack(self, serno, cmd, no_param=None, param=None, ad_param=None):
+    def pack(self,serno=00000,cmd=0x00,param_type=0x00,param_no=None,param=None):
         """ Funktion to create an IMPBUS2 package.
         
         Package is created from serial number, command and data
         string. serno shold be [int/hex], cmd [hex/int] and data
         should be a hex-string!
         """
-        state = 'fd' # indicates IMP232N protocol version
-        serno = '%06x' % serno
-        cmd = '%02x' % cmd
-        serno = self._reflect_bytes(serno)
         
-        if no_param:
-            data = self._pack_data(no_param, param, ad_param)
-            length = '%02x' % (len(data) / 2)
+        state = struct.pack('>B', 0xfd) # indicates IMP232N protocol version
+        serno = struct.pack('>I', serno)[1:4]
+        cmd   = struct.pack('>B', cmd)
+        
+        if param_no:
+            data = self._pack_data(param_type, param_no, param)
+            length = struct.pack('>B', len(data))
             header = state + cmd + length + serno
             header = header + self.calc_crc(header)
             packet = header + data
         else:
-            length = '00'
+            length = struct.pack('>B', 0xfd)
             header = state + cmd + length + serno
             header = header + self.calc_crc(header)
             packet = header

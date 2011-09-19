@@ -20,12 +20,11 @@ You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 import time
-from binascii import b2a_hex as b2a
-from binascii import a2b_hex as a2b
-from serial import Serial, SerialException
-from serial import EIGHTBITS, PARITY_ODD, STOPBITS_TWO
+import serial
+from struct import pack, unpack
+from binascii import b2a_hex as b2a, a2b_hex as a2b
 
-class SerialDeviceException(Exception):
+class SerialDeviceError(Exception):
     pass
 
 class SerialDevice(object):
@@ -36,21 +35,21 @@ class SerialDevice(object):
     a packet and recieving the answer.
     """
     def __init__(self, port):
+        self.PORT = port
         self.DEBUG = False
         self.TIMEOUT = 2
-        self.PORT = port
         
         try:
-            self.ser = Serial()
-        except SerialException as e:
-            raise SerialDeviceException(e.message)
+            self.ser = serial.serial_for_url(url=port, do_not_open=True)
+        except AttributeError:
+            self.ser = serial.Serial(port=None)
         
     def open_device(self, baudrate=9600):
         self.ser.port     = self.PORT
         self.ser.baudrate = baudrate
-        self.ser.bytesize = EIGHTBITS
-        self.ser.parity   = PARITY_ODD
-        self.ser.stopbits = STOPBITS_TWO
+        self.ser.bytesize = serial.EIGHTBITS
+        self.ser.parity   = serial.PARITY_ODD
+        self.ser.stopbits = serial.STOPBITS_TWO
         self.ser.timeout  = 0 # act nonblocking
         self.ser.xonxoff  = 0
         self.ser.rtscts   = 0
@@ -60,20 +59,21 @@ class SerialDevice(object):
         if self.DEBUG: print 'Device opened:', self.ser.name
         
     def close_device(self):
-        if self.DEBUG: print 'Device closed:', self.ser.name
         try:
             self.ser.flush()
             self.ser.close()
         except:
             pass
+        finally:
+            if self.DEBUG: print 'Device closed:', self.ser.name
         
     def write_package(self, packet):
         """ Writes IMPBUS2 packet to the serial line.
         
-        Packet must be a pre-build HEX string. Returns the
+        Packet must be a pre-build BYTE string. Returns the
         length in Bytes of the string written. 
         """
-        bytes_send = self.ser.write(a2b(packet))
+        bytes_send = self.ser.write(packet)
         time.sleep(0.1)
         if self.DEBUG: print 'Packet send:', packet, 'Length:', bytes_send
         return bytes_send
@@ -82,15 +82,15 @@ class SerialDevice(object):
         """ Read IMPBUS2 packet from serial line.
         
         It automatically calculates the length from the header
-        information and Returns the recieved packet as HEX string.
+        information and Returns the recieved packet as BYTE string.
         """
-        
         # read header, always 7 bytes
         header = str()
         length = 7
         tic = time.time()
         while (time.time() - tic < self.TIMEOUT) and (len(header) < length): 
             if self.ser.inWaiting(): header += self.ser.read()
+        
         if self.DEBUG: print 'Header read:', b2a(header), 'Length:', len(header)
         
         if len(header) < length:
@@ -98,35 +98,35 @@ class SerialDevice(object):
         
         # read data, length is known from header
         data = str()
-        length = int(b2a(header)[4:6], 16)
+        length = unpack('>B',header[3])
         tic = time.time()
         while (time.time() - tic < self.TIMEOUT) and (len(data) < length):
             if self.ser.inWaiting(): data += self.ser.read()
+        
         if self.DEBUG: print 'Data read:', b2a(data), 'Length:', len(data)
         
         if len(data) < length:
             raise SerialDeviceException('TimeoutError reading data!')
-            
-        packet = b2a(header + data)
-        if self.DEBUG: print 'Packet read:', packet, 'Length:', len(packet)/2
-        return packet
+        
+        return header + data
         
     def read_bytes(self, length):
         """ Tries to read <length>-bytes from the serial line.
         
         Methode to read a given amount of byter from the serial
-        line. Returns the result as HEX string.
+        line. Returns the result as BYTE string.
         """
         bytes = str()
         tic = time.time()
         while (time.time() - tic < self.TIMEOUT) and (len(bytes) < length): 
             if self.ser.inWaiting(): bytes += self.ser.read()
+        
         if self.DEBUG: print 'Bytes read:', b2a(bytes)
         
         if len(bytes) < length:
             raise SerialDeviceException('TimeoutError reading header!')
         
-        return b2a(bytes)
+        return bytes
         
     def read_something(self):
         """ Tries to read _one_ byte from the serial line.

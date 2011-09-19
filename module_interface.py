@@ -42,14 +42,21 @@ class Module(ModuleCommands, ModuleResponces):
     """
     
     def __init__(self, bus, serno):
-        self.DEBUG = True
+        super(Module, self).__init__()
+        self.DEBUG     = False
         self._unlocked = False
-        self._bus = bus
-        self._serno = serno
-        self._crc = CRC()
-        ModuleCommands.__init__(self)
-        ModuleResponces.__init__(self)
-    
+        self._bus      = bus
+        self._serno    = serno
+        self._crc      = CRC()
+        
+        self.EVENT_MODES = {
+            "NormalMeasure":    0x00,
+            "TRDScan":          0x01,
+            "AnalogOut":        0x02,
+            "ACIC_TC":          0x03,
+            "SelfTest":         0x04,
+            "MatTempSensor":    0x05}
+        
     def _get(self, table, param):
         """General get_parameter command"""
         if self.DEBUG: print("get_command: table={0} param={1}".format(table, param))
@@ -147,7 +154,9 @@ class Module(ModuleCommands, ModuleResponces):
     def get_event_mode(self):
         table = 'ACTION_PARAMETER_TABLE'
         param = 'Event'
-        return self._get(table, param)
+        modes = {v:k for k, v in self.EVENT_MODES.items()}
+        event = self._get(table, param)
+        return modes[event % 0x80]
     
     def read_eeprom(self):
         eprimg = str()
@@ -193,12 +202,12 @@ class Module(ModuleCommands, ModuleResponces):
         if not mvolt in range(0,1001):
             raise ModuleException('Value out of range!')
         
-        min = self.get_moist_max_value()
-        max = self.get_moist_min_value()
-        value = (abs(min) + abs(max)) / 1000 * mvolt
-        
+        min = self.get_moist_min_value()
+        max = self.get_moist_max_value()
+        value = (max - min) / 1000.0 * mvolt + min
         table = 'MEASURE_PARAMETER_TABLE'
         param = 'Moist'
+        print value
         if not self._unlocked:
             self._unlock()
         return self._set(table, param, value)
@@ -207,24 +216,37 @@ class Module(ModuleCommands, ModuleResponces):
         if not mvolt in range(0,1001):
             raise ModuleException('Value out of range!')
         
-        min = self.get_temp_max_value()
-        max = self.get_temp_min_value()
-        value = (abs(min) + abs(max)) / 1000 * mvolt
+        min = self.get_temp_min_value()
+        max = self.get_temp_max_value()
+        print "Min: {0}".format(min)
+        print "Max: {0}".format(max)
+        value = (max - min) / 1000.0 * mvolt + min
         table = 'MEASURE_PARAMETER_TABLE'
         param = 'CompTemp'
-        
+        print "Calculated Value: {0}".format(value)
         if not self._unlocked:
             self._unlock()
         return self._set(table, param, value)
     
-    def set_event_mode(self, event_mode=0x80):
+    def set_event_mode(self, event_mode="NormalMeasure"):
+        """" Command to set the Event Mode of the probe.
+        
+        EventMode is used to control the slave to fulfil
+        the different events.They are NormalMeasure, TDRScan,
+        AnalogOut, ASIC_TC (Temperature Compensation),
+        Self Test and MatTempSensor.
+        """
+        
         table = 'MEASURE_PARAMETER_TABLE'
         param = 'CompTemp'
-        value = event_mode
+        try:
+            value = self.EVENT_MODES[event_mode]
+        except KeyError as e:
+            raise ModuleException("'{0}' is not a valid EventMode!"
+                .format(e.message))
         
         if not self._unlocked:
             self._unlock()
-        #raise ModuleException("Setting event_mode failed!")
         return self._set(table, param, value)
         
     def write_eeprom(self, eeprom_file):
@@ -247,16 +269,8 @@ class Module(ModuleCommands, ModuleResponces):
     #################################
 
     def do_measurement(self):
-        # Event Modes
-        normal_measure  = 0x00
-        trd_scan        = 0x01
-        analog_out      = 0x02
-        asic_tc         = 0x03
-        self_test       = 0x04
-        mat_temp_sensor = 0x05
-        
-        print self.get_event_mode()
-        print self.set_event_mode()
+        if not self.get_event_mode() == "NormalMeasure":
+            self.set_event_mode("NormalMeasure")
 
 if __name__ == "__main__":
     import doctest

@@ -23,10 +23,10 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 from imp_tables import Tables, TablesException
 from imp_packets import Packets, PacketsException
 
-class BusCommandsException(Exception):
+class BusCommandError(Exception):
     pass
 
-class BusCommands(Packets, Tables):
+class BusCommand(Packets, Tables):
     """ COMMANDS TO CONTROL A IMPBUS2.
     
     After building-up a IMP232N-bus, it is necessary for the master to find
@@ -41,11 +41,10 @@ class BusCommands(Packets, Tables):
     
     """
     def __init__(self):
+        super(StateMachine, self).__init__(self)
         self.DEBUG = False
-        Packets.__init__(self)
-        Tables.__init__(self)
         
-    def get_long_acknowledge(self,serno):
+    def get_long_ack(self,serno):
         """ GET LONG ACKNOWLEDGE
         
         This command with the number 2 will call up the slave which is
@@ -53,13 +52,13 @@ class BusCommands(Packets, Tables):
         a complete address block. It can be used to test the presence of
         a module in conjunction with the quality of the bus connection.
         
-        >>> bus = BusCommands()
-        >>> print bus.get_long_acknowledge(31001)
+        >>> bus = BusCommand()
+        >>> print bus.get_long_ack(31001)
         fd02001979007b
         """
         return self.pack(serno=serno,cmd=0x02)
         
-    def get_short_acknowledge(self,serno):
+    def get_short_ack(self,serno):
         """ GET SHORT ACKNOWLEDGE
         
         This command will call up the slave which is addressed by its serial
@@ -68,13 +67,13 @@ class BusCommands(Packets, Tables):
         of any data block and the only one without a complete address block. It
         can be used to test the presence of a module.
         
-        >>> bus = BusCommands()
-        >>> print bus.get_short_acknowledge(31001)
+        >>> bus = BusCommand()
+        >>> print bus.get_short_ack(31001)
         fd0400197900e7
         """
         return self.pack(serno=serno,cmd=0x04)
         
-    def get_acknowledge_for_serial_number_range(self,range):
+    def get_range_ack(self,range):
         """ GET ACKNOWLEDGE FOR SERIAL NUMBER RANGE
         
         This command is very similar to the get_short_acknowledge command.
@@ -114,55 +113,47 @@ class BusCommands(Packets, Tables):
         lower half:  11010000 00000000 00000000 (old mark gets 0)
         higher half: 11110000 00000000 00000000 (old mark gets 1)
         
-        >>> bus = BusCommands()
+        >>> bus = BusCommand()
         >>> range = int(0b111100000000000000000000)
-        >>> print bus.get_acknowledge_for_serial_number_range(range)
+        >>> print bus.get_range_ack(range)
         fd06000000f0d0
         """
         return self.pack(serno=range,cmd=0x06)
         
-    def get_negative_acknowledge(self):
+    def get_negative_ack(self):
         """ GET NEGATIVE ACKNOWLEDGE
         
         This command is used to identify a single module on the bus which
         serial number is unknown. It is a broadcast command and serves to
         get the serial number of the module.
         
-        >>> bus = BaseCommands()
-        >>> print bus.get_negative_acknowledge()
+        >>> bus = BusCommand()
+        >>> print bus.get_negative_ack()
         fd0800ffffff60
         """
         return self.pack(serno=16777215,cmd=0x08)
         
     def set_parameter(self, serno, table, param, value):
         """ COMMAND TO SET A PARAMETER.
-
+        
         Command to write a parameter to one of the different parameter
         tables in the slave module. It will checkt if the value has the
         right type and if this parameter is writable, according tho the
         tables.
-
+        
         TODO: Check the value type!
-
-        >>> module = ModuleCommands()
-        >>> print module.set_parameter(31002,\
+        
+        >>> bus = BusCommand()
+        >>> print bus.set_parameter(31002,\
                 'PROBE_CONFIGURATION_PARAMETER_TABLE',\
                 'DeviceSerialNum',31003)
         fd11071a79002b0c000000791bc4
         """
         table = getattr(self, table)
         param = getattr(table, param)
-
-        value = '%x' % value
-        value = value.zfill(param.Length*2)
-
-        #if not param.writeable():
-        #    raise ModuleCommandsException('Parameter is not writeable!')
-
-        if not len(value)/2 == param.Length:
-            raise ModuleCommandsException('Parameter has the wrong length!')
-
-        package = self.pack(serno, table.Table.Set, param.No, value)
+        
+        package = self.pack(serno=serno, cmd=table.Table.Set,
+            param_type=param.Type, param_no=param.No, param=value)
         return package
         
 if __name__ == "__main__":

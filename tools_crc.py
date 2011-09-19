@@ -21,8 +21,9 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 
 from binascii import unhexlify as uh
+from struct import pack
 
-class CRCException(Exception):
+class CRCError(Exception):
     pass
 
 class CRC(object):
@@ -79,18 +80,17 @@ class CRC(object):
             tbl[i] = register & 255
         return tbl
 
-    def calc_crc(self, hex_string):
+    def calc_crc(self, byte_str):
         tbl = self.tbl
-        str = uh(hex_string)
         register = 0x0
-        for c in str:
+        for c in byte_str:
             tblidx   = (register ^ ord(c)) & 0xff
             register = ((register >> 8) ^ tbl[tblidx]) & 255
-        return "%02x" % register
+        return pack('>B', register)
 
-    def check_crc(self, hex_string):
-        data = hex_string[:-2]
-        crc  = hex_string[-2:]
+    def check_crc(self, byte_str):
+        data = byte_str[:-1]
+        crc  = byte_str[-1:]
         if crc == self.calc_crc(data):
             return True
         else:

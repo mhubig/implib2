@@ -20,6 +20,8 @@ You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 import struct
+from binascii import b2a_hex as b2a
+from binascii import a2b_hex as a2b
 from imp_packets import Packets, PacketsException
 from imp_tables import Tables, TablesException
 
@@ -31,10 +33,6 @@ class ModuleResponces(Packets, Tables):
         self.DEBUG = False
         Packets.__init__(self)
         Tables.__init__(self)
-    
-    def _hex2float(self, s):
-        bins = ''.join(chr(int(s[x:x+2], 16)) for x in range(0, len(s), 2))
-        return struct.unpack('>f', bins)[0]
     
     def responce_get_long_acknowledge(self, packet):
         responce = self.unpack(packet)
@@ -60,37 +58,35 @@ class ModuleResponces(Packets, Tables):
         
         # 8-bit unsigned char
         if param.Type == 0:
-            data = int(data, 16)
+            data = struct.unpack('>B', a2b(data))[0]
         
         # 8-bit signed char
         if param.Type == 1:
-            data = int(data, 16)
+            data = struct.unpack('>b', a2b(data))[0]
         
-        # 16-bit unsigned integer
+        # 16-bit unsigned short
         if param.Type == 2:
-            data = int(data, 16)
+            data = struct.unpack('>H', a2b(data))[0]
         
-        # 16-bit signed integer
+        # 16-bit signed short
         if param.Type == 3:
-            data = int(data, 16)
+            data = struct.unpack('>h', a2b(data))[0]
         
         # 32-bit unsigned integer 
         if param.Type == 4:
-            data = int(data, 16)
+            data = struct.unpack('>I', a2b(data))[0]
         
         # 32-bit signed integer
         if param.Type == 5:
-            data = int(data, 16)
+            data = struct.unpack('>i', a2b(data))[0]
         
         # 32-bit float
         if param.Type == 6:
-            data = self._hex2float(data)
-            data = '%.6f' % data
+            data = "{:.6f}".format(struct.unpack('>f', a2b(data))[0])
             
         # 64-bit double
         if param.Type == 7:
-            data = data = self._hex2float(data)
-            data = '%.6f' % data
+            data = "{:.6f}".format(struct.unpack('>d', a2b(data))[0])
         
         return data
         
