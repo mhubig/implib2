@@ -20,13 +20,16 @@ You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 
-from imp_tables import Tables, TablesException
-from imp_packets import Packets, PacketsException
+import struct
+from binascii import b2a_hex as b2a, a2b_hex as a2b
+
+from imp_tables import Tables, TablesError
+from imp_package import Package, PackageError
 
 class BusCommandError(Exception):
     pass
 
-class BusCommand(Packets, Tables):
+class BusCommand(object):
     """ COMMANDS TO CONTROL A IMPBUS2.
     
     After building-up a IMP232N-bus, it is necessary for the master to find
@@ -36,12 +39,20 @@ class BusCommand(Packets, Tables):
     
     For more details please refer to the "Developers Manual, Data Transmission
     Protocol for IMPBUS2, 2008-11-18".
-    
-    >>> bus 
-    
     """
     def __init__(self):
-        super(StateMachine, self).__init__(self)
+        self.tables = Tables()
+        self.pkg    = Package()
+        self.data_types = {
+            0x00: '<{0}B', # 8-bit unsigned char
+            0x01: '<{0}b', # 8-bit signed char
+            0x02: '<{0}H', # 16-bit unsigned short
+            0x03: '<{0}h', # 16-bit signed short
+            0x04: '<{0}I', # 32-bit unsigned integer
+            0x05: '<{0}i', # 32-bit signed integer
+            0x06: '<{0}f', # 32-bit float
+            0x07: '<{0}d'} # 64-bit double
+        
         self.DEBUG = False
         
     def get_long_ack(self,serno):
@@ -53,10 +64,11 @@ class BusCommand(Packets, Tables):
         a module in conjunction with the quality of the bus connection.
         
         >>> bus = BusCommand()
-        >>> print bus.get_long_ack(31001)
-        fd02001979007b
+        >>> pkg = bus.get_long_ack(31001)
+        >>> b2a(pkg)
+        'fd02001979007b'
         """
-        return self.pack(serno=serno,cmd=0x02)
+        return self.pkg.pack(serno=serno,cmd=0x02)
         
     def get_short_ack(self,serno):
         """ GET SHORT ACKNOWLEDGE
@@ -68,10 +80,11 @@ class BusCommand(Packets, Tables):
         can be used to test the presence of a module.
         
         >>> bus = BusCommand()
-        >>> print bus.get_short_ack(31001)
-        fd0400197900e7
+        >>> pkg = bus.get_short_ack(31001)
+        >>> b2a(pkg)
+        'fd0400197900e7'
         """
-        return self.pack(serno=serno,cmd=0x04)
+        return self.pkg.pack(serno=serno,cmd=0x04)
         
     def get_range_ack(self,range):
         """ GET ACKNOWLEDGE FOR SERIAL NUMBER RANGE
@@ -114,11 +127,12 @@ class BusCommand(Packets, Tables):
         higher half: 11110000 00000000 00000000 (old mark gets 1)
         
         >>> bus = BusCommand()
-        >>> range = int(0b111100000000000000000000)
-        >>> print bus.get_range_ack(range)
-        fd06000000f0d0
+        >>> rng = int(0b111100000000000000000000)
+        >>> pkg = bus.get_range_ack(rng)
+        >>> b2a(pkg)
+        'fd06000000f0d0'
         """
-        return self.pack(serno=range,cmd=0x06)
+        return self.pkg.pack(serno=range,cmd=0x06)
         
     def get_negative_ack(self):
         """ GET NEGATIVE ACKNOWLEDGE
@@ -128,12 +142,13 @@ class BusCommand(Packets, Tables):
         get the serial number of the module.
         
         >>> bus = BusCommand()
-        >>> print bus.get_negative_ack()
-        fd0800ffffff60
+        >>> pkg = bus.get_negative_ack()
+        >>> b2a(pkg)
+        'fd0800ffffff60'
         """
-        return self.pack(serno=16777215,cmd=0x08)
+        return self.pkg.pack(serno=16777215,cmd=0x08)
         
-    def set_parameter(self, serno, table, param, value):
+    def set_parameter(self,serno,table,param,value):
         """ COMMAND TO SET A PARAMETER.
         
         Command to write a parameter to one of the different parameter
@@ -141,19 +156,23 @@ class BusCommand(Packets, Tables):
         right type and if this parameter is writable, according tho the
         tables.
         
-        TODO: Check the value type!
-        
         >>> bus = BusCommand()
-        >>> print bus.set_parameter(31002,\
+        >>> pkg = bus.set_parameter(31002,\
                 'PROBE_CONFIGURATION_PARAMETER_TABLE',\
                 'DeviceSerialNum',31003)
-        fd11071a79002b0c000000791bc4
+        >>> b2a(pkg)
+        'fd11071a79002b0c001b790000b0'
         """
-        table = getattr(self, table)
-        param = getattr(table, param)
+        table  = getattr(self.tables, table)
+        param  = getattr(table, param)
+        format = self.data_types[param.Type]
         
-        package = self.pack(serno=serno, cmd=table.Table.Set,
-            param_type=param.Type, param_no=param.No, param=value)
+        param_no = struct.pack('<B', param.No)
+        param_ad = struct.pack('<B', 0)
+        param    = struct.pack(format.format(1), value)
+        data     = param_no + param_ad + param
+        
+        package = self.pkg.pack(serno=serno,cmd=table.Table.Set,data=data)
         return package
         
 if __name__ == "__main__":

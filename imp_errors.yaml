@@ -1,0 +1,111 @@
+#!/usr/bin/env python
+# -*- coding: UTF-8 -*-
+"""
+Copyright (C) 2011, Markus Hubig <mhubig@imko.de>
+
+This file is part of IMPLib2 a small Python library implementing
+the IMPBUS-2 data transmission protocol.
+
+IMPLib2 is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as
+published by the Free Software Foundation, either version 3 of
+the License, or (at your option) any later version.
+
+IMPLib2 is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public
+License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
+"""
+
+
+--- !Table
+Table:         {Name: SYSTEM_PARAMETER_TABLE, Get: 10, Set: 11}
+ConfigID:      {'No': 0xfb, Type: 0x02, Status: OR, Length: 2}
+TableSize:     {'No': 0xfc, Type: 0x02, Status: OR, Length: 2}
+DataSize:      {'No': 0xfe, Type: 0x02, Status: OR, Length: 2}
+GetParam:      {'No': 0xfd, Type: 0x02, Status: OR, Length: 2}
+GetData:       {'No': 0xff, Type: 0x02, Status: OR, Length: 2}
+SerialNum:     {'No': 0x01, Type: 0x04, Status: OR, Length: 4}
+HWVersion:     {'No': 0x02, Type: 0x06, Status: OR, Length: 4}
+FWVersion:     {'No': 0x03, Type: 0x06, Status: OR, Length: 4}
+Baudrate:      {'No': 0x04, Type: 0x02, Status: WR, Length: 2}
+ModuleName:    {'No': 0x05, Type: 0x80, Status: OR, Length: 16}
+ModuleCode:    {'No': 0x06, Type: 0x02, Status: OR, Length: 2}
+ModuleInfo1:   {'No': 0x07, Type: 0x00, Status: WR, Length: 1}
+ModuleInfo2:   {'No': 0x08, Type: 0x00, Status: WR, Length: 1}
+
+
+--- !Table
+Class:  {Name: Serial communication errors}
+1:      {Msg: received address block invalid first byte should be 253}
+2:      {Msg: received address block check CRC}
+3:      {Msg: received data block check CRC}
+4: time out of receiving data block
+5 V24
+6 UART
+7 time out of transmitting address block
+8 time out of transmitting data block
+
+Command errors
+20 no command
+21 parameter number isn’t in table
+22 get page parameter
+23 set page parameter
+24 parameter is not writable
+25 TDR scan parameter
+26 have no support right
+27 setting all parameters needs support right
+28 the event of TDRScan must be set in advance
+29 baud rate is too small
+30 baud rate is too big
+
+EEPROM errors
+41 no response from EEPROM
+42 page writing is out of range
+43 SCL stuck to low
+44 SDA stuck to low
+45 write memory address
+46 write data to EEPROM
+47 get & set image parameter
+48 ASIC errors
+49 ASIC check is failed
+
+Others
+60 Voltage too low
+
+TDR measuring errors
+100 TDR position is over flow
+101 TDR position is under flow
+102 get ASIC temperature
+103 EC divisor is zero
+105 Tp is out of range
+106 Resister is out of range
+108 No reflect point is found
+
+ADC, DAC, material temperature
+120 A/D convert
+121 D/A convert
+122 get material temperature
+123 get material temperature
+
+Calculate
+￼
+130 minimal or maximal gain threshold in calculating coefficients
+131 divisor is zero in ASIC temperature compensation
+132 actual moisture is too large in DAC
+133 actual moisture is too small in DAC
+134 actual temperature is too large in DAC
+135 actual temperature is too small in DAC
+136 TpMDivisor is zero
+137 T to Ms mode is out of range
+138 Ratio divisor is zero
+
+SelfTest
+150 DAC code is too small
+151 DAC code is too large
+
+200-254 reserved
+255 more data

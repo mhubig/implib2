@@ -19,36 +19,80 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
+import struct
+from binascii import b2a_hex as b2a, a2b_hex as a2b
 
-from imp_packets import Packets, PacketsException
+from imp_tables import Tables, TablesError
+from imp_package import Package, PackageError
 
-class BusResponcesException(Exception):
+class BusResponceError(Exception):
     pass
 
-class BusResponces(Packets):
+class BusResponce(object):
     def __init__(self):
-        Packets.__init__(self)
-        
+        self.tables = Tables()
+        self.pkg    = Package()
+    
     def get_long_ack(self,packet,serno):
-        responce = self.unpack(packet)
-        return responce['serno']
+        """ The counterpart of the bus_command get_long_ack().
         
+        >>> bus = BusResponce()
+        >>> pkg = a2b('0002001a7900a7')
+        >>> bus.get_long_ack(pkg, 31002)
+        True
+        """
+        responce = self.pkg.unpack(packet)
+        return serno == responce['header']['serno']
+    
     def get_short_ack(self,packet,serno):
-        # not a standart responce packet, just the CRC of the serial
-        pass
+        """ The counterpart of the bus_command get_short_ack().
         
+        >>> bus = BusResponce()
+        >>> pkg = a2b('24')
+        >>> bus.get_short_ack(pkg, 31002)
+        True
+        """
+        serno = struct.pack('<I', serno)[:-1]
+        crc = self.pkg.calc_crc(serno)
+        return crc == packet
+    
     def get_range_ack(self,packet):
-        # not a standart responce packet, just the CRC of the serial
-        pass
+        """ The counterpart of the bus_command get_range_ack().
         
-    def get_negative_ack(self, packet):
-        responce = self.unpack(packet)
-        responce = self._reflect_bytes(responce['data'][0:6])
-        return int(responce, 16)
+        >>> bus = BusResponce()
+        >>> pkg = a2b('24')
+        >>> bus.get_range_ack(pkg)
+        True
+        """
+        return len(packet) == 1
+    
+    def get_negative_ack(self,packet):
+        """ The counterpart of the bus_command get_negative_ack().
         
-    def set_parameter(self, packet):
-        responce = self.unpack(packet)
-        return responce['serno'], responce['cmd']
+        >>> bus = BusResponce()
+        >>> pkg = a2b('000805ffffffd91a79000042')
+        >>> bus.get_negative_ack(pkg)
+        31002
+        """
+        responce = self.pkg.unpack(packet)
+        return struct.unpack('<I', responce['data'])[0]
+    
+    def set_parameter(self,packet,serno,table):
+        """ The counterpart of the bus_command set_parameter().
+        
+        >>> bus = BusResponce()
+        >>> pkg = a2b('0011001a790095')
+        >>> bus.set_parameter(pkg,31002,'PROBE_CONFIGURATION_PARAMETER_TABLE')
+        True
+        """
+        table = getattr(self.tables, table)
+        responce = self.pkg.unpack(packet)
+        command  = responce['header']['cmd']
+        if not command == table.Table.Set:
+            return False
+        if not serno == responce['header']['serno']:
+            return False
+        return True
     
 if __name__ == "__main__":
     import doctest

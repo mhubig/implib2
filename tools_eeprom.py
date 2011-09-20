@@ -19,8 +19,7 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
-import os
-import re
+import os, re, struct
 from datetime import datetime
 
 class ParserException(Exception):
@@ -36,7 +35,7 @@ class Parser(object):
     >>> buffer = str()
     >>> for nr, page in eeprom:
     ...     buffer += page
-    >>> len(buffer)/2 == eeprom.length
+    >>> len(buffer) == eeprom.length
     True
     >>> eeprom.comment
     ["Don't change the structure of the file.", 'Comment may be added after ;', 'Note1:', 'Note2:']
@@ -46,8 +45,8 @@ class Parser(object):
     datetime.datetime(2011, 2, 28, 17, 11, 55)
     >>> eeprom.length
     8192
-    >>> eeprom.eeprom[0:20]
-    '003c8178760025ffffff'
+    >>> struct.unpack('>5B', eeprom.eeprom[0:5])
+    (0, 60, 129, 120, 118)
     """
     
     def __init__(self, filename):
@@ -77,7 +76,8 @@ class Parser(object):
         with open(self._filename) as ept:
             for line in ept.readlines():
                 if not line.startswith(';'):
-                    self._eptbuffer += "{0:0=2x}".format(int(line.strip()))
+                    #self._eptbuffer += "{0:0=2x}".format(int(line.strip()))
+                    self._eptbuffer += struct.pack('>B', int(line.strip()))
                 if line.startswith(';'):
                     version = refwv.match(line)
                     length  = relen.match(line)
@@ -95,7 +95,7 @@ class Parser(object):
                         line = line.rstrip()
                         line = line.lstrip('; ')
                         self._cmtbuffer.append(line.strip())
-        if not self._eptlength == len(self._eptbuffer)/2:
+        if not self._eptlength == len(self._eptbuffer):
             raise EPTParserException("ERROR: 'EPRImage Length' dosn't match real length!")
         
         return True

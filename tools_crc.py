@@ -91,10 +91,9 @@ class CRC(object):
     def check_crc(self, byte_str):
         data = byte_str[:-1]
         crc  = byte_str[-1:]
-        if crc == self.calc_crc(data):
-            return True
-        else:
+        if not crc == self.calc_crc(data):
             return False
+        return True
 
 if __name__ == "__main__":
     import doctest

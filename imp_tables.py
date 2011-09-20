@@ -77,7 +77,7 @@ class Table(YAMLObject):
         return "%s(Name=%s)" % (
             self.__class__.__name__, self.Table.Name)
 
-class TablesException(Exception):
+class TablesError(Exception):
     pass
 
 class Tables(object):
