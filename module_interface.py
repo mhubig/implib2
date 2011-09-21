@@ -21,16 +21,16 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 import time
 from binascii import b2a_hex as b2a
-from tools_crc import CRC, CRCException
-from tools_eeprom import Parser, ParserException
-from imp_serialdevice import SerialDeviceException
-from module_commands import ModuleCommands, ModuleCommandsException
-from module_responces import ModuleResponces, ModuleResponcesException
+from tools_crc import CRC, CRCError
+from tools_eeprom import Parser, ParserError
+from imp_serialdevice import SerialDeviceError
+from module_commands import ModuleCommand, ModuleCommandError
+from module_responces import ModuleResponce, ModuleResponceError
 
-class ModuleException(Exception):
+class ModuleError(Exception):
     pass
 
-class Module(ModuleCommands, ModuleResponces):
+class Module(ModuleCommand, ModuleResponce):
     """ Class to combine the basic IMPBUS2 commands to
         higher level command cascades.
         

@@ -22,7 +22,7 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 import os, re, struct
 from datetime import datetime
 
-class ParserException(Exception):
+class ParserError(Exception):
     pass
 
 class Parser(object):

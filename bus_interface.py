@@ -20,16 +20,15 @@ You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 import time
-#from binascii import b2a_hex as b2a
-from module_interface import Module, ModuleException
+from module_interface import Module, ModuleError
 from bus_commands import BusCommand, BusCommandError
 from bus_responces import BusResponce, BusResponceError
-from imp_serialdevice import SerialDevice, SerialDeviceEerror 
+from imp_serialdevice import SerialDevice, SerialDeviceError 
 
 class IMPBusError(Exception):
     pass
 
-class IMPBus(SerialDevice):
+class IMPBus(object):
     """ 
     Class to combine the basic IMPBUS2 commands to higher level
     command cascades. Befor using any other command you first
@@ -41,11 +40,9 @@ class IMPBus(SerialDevice):
     """
     
     def __init__(self, port):
-        super(IMPBus, self).__init__(self)
-        self.cmd = BusCommands()
-        self.res = BusResponces()
-        
-        self.DEBUG = True
+        self.cmd = BusCommand()
+        self.res = BusResponce()
+        self.ser = SerialDevice(port)
         self.bus_synced = False
     
     def _divide_and_conquer(self, low, high, found):
@@ -79,6 +76,14 @@ class IMPBus(SerialDevice):
     # Initialize the bus communication #
     ####################################
     
+    def open_device(self, baudrate=9600):
+        if not self.bus_synced:
+            self.ser.open_device(baudrate)
+        
+    def close_device(self):
+        self.bus_synced = False
+        self.ser.close_device()
+    
     def synchronise_bus(self, baudrate=9600):
         """ IMPBUS BAUDRATE SYNCHRONIZATION
         
@@ -91,65 +96,51 @@ class IMPBus(SerialDevice):
         and will switch to the desired baud rate.
         
         >>> bus = IMPBus('loop://')
-        >>> bus.DEBUG = True
-        >>> bus.synchronise_bus(96)
-        Set baudrate with 1200baud!
-        Set baudrate with 2400baud!
-        Set baudrate with 4800baud!
-        Set baudrate with 9600baud!
+        >>> bus.synchronise_bus(baudrate=9600)
+        True
         """
-        
         address = 16777215
         table = 'SYSTEM_PARAMETER_TABLE'
         parameter = 'Baudrate'
         value = baudrate/100
         
         if not value in (12, 24, 48, 96):
-            raise IMPBusException("Unknown baudrate!")
+            raise IMPBusError("Unknown baudrate!")
         
         # first close the device
-        self.close_device()
+        self.ser.close_device()
         
         # trying to set baudrate at 1200
-        if self.DEBUG:
-            print "Set baudrate to {0} with 1200baud!".format(baudrate)
-        self.open_device(baudrate=1200)
+        self.ser.open_device(baudrate=1200)
         package = self.cmd.set_parameter(address, table, parameter, value)
-        bytes_send = self.write_package(package)
+        bytes_send = self.ser.write_pkg(package)
         time.sleep(0.5)
-        self.close_device()
+        self.ser.close_device()
         
         # trying to set baudrate at 2400
-        if self.DEBUG:
-            print "Set baudrate to {0} with 2400baud!".format(baudrate)
-        self.open_device(baudrate=2400)
+        self.ser.open_device(baudrate=2400)
         package = self.cmd.set_parameter(address, table, parameter, value)
-        bytes_send = self.write_package(package)
+        bytes_send = self.ser.write_pkg(package)
         time.sleep(0.5)
-        self.close_device()
+        self.ser.close_device()
         
         # trying to set baudrate at 4800
-        if self.DEBUG:
-            print "Set baudrate to {0} with 4800baud!".format(baudrate)
-        self.open_device(baudrate=4800)
+        self.ser.open_device(baudrate=4800)
         package = self.cmd.set_parameter(address, table, parameter, value)
-        bytes_send = self.write_package(package)
+        bytes_send = self.ser.write_pkg(package)
         time.sleep(0.5)
-        self.close_device()
+        self.ser.close_device()
         
         # trying to set baudrate at 9600
-        if self.DEBUG:
-            print "Set baudrate to {0} with 9600baud!".format(baudrate)
-        self.open_device(baudrate=9600)
+        self.ser.open_device(baudrate=9600)
         package = self.cmd.set_parameter(address, table, parameter, value)
-        bytes_send = self.write_package(package)
+        bytes_send = self.ser.write_pkg(package)
         time.sleep(0.5)
-        self.close_device()
+        self.ser.close_device()
         
-        self.open_device(baudrate=baudrate)
+        # at last open the device with the setted baudrate
+        self.ser.open_device(baudrate=baudrate)
         self.bus_synced = True
-        if self.DEBUG:
-            print "All modules synced to {0}baud!".format(baudrate)
         
         return True
     
@@ -170,34 +161,36 @@ class IMPBus(SerialDevice):
         Usable like this:
         
         >>> bus = IMPBus('loop://')
-        >>> bus.DEBUG = True
+        >>> bus.open_device()
         >>> modules = bus.scan_bus(minserial=0, maxserial=2)
         """
-        
-        if self.DEBUG: print("Scanning bus for connected modules!")
-        
-        sernos = list()
+        sernos  = list()
         modules = list()
         self._divide_and_conquer(minserial, maxserial, sernos)
         
-        if len(sernos) == 0:
-            return modules
-            
         for serno in sernos:
-            if self.DEBUG:
-                print("Found module with serno:{0}".format(serno))
             modules.append(Module(self, serno))
         
         return modules
     
     def find_single_module(self):
-        package = self.cmd.get_negative_acknowledge()
+        """ Find a single module on the Bus
+        
+        This command is used to identify a single module on the bus
+        which serial number is unknown. It is a broadcast command and
+        serves to get the serial number of the module.
+        
+        >>> bus = IMPBus('loop://')
+        >>> bus.open_device()
+        >>> bus.find_single_module()
+        False
+        """
+        package = self.cmd.get_negative_ack()
         try:
-            bytes_send = self.write_package(package)
-            bytes_recv = self.read_package()
-            return self.res.get_negative_acknowledge(bytes_recv)
-        except SerialDeviceException, e:
+            bytes_recv = self.ser.talk(package)
+        except SerialDeviceError as e:
             return False
+        return self.res.get_negative_ack(bytes_recv)
     
     def probe_module_long(self, serno):
         """ PROBE MODULE (LONGCOMMAND)
@@ -208,19 +201,16 @@ class IMPBus(SerialDevice):
         of a module in conjunction with the quality of the bus connection.
         
         >>> bus = IMPBus('loop://')
-        >>> bus.DEBUG = True
+        >>> bus.open_device()
         >>> bus.probe_module_long(0)
-        0
+        False
         """
-        package = self.cmd.get_long_acknowledge(serno)
-        bytes_send = self.write_package(package)
-        if self.DEBUG: print "Probing SerNo:", serno
-        # Trying to get a respoce ...
-        bytes_recv = self.read_package()
-        if not bytes_recv:
+        package = self.cmd.get_long_ack(serno)
+        try:
+            bytes_recv = self.ser.talk(package)
+        except SerialDeviceError as e:
             return False
-        time.sleep(0.2)
-        return self.res.get_long_acknowledge(bytes_recv)
+        return self.res.get_long_ack(bytes_recv,serno)
             
     def probe_module_short(self, serno):
         """ PROBE MODULE (SHORTCOMMAND)
@@ -233,19 +223,17 @@ class IMPBus(SerialDevice):
         block. It can be used to test the presence of a module.
         
         >>> bus = IMPBus('loop://')
-        >>> bus.DEBUG = True
+        >>> bus.open_device()
         >>> bus.probe_module_short(0)
-        >>> True
+        False
         """
-        if self.DEBUG: print "Probing SerNo:", serno
         package = self.cmd.get_short_ack(serno)
-        serno = self._reflect_bytes('%06x' % serno)
-        bytes_send = self.write_package(package)
-        responce = self.read_bytes(1)
-        if not self.res.get_short_ack(serno, responce):
+        try:
+            bytes_send = self.ser.write_pkg(package)
+            bytes_recv = self.ser.read_bytes(1)
+        except SerialDeviceError as e:
             return False
-        time.sleep(0.2)
-        return True
+        return self.res.get_short_ack(bytes_recv,serno)
         
     def probe_range(self, broadcast):
         """ PROBE ADDRESSRANGE
@@ -259,19 +247,17 @@ class IMPBus(SerialDevice):
         IMPBUS2, 2008-11-18".
         
         >>> bus = IMPBus('loop://')
-        >>> bus.DEBUG = True
+        >>> bus.open_device()
         >>> bus.probe_range(16777215)
-        Module seen at range 16777215
-        True
+        False
         """
         package = self.cmd.get_range_ack(broadcast)
-        bytes_send = self.write_package(package)
-        if not self.read_something():
-            if self.DEBUG: print "No Module seen at range %s" % broadcast
+        try:
+            bytes_send = self.ser.write_pkg(package)
+            bytes_recv = self.ser.read_something()
+        except SerialDeviceError as e:
             return False
-        if self.DEBUG: print "Module seen at range %s" % broadcast
-        time.sleep(0.2)
-        return True
+        return self.res.get_range_ack(bytes_recv)
     
 if __name__ == "__main__":
     import doctest

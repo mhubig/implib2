@@ -53,8 +53,6 @@ class BusCommand(object):
             0x06: '<{0}f', # 32-bit float
             0x07: '<{0}d'} # 64-bit double
         
-        self.DEBUG = False
-        
     def get_long_ack(self,serno):
         """ GET LONG ACKNOWLEDGE
         

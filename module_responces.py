@@ -22,13 +22,13 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 import struct
 from binascii import b2a_hex as b2a
 from binascii import a2b_hex as a2b
-from imp_packets import Packets, PacketsException
-from imp_tables import Tables, TablesException
+from imp_packets import Package, PackageError
+from imp_tables import Tables, TablesError
 
-class ModuleResponcesException(Exception):
+class ModuleResponceError(Exception):
     pass
 
-class ModuleResponces(Packets, Tables):
+class ModuleResponce(Package, Tables):
     def __init__(self):
         self.DEBUG = False
         Packets.__init__(self)

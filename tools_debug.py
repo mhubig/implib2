@@ -19,15 +19,11 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
-from bus_interface import IMPBus, IMPBusError
+from decorator import decorator
 
-bus = IMPBus(port='/dev/tty.usbserial-A700eQFp')
-#bus.open_device()
-bus.synchronise_bus()
-serno = bus.find_single_module()
-modules = bus.scan_bus()
-print modules[0]._serno
-print bus.probe_module_long(serno)
-print bus.probe_module_short(serno)
+def _trace(f, *args, **kw):
+    print "calling %s with args %s, %s" % (f.__name__, args, kw)
+    return f(*args, **kw)
 
-
+def trace(f):
+    return decorator(_trace, f)

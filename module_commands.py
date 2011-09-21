@@ -19,13 +19,13 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
-from imp_tables import Tables, TablesException
-from imp_packets import Packets, PacketsException
+from imp_tables import Tables, TablesError
+from imp_package import Package, PackageError
 
-class ModuleCommandsException(Exception):
+class ModuleCommandError(Exception):
     pass
 
-class ModuleCommands(Packets, Tables):
+class ModuleCommand(Package, Tables):
     """ COMMANDS TO CONTROL THE MODULES AND TRANSFER PARAMETERS
     
     The main commands to transfer parameters are Get and Set Parameters.
@@ -86,7 +86,7 @@ class ModuleCommands(Packets, Tables):
     def __init__(self):
         self.DEBUG = True
         Tables.__init__(self)
-        Packets.__init__(self)
+        Package.__init__(self)
     
     def get_parameter(self, serno, table, param):
         """ COMMAND TO READ A PARAMETER.

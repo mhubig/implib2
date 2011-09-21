@@ -24,6 +24,8 @@ import serial
 from struct import pack, unpack
 from binascii import b2a_hex as b2a, a2b_hex as a2b
 
+from tools_debug import trace
+
 class SerialDeviceError(Exception):
     pass
 
@@ -36,7 +38,6 @@ class SerialDevice(object):
     """
     def __init__(self, port):
         self.PORT = port
-        self.DEBUG = False
         self.TIMEOUT = 2
         
         try:
@@ -56,7 +57,6 @@ class SerialDevice(object):
         self.ser.dsrdtr   = 0
         self.ser.open()
         self.ser.flush()
-        if self.DEBUG: print 'Device opened:', self.ser.name
         
     def close_device(self):
         try:
@@ -64,21 +64,20 @@ class SerialDevice(object):
             self.ser.close()
         except:
             pass
-        finally:
-            if self.DEBUG: print 'Device closed:', self.ser.name
         
-    def write_package(self, packet):
+    def write_pkg(self, packet):
         """ Writes IMPBUS2 packet to the serial line.
         
         Packet must be a pre-build BYTE string. Returns the
         length in Bytes of the string written. 
         """
         bytes_send = self.ser.write(packet)
+        if not bytes_send == len(packet):
+            raise SerialDeviceError("Couldn't write all bytes!")
         time.sleep(0.1)
-        if self.DEBUG: print 'Packet send:', packet, 'Length:', bytes_send
-        return bytes_send
+        return True
         
-    def read_package(self):
+    def read_pkg(self):
         """ Read IMPBUS2 packet from serial line.
         
         It automatically calculates the length from the header
@@ -91,22 +90,18 @@ class SerialDevice(object):
         while (time.time() - tic < self.TIMEOUT) and (len(header) < length): 
             if self.ser.inWaiting(): header += self.ser.read()
         
-        if self.DEBUG: print 'Header read:', b2a(header), 'Length:', len(header)
-        
         if len(header) < length:
-            raise SerialDeviceException('TimeoutError reading header!')
+            raise SerialDeviceError('Timeout reading header!')
         
         # read data, length is known from header
         data = str()
-        length = unpack('>B',header[3])
+        length = unpack('<B',header[2])[0]
         tic = time.time()
         while (time.time() - tic < self.TIMEOUT) and (len(data) < length):
             if self.ser.inWaiting(): data += self.ser.read()
         
-        if self.DEBUG: print 'Data read:', b2a(data), 'Length:', len(data)
-        
         if len(data) < length:
-            raise SerialDeviceException('TimeoutError reading data!')
+            raise SerialDeviceError('Timeout reading data!')
         
         return header + data
         
@@ -121,10 +116,8 @@ class SerialDevice(object):
         while (time.time() - tic < self.TIMEOUT) and (len(bytes) < length): 
             if self.ser.inWaiting(): bytes += self.ser.read()
         
-        if self.DEBUG: print 'Bytes read:', b2a(bytes)
-        
         if len(bytes) < length:
-            raise SerialDeviceException('TimeoutError reading header!')
+            raise SerialDeviceError('Timeout reading bytes!')
         
         return bytes
         
@@ -134,14 +127,12 @@ class SerialDevice(object):
         This methode shold be as fast as possible. Returns
         True or False. Useable for scanning the bus. 
         """
-        state = (len(self.ser.read()) == 1)
-        if self.DEBUG: print 'Byte Read:', state
-        return state
+        return self.ser.read()
         
     def talk(self, packet):
         """ Writes an IMPBUS2 Package and reads the responce packet """
-        self.write_packet(packet)
-        return self.read_packet()
+        self.write_pkg(packet)
+        return self.read_pkg()
         
 if __name__ == "__main__":
     import doctest

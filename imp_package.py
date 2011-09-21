@@ -36,8 +36,7 @@ class Package(CRC):
     """
     
     def __init__(self):
-        super(Package, self).__init__()
-        self.DEBUG = True
+        CRC.__init__(self)
     
     def _pack_data(self,data):
         if len(data)> 253:
@@ -112,7 +111,6 @@ class Package(CRC):
         >>> b2a(package)
         'fd0b07bb8100580100bb810000fb'
         """
-        
         if data:
             data    = self._pack_data(data)
             header  = self._pack_head(cmd,len(data),serno)
