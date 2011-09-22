@@ -22,36 +22,35 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 import os, re, struct
 from datetime import datetime
 
-class ParserError(Exception):
+class EEPROMError(Exception):
     pass
 
-class Parser(object):
+class EEPROM(object):
     """ Class to parse a EPT file.
     
     The Parser Class has an build in iterator which allowes
     to iter about the eeprom pages stored in this class:
     
-    >>> eeprom = Parser('test.ept')
-    >>> buffer = str()
+    >>> eeprom = EEPROM('../hexfiles/EEPROM.ept')
+    >>> buffer = list()
     >>> for nr, page in eeprom:
-    ...     buffer += page
+    ...     buffer.extend(page)
     >>> len(buffer) == eeprom.length
     True
-    >>> eeprom.comment
-    ["Don't change the structure of the file.", 'Comment may be added after ;', 'Note1:', 'Note2:']
+    >>> eeprom.comment[0]
+    "Don't change the structure of the file."
     >>> eeprom.version
-    '1.120631'
+    '1.120313'
     >>> eeprom.date
-    datetime.datetime(2011, 2, 28, 17, 11, 55)
+    datetime.datetime(2011, 3, 3, 14, 28, 6)
     >>> eeprom.length
     8192
-    >>> struct.unpack('>5B', eeprom.eeprom[0:5])
-    (0, 60, 129, 120, 118)
+    >>> eeprom.eeprom[0:5]
+    [0, 60, 129, 95, 126]
     """
-    
     def __init__(self, filename):
         self._filename = os.path.abspath(filename)
-        self._eptbuffer = str()
+        self._eptbuffer = list()
         self._cmtbuffer = list()
         self._fwversion = str()
         self._eptlength = int()
@@ -64,8 +63,8 @@ class Parser(object):
         if pages*250 < self._eptlength:
             pages += 1
         for page in range(0, pages):
-            start = page*250*2
-            stop  = start+250*2
+            start = page*250
+            stop  = start+250
             yield page, self._eptbuffer[start:stop]
     
     def _read_ept(self):
@@ -76,8 +75,7 @@ class Parser(object):
         with open(self._filename) as ept:
             for line in ept.readlines():
                 if not line.startswith(';'):
-                    #self._eptbuffer += "{0:0=2x}".format(int(line.strip()))
-                    self._eptbuffer += struct.pack('>B', int(line.strip()))
+                    self._eptbuffer.append(int(line.strip()))
                 if line.startswith(';'):
                     version = refwv.match(line)
                     length  = relen.match(line)

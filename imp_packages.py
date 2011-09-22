@@ -21,13 +21,14 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 
 import struct
-from tools_crc import CRC
 from binascii import b2a_hex as b2a, a2b_hex as a2b
+
+from imp_crc import MaximCRC, MaximCRCError
 
 class PackageError(Exception):
     pass
 
-class Package(CRC):
+class Package(object):
     """ Class for packing, unpacking and checking IMPBus packages.
     
     Composing a IMPBus2 Package is done be the Package.pack() funktion
@@ -36,17 +37,17 @@ class Package(CRC):
     """
     
     def __init__(self):
-        CRC.__init__(self)
+        self.crc = MaximCRC()
     
     def _pack_data(self,data):
         if len(data)> 253:
             raise PackageError("Data block bigger than 252Bytes!")
-        return data + self.calc_crc(data)
+        return data + self.crc.calc_crc(data)
         
     def _unpack_data(self,data):
         if len(data)> 253:
             raise PackageError("Data block bigger than 252Bytes!")
-        if not self.check_crc(data):
+        if not self.crc.check_crc(data):
             raise PackageError("Package with faulty data CRC!")
         return data[:-1]
     
@@ -57,7 +58,7 @@ class Package(CRC):
         serno  = struct.pack('<I', serno)[:-1]
         
         header = state + cmd + length + serno
-        header = header + self.calc_crc(header)
+        header = header + self.crc.calc_crc(header)
         
         return header
     
@@ -67,7 +68,7 @@ class Package(CRC):
         length = struct.unpack('<B', header[2])[0]
         serno  = struct.unpack('<I', header[3:6] + '\x00')[0]
         
-        if not self.check_crc(header):
+        if not self.crc.check_crc(header):
             raise PackageError("Package with faulty header CRC!")
         
         if state not in [0,253,255]:

@@ -20,13 +20,13 @@ You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 
-from binascii import unhexlify as uh
 from struct import pack
+from binascii import b2a_hex as b2a, a2b_hex as a2b
 
-class CRCError(Exception):
+class MaximCRCError(Exception):
     pass
 
-class CRC(object):
+class MaximCRC(object):
     """
     Class to compute the dallas-1-wire crc of a given hexstring.
     Uses a table driven implementation of the crc algorithm.
@@ -50,8 +50,9 @@ class CRC(object):
 
     http://www.ross.net/crc/download/crc_v3.txt
 
-    >>> crc = CRC()
-    >>> crc.calc_crc('FD15ED09')
+    >>> crc = MaximCRC()
+    >>> c = crc.calc_crc(a2b('FD15ED09'))
+    >>> b2a(c)
     'f3'
     """
 

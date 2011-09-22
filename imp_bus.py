@@ -20,15 +20,15 @@ You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 import time
-from module_interface import Module, ModuleError
-from bus_commands import BusCommand, BusCommandError
-from bus_responces import BusResponce, BusResponceError
+from imp_modules import Module, ModuleError
+from imp_commands import Command, CommandError
+from imp_responces import Responce, ResponceError
 from imp_serialdevice import SerialDevice, SerialDeviceError 
 
 class IMPBusError(Exception):
     pass
 
-class IMPBus(object):
+class IMPBus(SerialDevice):
     """ 
     Class to combine the basic IMPBUS2 commands to higher level
     command cascades. Befor using any other command you first
@@ -40,9 +40,9 @@ class IMPBus(object):
     """
     
     def __init__(self, port):
-        self.cmd = BusCommand()
-        self.res = BusResponce()
-        self.ser = SerialDevice(port)
+        super(IMPBus, self).__init__(port)
+        self.cmd = Command()
+        self.res = Responce()
         self.bus_synced = False
     
     def _divide_and_conquer(self, low, high, found):
@@ -76,14 +76,6 @@ class IMPBus(object):
     # Initialize the bus communication #
     ####################################
     
-    def open_device(self, baudrate=9600):
-        if not self.bus_synced:
-            self.ser.open_device(baudrate)
-        
-    def close_device(self):
-        self.bus_synced = False
-        self.ser.close_device()
-    
     def synchronise_bus(self, baudrate=9600):
         """ IMPBUS BAUDRATE SYNCHRONIZATION
         
@@ -108,38 +100,38 @@ class IMPBus(object):
             raise IMPBusError("Unknown baudrate!")
         
         # first close the device
-        self.ser.close_device()
+        self.close_device()
         
         # trying to set baudrate at 1200
-        self.ser.open_device(baudrate=1200)
-        package = self.cmd.set_parameter(address, table, parameter, value)
-        bytes_send = self.ser.write_pkg(package)
+        self.open_device(baudrate=1200)
+        package = self.cmd.set_parameter(address, table, parameter, [value])
+        bytes_send = self.write_pkg(package)
         time.sleep(0.5)
-        self.ser.close_device()
+        self.close_device()
         
         # trying to set baudrate at 2400
-        self.ser.open_device(baudrate=2400)
-        package = self.cmd.set_parameter(address, table, parameter, value)
-        bytes_send = self.ser.write_pkg(package)
+        self.open_device(baudrate=2400)
+        package = self.cmd.set_parameter(address, table, parameter, [value])
+        bytes_send = self.write_pkg(package)
         time.sleep(0.5)
-        self.ser.close_device()
+        self.close_device()
         
         # trying to set baudrate at 4800
-        self.ser.open_device(baudrate=4800)
-        package = self.cmd.set_parameter(address, table, parameter, value)
-        bytes_send = self.ser.write_pkg(package)
+        self.open_device(baudrate=4800)
+        package = self.cmd.set_parameter(address, table, parameter, [value])
+        bytes_send = self.write_pkg(package)
         time.sleep(0.5)
-        self.ser.close_device()
+        self.close_device()
         
         # trying to set baudrate at 9600
-        self.ser.open_device(baudrate=9600)
-        package = self.cmd.set_parameter(address, table, parameter, value)
-        bytes_send = self.ser.write_pkg(package)
+        self.open_device(baudrate=9600)
+        package = self.cmd.set_parameter(address, table, parameter, [value])
+        bytes_send = self.write_pkg(package)
         time.sleep(0.5)
-        self.ser.close_device()
+        self.close_device()
         
         # at last open the device with the setted baudrate
-        self.ser.open_device(baudrate=baudrate)
+        self.open_device(baudrate=baudrate)
         self.bus_synced = True
         
         return True
@@ -187,7 +179,7 @@ class IMPBus(object):
         """
         package = self.cmd.get_negative_ack()
         try:
-            bytes_recv = self.ser.talk(package)
+            bytes_recv = self.talk(package)
         except SerialDeviceError as e:
             return False
         return self.res.get_negative_ack(bytes_recv)
@@ -207,7 +199,7 @@ class IMPBus(object):
         """
         package = self.cmd.get_long_ack(serno)
         try:
-            bytes_recv = self.ser.talk(package)
+            bytes_recv = self.talk(package)
         except SerialDeviceError as e:
             return False
         return self.res.get_long_ack(bytes_recv,serno)
@@ -229,8 +221,8 @@ class IMPBus(object):
         """
         package = self.cmd.get_short_ack(serno)
         try:
-            bytes_send = self.ser.write_pkg(package)
-            bytes_recv = self.ser.read_bytes(1)
+            bytes_send = self.write_pkg(package)
+            bytes_recv = self.read_bytes(1)
         except SerialDeviceError as e:
             return False
         return self.res.get_short_ack(bytes_recv,serno)
@@ -253,8 +245,8 @@ class IMPBus(object):
         """
         package = self.cmd.get_range_ack(broadcast)
         try:
-            bytes_send = self.ser.write_pkg(package)
-            bytes_recv = self.ser.read_something()
+            bytes_send = self.write_pkg(package)
+            bytes_recv = self.read_something()
         except SerialDeviceError as e:
             return False
         return self.res.get_range_ack(bytes_recv)

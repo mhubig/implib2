@@ -19,15 +19,30 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
-from bus_interface import IMPBus, IMPBusError
+from imp_bus import IMPBus, IMPBusError
+from imp_modules import Module, ModuleError
 
 bus = IMPBus(port='/dev/tty.usbserial-A700eQFp')
-#bus.open_device()
 bus.synchronise_bus()
-serno = bus.find_single_module()
 modules = bus.scan_bus()
-print modules[0]._serno
+serno = bus.find_single_module()
+print serno
 print bus.probe_module_long(serno)
 print bus.probe_module_short(serno)
 
+module = modules[0]
+print module.get_serial()
+print module.get_hw_version()
+print module.get_fw_version()
+print module.get_moist_min_value()
+print module.get_moist_max_value()
+print module.get_temp_max_value()
+print module.get_temp_min_value()
+print module.get_event_mode()
+#print module.set_analog_moist(mvolt=500)
+#print module.set_analog_temp(mvolt=1000)
+#print module.read_eeprom()[0:10]
+
+#module.write_eeprom('../hexfiles/EEPROM.ept')
+#module.set_serial(32344)
 

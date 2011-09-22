@@ -19,36 +19,39 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
-import time
+import time, struct
 from binascii import b2a_hex as b2a
-from tools_crc import CRC, CRCError
-from tools_eeprom import Parser, ParserError
-from imp_serialdevice import SerialDeviceError
-from module_commands import ModuleCommand, ModuleCommandError
-from module_responces import ModuleResponce, ModuleResponceError
+
+from imp_crc import MaximCRC, MaximCRCError
+from imp_eeprom import EEPROM, EEPROMError
+from imp_commands import Command, CommandError
+from imp_responces import Responce, ResponceError
+from imp_serialdevice import SerialDevice, SerialDeviceError
 
 class ModuleError(Exception):
     pass
 
-class Module(ModuleCommand, ModuleResponce):
-    """ Class to combine the basic IMPBUS2 commands to
-        higher level command cascades.
-        
-    >>> from bus_interface import IMPBus
-    >>> bus = IMPBus('loop://')
+class Module(object):
+    """ Class representing a IMPBus2 Module.
+    
+    Small example of how to use is together with the IMPBus class:
+    
+    >>> from imp_bus import IMPBus
+    >>> bus = IMPBus('/dev/tty.usbserial-A700eQFp')
+    >>> bus.synchronise_bus()
+    True
     >>> modules = bus.scan_bus()
     >>> for module in modules:
-    ...     modules.get_serial()
+    ...     print module.get_serial()
+    32344
     """
-    
     def __init__(self, bus, serno):
-        super(Module, self).__init__()
-        self.DEBUG     = False
+        self.cmd = Command()
+        self.res = Responce()
+        self.crc = MaximCRC()
+        self.bus = bus
         self._unlocked = False
-        self._bus      = bus
         self._serno    = serno
-        self._crc      = CRC()
-        
         self.EVENT_MODES = {
             "NormalMeasure":    0x00,
             "TRDScan":          0x01,
@@ -59,52 +62,30 @@ class Module(ModuleCommand, ModuleResponce):
         
     def _get(self, table, param):
         """General get_parameter command"""
-        if self.DEBUG: print("get_command: table={0} param={1}".format(table, param))
-        try:
-            package = self.get_parameter(self._serno, table, param)
-            bytes_send = self._bus.write_package(package)
-            responce = self.responce_get_parameter(self._bus.read_package(), table, param)
-        except SerialDeviceException as e:
-            raise ModuleException(e.message)
-        time.sleep(0.2)
+        package = self.cmd.get_parameter(self._serno, table, param)
+        bytes_recv = self.bus.talk(package)
+        responce = self.res.get_parameter(bytes_recv, table, param)
+        time.sleep(0.1)
         return responce
     
     def _set(self, table, param, value):
         """General set_parameter command"""
-        if self.DEBUG: print("set_command: table={0} param={1}".format(table, param))
-        try:
-            package = self.set_parameter(self._serno, table, param, value)
-            bytes_send = self._bus.write_package(package)
-            responce = self.responce_set_parameter(self._bus.read_package(), table)
-        except SerialDeviceException as e:
-            raise ModuleException(e.message)
-        time.sleep(0.2)
+        package = self.cmd.set_parameter(self._serno, table, param, value)
+        bytes_recv = self.bus.talk(package)
+        responce = self.res.set_parameter(bytes_recv, self._serno, table)
+        time.sleep(0.1)
         return responce
     
     def _unlock(self):
-        if self.DEBUG: print("Unlocking Device")
         # Calculate the SupportPW: calc_crc(serno) + 0x8000
-        passwd = self._reflect_bytes('%08x' % self._serno)
-        passwd = self._crc.calc_crc(passwd)
-        passwd = int(passwd, 16) + 0x8000
+        passwd = struct.pack('<I', self._serno)
+        passwd = struct.unpack('<B', self.crc.calc_crc(passwd))[0] + 0x8000
         
         # Unlock the device with the password
         table = 'ACTION_PARAMETER_TABLE'
         param = 'SupportPW'
         value = passwd
-        self._set(table, param, value)
-        
-        # Test is device is writeable
-        table = 'PROBE_CONFIGURATION_PARAMETER_TABLE'
-        param = 'ProbeType'
-        value = 0xFF
-        self._set(table, param, value)
-        
-        table = 'PROBE_CONFIGURATION_PARAMETER_TABLE'
-        param = 'ProbeType' 
-        
-        if not self._get(table, param) == 255:
-            raise ModuleException("Error: Couldn't unlock device!")
+        self._set(table, param, [value])
         
         self._unlocked = True
     
@@ -113,120 +94,148 @@ class Module(ModuleCommand, ModuleResponce):
     #######################################
     
     def get_table(self, table):
+        """Spezial Command to get a whole table.
+        
+        **Not implemented yet!**
+        
+        Basicly you get a whole table, witch means the data-part of the
+        recieved package consists of the concatinated table values. If
+        the table don't fit into one package the status byte of the
+        header-part will be '0xff'. Than you have to wait a bit and recieve
+        packages as long as the status byte is '0x00' again. To extract the
+        concatenated table-values you have to split the data in order of the
+        Parameter-No., the length of each value can is equal to the
+        Parameter-Length.
+        
+        You can use the parameters GetData, DataSize and TableSize to gain
+        information about the spezific table.
+        """
         param = 'GetData'
-        return self._get(table, param)
+        raise ModuleError("Not yet implemented!")
+        return False
     
     def get_serial(self):
         table = 'SYSTEM_PARAMETER_TABLE'
         param = 'SerialNum'
-        return self._get(table, param)
+        return self._get(table, param)[0]
     
     def get_hw_version(self):
         table = 'SYSTEM_PARAMETER_TABLE'
         param = 'HWVersion'
-        return self._get(table, param)
+        return self._get(table, param)[0]
     
     def get_fw_version(self):
         table = 'SYSTEM_PARAMETER_TABLE'
         param = 'FWVersion'
-        return self._get(table, param)
+        return self._get(table, param)[0]
     
     def get_moist_max_value(self):
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
         param = 'MoistMaxValue'
-        return self._get(table, param)
+        return self._get(table, param)[0]
     
     def get_moist_min_value(self):
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
         param = 'MoistMinValue'
-        return self._get(table, param)
+        return self._get(table, param)[0]
     
     def get_temp_max_value(self):
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
         param = 'TempMaxValue'
-        return self._get(table, param)
+        return self._get(table, param)[0]
     
     def get_temp_min_value(self):
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
         param = 'TempMinValue'
-        return self._get(table, param)
+        return self._get(table, param)[0]
     
     def get_event_mode(self):
         table = 'ACTION_PARAMETER_TABLE'
         param = 'Event'
         modes = {v:k for k, v in self.EVENT_MODES.items()}
-        event = self._get(table, param)
-        return modes[event % 0x80]
+        return modes[self._get(table, param)[0] % 0x80]
     
     def read_eeprom(self):
-        eprimg = str()
+        table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
+        param = 'EPRByteLen'
+        length = self._get(table, param)[0]
+        
         if not self._unlocked:
             self._unlock()        
-        try:
-            table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
-            param = 'EPRByteLen'
-            package = self.get_parameter(self._serno, table, param)
-            bytes_send = self._bus.write_package(package)
-            # TODO: test! -> is 'GetData' right?
-            eprbytelen = self.responce_get_parameter(self._bus.read_package(), table, 'GetData')
-            time.sleep(0.2)
-        except SerialDeviceException as e:
-            raise ModuleException(e.message)
-        pages = eprbytelen / 252 + 1
+        
+        pages = length / 252
+        if length % 252:
+            pages += 1
+        
+        eprimg = list()
         for page in range(0,pages):    
-            try:
-                package = self.get_epr_image(self._serno, page)
-                bytes_send = self._bus.write_package(package)
-                eprimg += self.responce_get_epr_image(self._bus.read_package())
-                time.sleep(0.2)
-            except SerialDeviceException as e:
-                raise ModuleException(e.message)
+            package = self.cmd.get_epr_image(self._serno, page)
+            bytes_recv = self.bus.talk(package)
+            page = self.res.get_epr_image(bytes_recv)
+            eprimg.extend(page)
+            time.sleep(0.2)
+        
+        if not len(eprimg) == length:
+            raise ModuleError("EEPROM length don't match!")
         return eprimg
     
     ################################
     # change the module settings   #
     ################################
     
+    def set_table(self, table, data):
+        """Spezial Command to set the values of a whole table.
+
+        **Not implemented yet!**
+
+        You can use the parameters GetData, DataSize and TableSize to gain
+        information about the spezific table.
+        """
+        param = 'GetData'
+        raise ModuleError("Not yet implemented!")
+        return False
+    
     def set_serial(self, serno):
+        """Set the serialnumber of the module."""
         table = 'SYSTEM_PARAMETER_TABLE'
         param = 'SerialNum'
-        value = serno
         
         if not self._unlocked:
             self._unlock()
-        state = self._set(table, param, value)
+        
+        state = self._set(table, param, [serno])
         self._serno = serno
         return state
     
     def set_analog_moist(self, mvolt=500):
         if not mvolt in range(0,1001):
-            raise ModuleException('Value out of range!')
+            raise ModuleError("Value out of range!")
         
         min = self.get_moist_min_value()
         max = self.get_moist_max_value()
         value = (max - min) / 1000.0 * mvolt + min
         table = 'MEASURE_PARAMETER_TABLE'
         param = 'Moist'
-        print value
-        if not self._unlocked:
-            self._unlock()
-        return self._set(table, param, value)
+        
+        if not self.set_event_mode("AnalogOut"):
+            raise ModuleError("Coul'd not set event mode!")
+        
+        return self._set(table, param, [value])
         
     def set_analog_temp(self, mvolt=500):
         if not mvolt in range(0,1001):
-            raise ModuleException('Value out of range!')
+            raise ModuleError('Value out of range!')
         
         min = self.get_temp_min_value()
         max = self.get_temp_max_value()
-        print "Min: {0}".format(min)
-        print "Max: {0}".format(max)
         value = (max - min) / 1000.0 * mvolt + min
         table = 'MEASURE_PARAMETER_TABLE'
         param = 'CompTemp'
-        print "Calculated Value: {0}".format(value)
-        if not self._unlocked:
-            self._unlock()
-        return self._set(table, param, value)
+        
+        if not self.set_event_mode("AnalogOut"):
+            raise ModuleError("Coul'd not set event mode!")
+        
+        return self._set(table, param, [value])
     
     def set_event_mode(self, event_mode="NormalMeasure"):
         """" Command to set the Event Mode of the probe.
@@ -236,32 +245,30 @@ class Module(ModuleCommand, ModuleResponce):
         AnalogOut, ASIC_TC (Temperature Compensation),
         Self Test and MatTempSensor.
         """
-        
-        table = 'MEASURE_PARAMETER_TABLE'
-        param = 'CompTemp'
-        try:
+        table = 'ACTION_PARAMETER_TABLE'
+        param = 'Event'
+        if event_mode in self.EVENT_MODES:
             value = self.EVENT_MODES[event_mode]
-        except KeyError as e:
-            raise ModuleException("'{0}' is not a valid EventMode!"
-                .format(e.message))
+        else:
+            raise ModuleError("Invalid EventMode!")
         
         if not self._unlocked:
             self._unlock()
-        return self._set(table, param, value)
+        return self._set(table, param, [value])
         
     def write_eeprom(self, eeprom_file):
+        eeprom = EEPROM(eeprom_file)
+        
         if not self._unlocked:
-            self._unlock()        
-        eeprom = Parser(eeprom_file)
+            self._unlock()
+        
         for page_nr, page in eeprom:
-            package = self.set_epr_image(self._serno, page_nr, page)
-            try:
-                bytes_send = self._bus.write_package(package)
-                if not self.responce_set_erp_image(self._bus.read_package()):
-                    raise ModuleException("Writing EEPROM Failed")
-                time.sleep(0.2)
-            except SerialDeviceException as e:
-                raise ModuleException(e.message)
+            package = self.cmd.set_epr_image(self._serno, page_nr, page)
+            bytes_recv = self.bus.talk(package)
+            responce = self.res.set_epr_image(bytes_recv)
+            if not self.res.set_epr_image(bytes_recv):
+                raise ModuleError("Writing EEPROM Failed")
+            time.sleep(0.2)
         return True
 
     #################################
