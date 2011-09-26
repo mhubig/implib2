@@ -133,6 +133,7 @@ class IMPBus(SerialDevice):
         # at last open the device with the setted baudrate
         self.open_device(baudrate=baudrate)
         self.bus_synced = True
+        time.sleep(0.5)
         
         return True
     
@@ -170,7 +171,8 @@ class IMPBus(SerialDevice):
         
         This command is used to identify a single module on the bus
         which serial number is unknown. It is a broadcast command and
-        serves to get the serial number of the module.
+        serves to get the serial number of the module. This command
+        returns a Modules Object.
         
         >>> bus = IMPBus('loop://')
         >>> bus.open_device()
@@ -182,7 +184,8 @@ class IMPBus(SerialDevice):
             bytes_recv = self.talk(package)
         except SerialDeviceError as e:
             return False
-        return self.res.get_negative_ack(bytes_recv)
+        serno = self.res.get_negative_ack(bytes_recv)
+        return Module(self, serno)
     
     def probe_module_long(self, serno):
         """ PROBE MODULE (LONGCOMMAND)
