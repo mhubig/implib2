@@ -274,11 +274,23 @@ class Module(object):
     #################################
     # perform measurment commands   #  
     #################################
-
-    def do_measurement(self):
+    
+    def get_moisture(self):
         if not self.get_event_mode() == "NormalMeasure":
             self.set_event_mode("NormalMeasure")
-
+        
+        table = 'ACTION_PARAMETER_TABLE'
+        param = 'StartMeasure'
+        self._set(table, param, [1])
+        time.sleep(1.0)
+        
+        while self._get(table, param)[0]:
+            time.sleep(0.5)
+            
+        table = 'MEASURE_PARAMETER_TABLE'
+        param = 'Moist'
+        return self._get(table, param)[0]
+    
 if __name__ == "__main__":
     import doctest
     doctest.testmod()

@@ -23,26 +23,6 @@ from imp_bus import IMPBus, IMPBusError
 from imp_modules import Module, ModuleError
 
 bus = IMPBus(port='/dev/tty.usbserial-A700eQFp')
-bus.synchronise_bus()
-modules = bus.scan_bus()
-serno = bus.find_single_module()
-print serno
-print bus.probe_module_long(serno)
-print bus.probe_module_short(serno)
-
-module = modules[0]
-print module.get_serial()
-print module.get_hw_version()
-print module.get_fw_version()
-print module.get_moist_min_value()
-print module.get_moist_max_value()
-print module.get_temp_max_value()
-print module.get_temp_min_value()
-print module.get_event_mode()
-#print module.set_analog_moist(mvolt=500)
-#print module.set_analog_temp(mvolt=1000)
-#print module.read_eeprom()[0:10]
-
-#module.write_eeprom('../hexfiles/EEPROM.ept')
-#module.set_serial(32344)
-
+bus.open_device()
+module = bus.find_single_module()
+print module.get_measurement_data()
