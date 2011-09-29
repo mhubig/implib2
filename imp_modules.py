@@ -289,7 +289,7 @@ class Module(object):
             
         table = 'MEASURE_PARAMETER_TABLE'
         param = 'Moist'
-        return '{0:.2f}'.format(self._get(table, param)[0])
+        return self._get(table, param)[0]
     
 if __name__ == "__main__":
     import doctest
