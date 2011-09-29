@@ -122,12 +122,12 @@ class Module(object):
     def get_hw_version(self):
         table = 'SYSTEM_PARAMETER_TABLE'
         param = 'HWVersion'
-        return self._get(table, param)[0]
+        return '{0:.2f}'.format(self._get(table, param)[0])
     
     def get_fw_version(self):
         table = 'SYSTEM_PARAMETER_TABLE'
         param = 'FWVersion'
-        return self._get(table, param)[0]
+        return '{0:.2f}'.format(self._get(table, param)[0])
     
     def get_moist_max_value(self):
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
@@ -289,7 +289,7 @@ class Module(object):
             
         table = 'MEASURE_PARAMETER_TABLE'
         param = 'Moist'
-        return self._get(table, param)[0]
+        return '{0:.2f}'.format(self._get(table, param)[0])
     
 if __name__ == "__main__":
     import doctest
