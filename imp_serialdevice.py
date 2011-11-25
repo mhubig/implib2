@@ -24,7 +24,7 @@ import serial
 from struct import pack, unpack
 from binascii import b2a_hex as b2a, a2b_hex as a2b
 
-from tools_debug import trace
+#from tools_debug import trace
 
 class SerialDeviceError(Exception):
     pass
@@ -38,7 +38,7 @@ class SerialDevice(object):
     """
     def __init__(self, port):
         self.PORT = port
-        self.TIMEOUT = 2
+        self.TIMEOUT = 5
         
         try:
             self.ser = serial.serial_for_url(url=port, do_not_open=True)
@@ -74,7 +74,7 @@ class SerialDevice(object):
         bytes_send = self.ser.write(packet)
         if not bytes_send == len(packet):
             raise SerialDeviceError("Couldn't write all bytes!")
-        time.sleep(0.1)
+        
         return True
         
     def read_pkg(self):
@@ -137,3 +137,4 @@ class SerialDevice(object):
 if __name__ == "__main__":
     import doctest
     doctest.testmod()
+

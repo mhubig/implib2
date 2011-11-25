@@ -152,7 +152,11 @@ class Module(object):
     def get_event_mode(self):
         table = 'ACTION_PARAMETER_TABLE'
         param = 'Event'
-        modes = {v:k for k, v in self.EVENT_MODES.items()}
+        # Doesn't work on python 2.6.x
+        # modes = {v:k for k, v in self.EVENT_MODES.items()}
+        keys   = self.EVENT_MODES.keys()
+        values = self.EVENT_MODES.values()
+        modes  = dict(zip(values,keys))
         return modes[self._get(table, param)[0] % 0x80]
     
     def read_eeprom(self):
@@ -217,7 +221,7 @@ class Module(object):
         table = 'MEASURE_PARAMETER_TABLE'
         param = 'Moist'
         
-        if not self.set_event_mode("AnalogOut"):
+        if not self.set_event_mode("AnalogOut"): 
             raise ModuleError("Coul'd not set event mode!")
         
         return self._set(table, param, [value])
@@ -286,7 +290,7 @@ class Module(object):
         
         while self._get(table, param)[0]:
             time.sleep(0.5)
-            
+	
         table = 'MEASURE_PARAMETER_TABLE'
         param = 'Moist'
         return self._get(table, param)[0]
@@ -294,3 +298,4 @@ class Module(object):
 if __name__ == "__main__":
     import doctest
     doctest.testmod()
+

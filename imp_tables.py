@@ -22,12 +22,7 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 
 import os
 from yaml import YAMLObject, load_all
-
-try:
-    from yaml import CLoader as Loader
-    from yaml import CDumper as Dumper
-except ImportError:
-    from yaml import Loader, Dumper
+from yaml import Loader, Dumper
 
 class Row(type):
     """ Metaclass based Class factory for the table rows. 

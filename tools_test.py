@@ -19,10 +19,20 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
+
+import time
+
 from imp_bus import IMPBus, IMPBusError
 from imp_modules import Module, ModuleError
-
-bus = IMPBus(port='/dev/tty.usbserial-A700eQFp')
-bus.open_device()
+bus = IMPBus(port='/dev/ttyUSB0')
+bus.synchronise_bus(baudrate=9600)
 module = bus.find_single_module()
-print module.get_measurement_data()
+print module.get_serial()
+print module.get_serial()
+print module.get_serial()
+print module.get_serial()
+print module.get_event_mode()
+
+time.sleep(2.0)
+
+print module.get_moisture()
