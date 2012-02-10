@@ -91,10 +91,11 @@ class IMPBus(SerialDevice):
         >>> bus.synchronise_bus(baudrate=9600)
         True
         """
-        address = 16777215
-        table = 'SYSTEM_PARAMETER_TABLE'
-        parameter = 'Baudrate'
-        value = baudrate/100
+        address  = 16777215
+        table    = 'SYSTEM_PARAMETER_TABLE'
+        param    = 'Baudrate'
+        ad_param = 0
+        value    = baudrate/100
         
         if not value in (12, 24, 48, 96):
             raise IMPBusError("Unknown baudrate!")
@@ -104,28 +105,28 @@ class IMPBus(SerialDevice):
         
         # trying to set baudrate at 1200
         self.open_device(baudrate=1200)
-        package = self.cmd.set_parameter(address, table, parameter, [value])
+        package = self.cmd.set_parameter(address, table, param, ad_param, [value])
         bytes_send = self.write_pkg(package)
         time.sleep(0.5)
         self.close_device()
         
         # trying to set baudrate at 2400
         self.open_device(baudrate=2400)
-        package = self.cmd.set_parameter(address, table, parameter, [value])
+        package = self.cmd.set_parameter(address, table, param, ad_param, [value])
         bytes_send = self.write_pkg(package)
         time.sleep(0.5)
         self.close_device()
         
         # trying to set baudrate at 4800
         self.open_device(baudrate=4800)
-        package = self.cmd.set_parameter(address, table, parameter, [value])
+        package = self.cmd.set_parameter(address, table, param, ad_param, [value])
         bytes_send = self.write_pkg(package)
         time.sleep(0.5)
         self.close_device()
         
         # trying to set baudrate at 9600
         self.open_device(baudrate=9600)
-        package = self.cmd.set_parameter(address, table, parameter, [value])
+        package = self.cmd.set_parameter(address, table, param, ad_param, [value])
         bytes_send = self.write_pkg(package)
         time.sleep(0.5)
         self.close_device()

@@ -68,9 +68,10 @@ class Module(object):
         time.sleep(0.1)
         return responce
     
-    def _set(self, table, param, value):
+    def _set(self, table, param, value, ad_param=0):
         """General set_parameter command"""
-        package = self.cmd.set_parameter(self._serno, table, param, value)
+        package = self.cmd.set_parameter(self._serno, table, param, ad_param, value)
+        print b2a(package)
         bytes_recv = self.bus.talk(package)
         responce = self.res.set_parameter(bytes_recv, self._serno, table)
         time.sleep(0.1)
@@ -222,7 +223,7 @@ class Module(object):
         param = 'Moist'
         
         if not self.set_event_mode("AnalogOut"): 
-            raise ModuleError("Coul'd not set event mode!")
+            raise ModuleError("Could not set event mode!")
         
         return self._set(table, param, [value])
         
@@ -274,6 +275,38 @@ class Module(object):
                 raise ModuleError("Writing EEPROM Failed")
             time.sleep(0.2)
         return True
+
+    def turn_ASIC_on(self):
+        """" Command to start the selftest of the probe.
+	        
+        SelfTest is used for primary for internal test by IMKO.
+	    In this context, it will be used to 'ON' the ASIC.
+        """
+        table    = 'ACTION_PARAMETER_TABLE'
+        param    = 'SelfTest'
+        value    = [1,1,63,0]
+
+        if not self.set_event_mode("SelfTest"):
+            raise ModuleError("Coul'd not set event mode!")
+        
+	    print "Turn ASIC on" 
+        return self._set(table, param, value)
+    
+    def turn_ASIC_off(self):
+        """" Command to start the selftest of the probe.
+	        
+        SelfTest is used for primary for internal test by IMKO.
+	    In this context, it will be used to 'OFF' the ASIC.
+        """
+        table = 'ACTION_PARAMETER_TABLE'
+        param = 'SelfTest'
+        value = [1,0,255,0]
+        
+        if not self.set_event_mode("SelfTest"):
+            raise ModuleError("Coul'd not set event mode!")
+        
+        return self._set(table, param, value)
+     
 
     #################################
     # perform measurment commands   #  

@@ -99,8 +99,8 @@ class Command(object):
         self.tbl = Tables()
         self.pkg = Package()
         self.data_types = {
-            0x00: '<{0}B', # 8-bit unsigned char
-            0x01: '<{0}b', # 8-bit signed char
+            0x00: '<{0}B', #  8-bit unsigned char
+            0x01: '<{0}b', #  8-bit signed char
             0x02: '<{0}H', # 16-bit unsigned short
             0x03: '<{0}h', # 16-bit signed short
             0x04: '<{0}I', # 32-bit unsigned integer
@@ -222,7 +222,7 @@ class Command(object):
         package = self.pkg.pack(serno=serno,cmd=table.Table.Get,data=data)
         return package
     
-    def set_parameter(self, serno, table, param, values):
+    def set_parameter(self, serno, table, param, ad_param, values):
         """ COMMAND TO SET A PARAMETER.
         
         Command to write a parameter to one of the different parameter
@@ -239,10 +239,10 @@ class Command(object):
         """
         table  = getattr(self.tbl, table)
         param  = getattr(table, param)
-        format = self.data_types[param.Type]
+        format = self.data_types[param.Type % 0x80]
         
         param_no = struct.pack('<B', param.No)
-        param_ad = struct.pack('<B', 0)
+        param_ad = struct.pack('<B', ad_param)
         param = struct.pack(format.format(len(values)), *values)
         data = param_no + param_ad + param
         
