@@ -71,7 +71,6 @@ class Module(object):
     def _set(self, table, param, value, ad_param=0):
         """General set_parameter command"""
         package = self.cmd.set_parameter(self._serno, table, param, ad_param, value)
-        print b2a(package)
         bytes_recv = self.bus.talk(package)
         responce = self.res.set_parameter(bytes_recv, self._serno, table)
         time.sleep(0.1)
@@ -289,7 +288,6 @@ class Module(object):
         if not self.set_event_mode("SelfTest"):
             raise ModuleError("Coul'd not set event mode!")
         
-	    print "Turn ASIC on" 
         return self._set(table, param, value)
     
     def turn_ASIC_off(self):
