@@ -71,7 +71,7 @@ class Package(object):
         if not self.crc.check_crc(header):
             raise PackageError("Package with faulty header CRC!")
         
-        if state not in [0,253,255]:
+        if state not in [0,122,123,253,255]:
             # TODO: Look up the real error msg!
             raise PackageError("Probe Error: {0}!".format(state))
         
