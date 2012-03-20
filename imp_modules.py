@@ -71,8 +71,6 @@ class Module(object):
     def _set(self, table, param, value, ad_param=0):
         """General set_parameter command"""
         package = self.cmd.set_parameter(self._serno, table, param, ad_param, value)
-        # debug
-        #print b2a(package)
         bytes_recv = self.bus.talk(package)
         responce = self.res.set_parameter(bytes_recv, self._serno, table)
         time.sleep(0.1)
@@ -289,8 +287,7 @@ class Module(object):
 
         if not self.set_event_mode("SelfTest"):
             raise ModuleError("Coul'd not set event mode!")
-        
-	    print "Turn ASIC on" 
+         
         return self._set(table, param, value)
     
     def turn_ASIC_off(self):
@@ -328,36 +325,36 @@ class Module(object):
         table = 'MEASURE_PARAMETER_TABLE'
         param = 'Moist'
         return self._get(table, param)[0]
-        
+
     def get_transit_time_tdr(self):
         if not self.get_event_mode() == "NormalMeasure":
             self.set_event_mode("NormalMeasure")
-        
+
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
         param = 'MeasMode'
         self._set(table, param, [0])
         time.sleep(0.1)
-        
+
         table = 'ACTION_PARAMETER_TABLE'
         param = 'StartMeasure'
         self._set(table, param, [1])
         time.sleep(1.0)
-        
+
         while self._get(table, param)[0]:
             time.sleep(0.5)
-        
+
         table = 'MEASURE_PARAMETER_TABLE'
         param = 'TransitTime'
         tt = self._get(table, param)[0]
-        
+
         param = 'TDRValue'
         tdr = self._get(table, param)[0]
-        
+
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
         param = 'MeasMode'
         self._set(table, param, [2])
         time.sleep(0.1)
-        
+
         return tt, tdr
     
 if __name__ == "__main__":
