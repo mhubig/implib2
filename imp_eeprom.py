@@ -94,7 +94,7 @@ class EEPROM(object):
                         line = line.lstrip('; ')
                         self._cmtbuffer.append(line.strip())
         if not self._eptlength == len(self._eptbuffer):
-            raise EPTParserException("ERROR: 'EPRImage Length' dosn't match real length!")
+            raise EPTParserException("ERROR: 'EPRImage Length' doesn't match real length!")
         
         return True
         
