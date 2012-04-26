@@ -356,7 +356,17 @@ class Module(object):
         time.sleep(0.1)
 
         return tt, tdr
-    
+        
+    def set_measmode(self,mode=0):
+        if not self.get_event_mode() == "NormalMeasure":
+            self.set_event_mode("NormalMeasure")
+
+        table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
+        param = 'MeasMode'
+        self._set(table, param, [mode])
+        time.sleep(0.1)
+        return self._set(table, param, [mode])
+        
 if __name__ == "__main__":
     import doctest
     doctest.testmod()
