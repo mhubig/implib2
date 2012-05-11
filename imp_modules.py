@@ -341,6 +341,30 @@ class Module(object):
         table = 'MEASURE_PARAMETER_TABLE'
         param = 'Moist'
         return self._get(table, param)[0]
+        
+    def get_measure(self,strName):
+        
+        if strName == 'RbC': strName = 'Info1'
+        
+        # set MeasMode ModeA
+        # Refer Protocol Handbook page 18.
+        self.set_measmode(mode=0)
+        
+        # set NormalMeasure
+        if not self.get_event_mode() == "NormalMeasure":
+            self.set_event_mode("NormalMeasure")
+        
+        table = 'ACTION_PARAMETER_TABLE'
+        param = 'StartMeasure'
+        self._set(table, param, [1])
+        time.sleep(1.0)
+        
+        while self._get(table, param)[0]:
+            time.sleep(0.5)
+	
+        table = 'MEASURE_PARAMETER_TABLE'
+        param = strName
+        return self._get(table, param)[0]
 
     def get_transit_time_tdr(self):
         # ** Internal usage - Trime IBT 
