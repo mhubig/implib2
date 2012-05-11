@@ -127,7 +127,12 @@ class SerialDevice(object):
         This methode shold be as fast as possible. Returns
         True or False. Useable for scanning the bus. 
         """
-        return self.ser.read()
+        bytes = str()
+        tic = time.time()
+        while (time.time() - tic < 0.25) and (len(bytes) < 1): 
+            if self.ser.inWaiting(): bytes += self.ser.read()
+        
+        return bytes
         
     def talk(self, packet):
         """ Writes an IMPBUS2 Package and reads the responce packet """

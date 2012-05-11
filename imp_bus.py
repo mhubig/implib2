@@ -46,7 +46,7 @@ class IMPBus(SerialDevice):
         self.bus_synced = False
     
     def _divide_and_conquer(self, low, high, found):
-        """ Recursiv divide-and-conquer algorythm to scan the IMPBUS.
+        """ Recursiv divide-and-conquer algorithm to scan the IMPBUS.
         
         Divides the 24bit address range [0 - 16777215] in equal parts
         and uses the get_acknowledge_for_serial_number_range() methode
@@ -66,7 +66,7 @@ class IMPBus(SerialDevice):
             if not self.probe_range(broadcast):
                 return False
             
-        # divide-and-conquer by splitting the range into two pices. 
+        # divide-and-conquer by splitting the range into two pices.
         mid = (low + high)/2
         self._divide_and_conquer(low, mid, found)
         self._divide_and_conquer(mid+1, high, found)
@@ -162,6 +162,8 @@ class IMPBus(SerialDevice):
         modules = list()
         self._divide_and_conquer(minserial, maxserial, sernos)
         
+        print sernos
+        
         for serno in sernos:
             modules.append(Module(self, serno))
         
@@ -226,7 +228,8 @@ class IMPBus(SerialDevice):
         package = self.cmd.get_short_ack(serno)
         try:
             bytes_send = self.write_pkg(package)
-            bytes_recv = self.read_bytes(1)
+            bytes_recv = self.read_something()
+            #bytes_recv = self.read_bytes(1)
         except SerialDeviceError as e:
             return False
         return self.res.get_short_ack(bytes_recv,serno)
@@ -250,7 +253,12 @@ class IMPBus(SerialDevice):
         package = self.cmd.get_range_ack(broadcast)
         try:
             bytes_send = self.write_pkg(package)
+            # !! Achtung
+            # @ m.hubig@imko.de ser.read() code does not work in read_something()
+            # use read_bytes(1) as temporary solution
+            
             bytes_recv = self.read_something()
+            #bytes_recv = self.read_bytes(1)
         except SerialDeviceError as e:
             return False
         return self.res.get_range_ack(bytes_recv)
