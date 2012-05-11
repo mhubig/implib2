@@ -256,7 +256,7 @@ class IMPBus(SerialDevice):
             # !! Achtung
             # @ m.hubig@imko.de ser.read() code does not work in read_something()
             # use read_bytes(1) as temporary solution
-            
+            # UPDATE: tweaked read_something to be controlled by timer. Read commit comments
             bytes_recv = self.read_something()
             #bytes_recv = self.read_bytes(1)
         except SerialDeviceError as e:

@@ -259,7 +259,17 @@ class Module(object):
         if not self._unlocked:
             self._unlock()
         return self._set(table, param, [value])
-        
+    
+    def set_measmode(self,mode=0):
+        if not self.get_event_mode() == "NormalMeasure":
+            self.set_event_mode("NormalMeasure")
+
+        table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
+        param = 'MeasMode'
+        self._set(table, param, [mode])
+        time.sleep(0.1)
+        return self._set(table, param, [mode])
+            
     def write_eeprom(self, eeprom_file):
         eeprom = EEPROM(eeprom_file)
         
@@ -311,6 +321,12 @@ class Module(object):
     #################################
     
     def get_moisture(self):
+        
+        # set MeasMode ModeA
+        # Refer Protocol Handbook page 18.
+        self.set_measmode(mode=0)
+        
+        # set NormalMeasure
         if not self.get_event_mode() == "NormalMeasure":
             self.set_event_mode("NormalMeasure")
         
@@ -327,6 +343,8 @@ class Module(object):
         return self._get(table, param)[0]
 
     def get_transit_time_tdr(self):
+        # ** Internal usage - Trime IBT 
+        
         if not self.get_event_mode() == "NormalMeasure":
             self.set_event_mode("NormalMeasure")
 
@@ -357,15 +375,7 @@ class Module(object):
 
         return tt, tdr
         
-    def set_measmode(self,mode=0):
-        if not self.get_event_mode() == "NormalMeasure":
-            self.set_event_mode("NormalMeasure")
-
-        table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
-        param = 'MeasMode'
-        self._set(table, param, [mode])
-        time.sleep(0.1)
-        return self._set(table, param, [mode])
+    
         
 if __name__ == "__main__":
     import doctest
