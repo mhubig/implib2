@@ -189,6 +189,15 @@ class IMPBus(SerialDevice):
             return False
         serno = self.res.get_negative_ack(bytes_recv)
         return Module(self, serno)
+        
+    def single_module(self, serno):
+        """ Create a Module Object for a known serial number
+        
+        This command is not recommended as faulty serial number 
+        will cause unexpected error.
+        This command will create a Modules Object.
+        """
+        return Module(self, serno)
     
     def probe_module_long(self, serno):
         """ PROBE MODULE (LONGCOMMAND)
