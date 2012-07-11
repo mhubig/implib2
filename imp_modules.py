@@ -269,6 +269,23 @@ class Module(object):
         self._set(table, param, [mode])
         time.sleep(0.1)
         return self._set(table, param, [mode])
+        
+    def set_default_measmode(self,mode=2):
+        if not self.get_event_mode() == "NormalMeasure":
+            self.set_event_mode("NormalMeasure")
+
+        table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
+        param = 'DefaultMeasMode'
+        self._set(table, param, [mode])
+        time.sleep(0.1)
+        return self._set(table, param, [mode])
+        
+    def set_average_mode(self,mode=0):
+        table = 'APPLICATION_PARAMETER_TABLE'
+        param = 'AverageMode'
+        self._set(table, param, [mode])
+        time.sleep(0.1)
+        return self._set(table, param, [mode])
             
     def write_eeprom(self, eeprom_file):
         eeprom = EEPROM(eeprom_file)
