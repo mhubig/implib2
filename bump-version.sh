@@ -24,7 +24,7 @@ function usage () {
 
 function update_version () {
     sed "s/^__version__ = .*$/__version__ = '$1'/g" \
-        __init__.py > .__init__.new
+        implib2/__init__.py > .__init__.new
 }
 
 if [ $# -ne 1 ]; then
@@ -37,6 +37,6 @@ if ! update_version $1; then
     exit 2
 fi
 
-mv .__init__.new __init__.py
+mv .__init__.new implib2/__init__.py
 git add __init__.py
 git commit -s -m "Bumped version number to $1" __init__.py
