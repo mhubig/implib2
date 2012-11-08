@@ -35,9 +35,9 @@ Installation:
 
 Just install the stable branch with pip using git:
 
-    $ pip install git+git://bitbucket.org:imko/implib2.git@master
+    $ pip install git+git://bitbucket.org/imko/implib2.git@master#egg=implib2
 
 Of if you brave enough:
 
-    $ pip install git+git://bitbucket.org:imko/implib2.git@develop
+    $ pip install git+git://bitbucket.org/imko/implib2.git@develop#egg=implib2
 
