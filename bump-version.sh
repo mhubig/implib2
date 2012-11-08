@@ -22,21 +22,35 @@ function usage () {
     echo "usage: bump-version <version-id>"
 }
 
-function update_version () {
-    sed "s/^__version__ = .*$/__version__ = '$1'/g" \
+function update_version_init () {
+    sed "s/^__version__ = .*$/__version__ = 'release-$1'/g" \
         implib2/__init__.py > .__init__.new
 }
+
+function update_version_setup () {
+    sed "s/version = .*$/version = 'release-$1',/g" \
+        setup.py > .setup.new
+}
+
 
 if [ $# -ne 1 ]; then
     usage
     exit 1
 fi
 
-if ! update_version $1; then
-    echo "Could not replace __version__ variable." >&2
+if ! update_version_init $1; then
+    echo "Could not replace version in '__init__.py'!" >&2
     exit 2
+else
+    mv .__init__.new implib2/__init__.py
 fi
 
-mv .__init__.new implib2/__init__.py
+if ! update_version_setup $1; then
+    echo "Could not replace version in 'setup.py'!" >&2
+    exit 2
+else
+    mv .setup.new setup.py
+fi
+
 git add __init__.py
-git commit -s -m "Bumped version number to $1" __init__.py
+git commit -s -m "Bumped version number to release-$1" __init__.py
