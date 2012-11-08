@@ -23,7 +23,7 @@ function usage () {
 }
 
 function update_version () {
-    sed 's/^__version__ = .*$/__version__ = '$1'/g' \
+    sed "s/^__version__ = .*$/__version__ = '$1'/g" \
         __init__.py > .__init__.new
 }
 
@@ -39,4 +39,4 @@ fi
 
 mv .__init__.new __init__.py
 git add __init__.py
-git commit -m "Bumped version number to $1" __init__.py
+git commit -s -m "Bumped version number to $1" __init__.py
