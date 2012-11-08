@@ -1,0 +1,3 @@
+*.pyc
+.tox/
+IMPLib2.egg-info/
