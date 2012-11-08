@@ -1,10 +1,7 @@
-# Autor:        Markus Hubig <mhubig@imko.de>
-# Last Changed: 2011/15/08
-
 Lizence:
 ========
 
-Copyright (C) 2011, Markus Hubig <mhubig@imko.de>
+Copyright (C) 2011-2012, Markus Hubig <mhubig@imko.de>
 
 This file is part of IMPLib2 a small Python library implementing
 the IMPBUS-2 data transmission protocol.
@@ -36,6 +33,11 @@ you have at least the following software installed.
 Installation:
 =============
 
-Just get the sources from bitbucket via hg
+Just install the stable branch with pip using git:
 
-$ hg clone https://bitbucket.org/imko/implib2
+    $ pip install git+git://bitbucket.org:imko/implib2.git@master
+
+Of if you brave enough:
+
+    $ pip install git+git://bitbucket.org:imko/implib2.git@develop
+
