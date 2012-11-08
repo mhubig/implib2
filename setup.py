@@ -31,7 +31,7 @@ def read(fname):
 
 setup(
         name = 'IMPLib2',
-        version = 'release-0.4.0',
+        version = 'release-0.5.0',
         packages = find_packages(),
 
         # Include the *.yaml files
