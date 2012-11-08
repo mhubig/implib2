@@ -52,6 +52,6 @@ else
     mv .setup.new setup.py
 fi
 
-git add implib/__init__.py setup.py
+git add implib2/__init__.py setup.py
 git commit -s -m "Bumped version number to release-$1" \
-    implib/__init__.py setup.py
+    implib2/__init__.py setup.py
