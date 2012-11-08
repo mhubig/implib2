@@ -39,4 +39,4 @@ fi
 
 mv .__init__.new __init__.py
 git add __init__.py
-git commit -m "Bumped version number to $1" __init__.py
+git commit -s -m "Bumped version number to $1" __init__.py
