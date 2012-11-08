@@ -20,7 +20,14 @@ You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 
+import os
 from setuptools import setup, find_packages
+
+# Utility function to read the README file, used for the long_description.
+# It's nice, because now 1) we have a top level README file and 2) it's
+# easier to type in the README file than to put a raw string in below ...
+def read(fname):
+    return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 setup(
         name = 'IMPLib2',
@@ -43,7 +50,17 @@ setup(
         author = 'Markus Hubig',
         author_email = 'mhubig@imko.de',
         url = 'https://bitbucket.org/imko/implib2',
-        description = 'Python implementation of the IMPBUS-2 data transmission protocol.',
+        description = ("Python implementation of the IMPBUS-2 data "
+            "transmission protocol."),
+        long_description=read('README.md'),
         license = "LGPL",
-        keywords = "serial impbus imko"
+        keywords = "serial impbus imko",
+
+        classifiers = [
+            "Development Status :: 4 - Beta",
+            "Topic :: Software Development :: Libraries",
+            "Intended Audience :: Developers",
+            "Programming Language :: Python :: 2.7",
+            "License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)",
+        ],
 )
