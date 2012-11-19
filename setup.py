@@ -36,14 +36,13 @@ setup(
 
         # Include the *.yaml files
         package_data = {
-            'implib2': ['*.yaml'],
+            'implib2': ['*.json'],
         },
 
         # Install or upgrade the dependencies
         install_requires = [
+            'nose>=1.2.1',
             'PySerial>=2.6',
-            'PyYAML>=3.10',
-            'SQLAlchemy>=0.7.9',
         ],
 
         # metadata for upload to PyPI
