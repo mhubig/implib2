@@ -4,3 +4,4 @@
 build/
 dist/
 IMPLib2.egg-info/
+docs/_build/
