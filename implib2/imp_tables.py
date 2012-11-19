@@ -23,6 +23,9 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 import json
 from imp_helper import _normalize
 
+class TablesError(Exception):
+    pass
+
 class Tables(object):
     def __init__(self, filename='imp_tables.json'):
         self._tables = self._load_json(filename)
@@ -32,8 +35,11 @@ class Tables(object):
         with open(filename) as js:
             return json.load(js)
 
-    def lookup(self, table, row):
-        cmd = self._tables[table][row]
-        cmd[u'Set'] = self._tables[table]["Table"]["Set"]
-        cmd[u'Get'] = self._tables[table]["Table"]["Get"]
-        return cmd
+    def lookup(self, table, param):
+        try:
+            cmd = self._tables[table][param]
+            cmd[u'Set'] = self._tables[table]["Table"]["Set"]
+            cmd[u'Get'] = self._tables[table]["Table"]["Get"]
+            return cmd
+        except KeyError as e:
+            raise TablesError(table, param)

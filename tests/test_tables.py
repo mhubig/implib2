@@ -21,15 +21,17 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 
 import json
-from nose.tools import ok_, eq_, raises
-from implib2.imp_tables import Tables
+from nose.tools import ok_, eq_, raises, with_setup
+from implib2.imp_tables import Tables, TablesError
 
-class TestTables():
+class TestTables(object):
+
+    def __init__(self):
+        with open('implib2/imp_tables.json') as js:
+            self.j = json.load(js)
 
     def setUp(self):
         self.t = Tables()
-        with open('implib2/imp_tables.json') as js:
-            self.j = json.load(js)
 
     def tearDown(self):
         pass
@@ -45,21 +47,43 @@ class TestTables():
     def test_load_json_falty_file(self):
         json = self.t._load_json('imp_tables.py')
 
-    def test_lookup_value(self):
-        table = 'APPLICATION_PARAMETER_TABLE'
-        row = 'AverageMode'
-        value = self.t.lookup(table, row)
-        ok_(len(value), 6)
+    @raises(TablesError)
+    def test_lookup_unknown_table(self):
+        self.t.lookup('UNKNOWN', 'UNKNOWN')
 
-    def test_lookup_value_hast_set(self):
-        table = 'APPLICATION_PARAMETER_TABLE'
-        row = 'AverageMode'
-        value = self.t.lookup(table, row)
-        ok_(value.has_key('Set'))
+    @raises(TablesError)
+    def test_lookup_unknown_param(self):
+        self.t.lookup('APPLICATION_PARAMETER_TABLE', 'UNKNOWN')
 
-    def test_lookup_value_hast_get(self):
-        table = 'APPLICATION_PARAMETER_TABLE'
-        row = 'AverageMode'
-        value = self.t.lookup(table, row)
-        ok_(value.has_key('Get'))
+    def _lookup_value(self, table, param):
+        row = self.j[table][param]
+        value = self.t.lookup(table, param)
+        if param == 'Table':
+            eq_(len(row), len(value))
+        else:
+            eq_(len(row) + 2, len(value))
+
+    def _test_lookup_value(self):
+        for table in self.j:
+            for param in self.j[table]:
+                yield _lookup_value, table, param
+
+    def _lookup_value_has_get(self, table, param):
+        row = self.t.lookup(table, param)
+        ok_(row.has_key('Get'))
+
+    def test_has_get(self):
+        for table in self.j:
+            for param in self.j[table]:
+                yield self._lookup_value_has_get, table, param
+
+    def _lookup_value_has_set(self, table, param):
+        row = self.t.lookup(table, param)
+        ok_(row.has_key('Set'))
+
+    def test_has_set(self):
+        for table in self.j:
+            for param in self.j[table]:
+                yield self._lookup_value_has_set, table, param
+
 
