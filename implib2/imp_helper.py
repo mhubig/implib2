@@ -20,20 +20,9 @@ You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 
-import json
-from imp_helper import _normalize
+def _normalize(filename):
+    import os
+    abs_path = os.path.abspath(__file__)
+    dir_name = os.path.dirname(abs_path)
+    return os.path.join(dir_name, filename)
 
-class Tables(object):
-    def __init__(self, filename='imp_tables.json'):
-        self._tables = self._load_json(filename)
-
-    def _load_json(self, filename):
-        filename = _normalize(filename)
-        with open(filename) as js:
-            return json.load(js)
-
-    def lookup(self, table, row):
-        cmd = self._tables[table][row]
-        cmd[u'Set'] = self._tables[table]["Table"]["Set"]
-        cmd[u'Get'] = self._tables[table]["Table"]["Get"]
-        return cmd

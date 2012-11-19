@@ -1,6 +1,6 @@
 {
   "SYSTEM_PARAMETER_TABLE": {
-    "Get": 10, "Set": 11,
+    "Table":       {"Get": 10, "Set": 11},
     "ConfigID":    {"No": 251, "Type":   2, "Status": "OR", "Length":  2},
     "TableSize":   {"No": 252, "Type":   2, "Status": "OR", "Length":  2},
     "DataSize":    {"No": 254, "Type":   2, "Status": "OR", "Length":  2},
@@ -17,7 +17,7 @@
   },
 
   "DEVICE_CONFIGURATION_PARAMETER_TABLE": {
-    "Get": 12, "Set": 13,
+    "Table":             {"Get": 12, "Set": 13},
     "ConfigID":          {"No": 251, "Type":   2, "Status": "OR", "Length": 2},
     "TableSize":         {"No": 252, "Type":   2, "Status": "OR", "Length": 2},
     "DataSize":          {"No": 254, "Type":   2, "Status": "OR", "Length": 2},
@@ -39,7 +39,7 @@
   },
 
   "DEVICE_CALIBRATION_PARAMETER_TABLE": {
-    "Get": 14, "Set": 15,
+    "Table":           {"Get": 14, "Set": 15},
     "ASICTempCorr":    {"No":   1, "Type": 134, "Status": "OR", "Length": 24},
     "ASICTCStartTemp": {"No":   2, "Type":   1, "Status": "OR", "Length":  1},
     "ASICTCHeatTemp":  {"No":   3, "Type":   0, "Status": "OR", "Length":  1},
@@ -50,7 +50,7 @@
   },
 
   "PROBE_CONFIGURATION_PARAMETER_TABLE": {
-    "Get": 16, "Set": 17,
+    "Table":               {"Get": 16, "Set": 17},
     "ConfigID":            {"No": 251, "Type":   2, "Status": "OR", "Length":  2},
     "TableSize":           {"No": 252, "Type":   2, "Status": "OR", "Length":  2},
     "DataSize":            {"No": 254, "Type":   2, "Status": "OR", "Length":  2},
@@ -73,7 +73,7 @@
   },
 
   "PROBE_CALIBRATION_PARAMETER_TABLE": {
-    "Get": 18, "Set": 19,
+    "Table":          {"Get": 18, "Set": 19},
     "ConfigID":       {"No": 251, "Type":   2, "Status": "OR", "Length":  2},
     "TableSize":      {"No": 252, "Type":   2, "Status": "OR", "Length":  2},
     "DataSize":       {"No": 254, "Type":   2, "Status": "OR", "Length":  2},
@@ -214,7 +214,7 @@
   },
 
   "ACTION_PARAMETER_TABLE": {
-    "Get": 20, "Set": 21,
+    "Table":          {"Get": 20, "Set": 21},
     "ConfigID":       {"No": 251, "Type":   2, "Status": "OR", "Length": 2},
     "TableSize":      {"No": 252, "Type":   2, "Status": "OR", "Length": 2},
     "DataSize":       {"No": 254, "Type":   2, "Status": "OR", "Length": 2},
@@ -234,7 +234,7 @@
   },
 
   "MEASURE_PARAMETER_TABLE": {
-    "Get": 22, "Set": 23,
+    "Table":             {"Get": 22, "Set": 23},
     "ConfigID":          {"No": 251, "Type":   2, "Status": "OR", "Length": 2},
     "TableSize":         {"No": 252, "Type":   2, "Status": "OR", "Length": 2},
     "DataSize":          {"No": 254, "Type":   2, "Status": "OR", "Length": 2},
@@ -259,7 +259,7 @@
   },
 
   "TP_MOIST_PARAMETER_TABLE": {
-    "Get": 24, "Set": 25,
+    "Table":     {"Get": 24, "Set": 25},
     "ConfigID":  {"No": 251, "Type":   2, "Status": "OR", "Length": 2},
     "TableSize": {"No": 252, "Type":   2, "Status": "OR", "Length": 2},
     "DataSize":  {"No": 254, "Type":   2, "Status": "OR", "Length": 2},
@@ -369,7 +369,7 @@
   },
 
   "APPLICATION_PARAMETER_TABLE": {
-    "Get": 40, "Set": 41,
+    "Table":       {"Get": 40, "Set": 41},
     "AverageMode": {"No":   1, "Type":   0, "Status": "WR", "Length": 1}
   }
 
