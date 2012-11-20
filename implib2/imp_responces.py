@@ -24,16 +24,14 @@ from binascii import b2a_hex as b2a, a2b_hex as a2b
 
 from imp_tables import Tables, TablesError
 from imp_packages import Package, PackageError
-from imp_crc import MaximCRC, MaximCRCError
 
 class ResponceError(Exception):
     pass
 
 class Responce(object):
-    def __init__(self, tables, package, maximcrc):
+    def __init__(self, tables, package):
         self.tbl = tables
         self.pkg = package
-        self.crc = maximcrc
         self.data_types = {
             0x00: '<{0}B', #  8-bit unsigned char
             0x01: '<{0}b', #  8-bit signed char
@@ -50,7 +48,7 @@ class Responce(object):
 
     def get_short_ack(self, packet, serno):
         serno = struct.pack('<I', serno)[:-1]
-        res_crc = self.crc.calc_crc(serno)
+        res_crc = self.pkg.crc.calc_crc(serno)
         return res_crc == packet
 
     def get_range_ack(self, packet):

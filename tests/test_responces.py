@@ -32,7 +32,7 @@ from implib2.imp_responces import Responce, ResponceError
 class TestResponce(object):
 
     def __init__(self):
-        self.res = Responce(Tables(), Package(), MaximCRC())
+        self.res = Responce(Tables(), Package())
 
     def setUp(self):
         pass
