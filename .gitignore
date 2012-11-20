@@ -1,7 +1,9 @@
 *.pyc
 *.DS_Store
 .tox/
+.coverage
 build/
 dist/
 IMPLib2.egg-info/
 docs/_build/
+tests/.coverage
