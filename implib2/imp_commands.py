@@ -30,9 +30,9 @@ class CommandError(Exception):
     pass
 
 class Command(object):
-    def __init__(self, tbl, pkg):
-        self.tbl = tbl
-        self.pkg = pkg
+    def __init__(self, tables, package):
+        self.tbl = tables
+        self.pkg = package
         self.data_types = {
             0x00: '<{0}B', #  8-bit unsigned char
             0x01: '<{0}b', #  8-bit signed char
