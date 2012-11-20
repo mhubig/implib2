@@ -96,7 +96,7 @@ class Command(object):
 
     def set_epr_image(self, serno, page_nr, page):
         if len(page) > 250:
-            raise ModuleCommandError("Page to big, exeeds 250 Bytes!")
+            raise CommandError("Page to big, exeeds 250 Bytes!")
 
         param_no = struct.pack('<B', 255)
         param_ad = struct.pack('<B', page_nr)
