@@ -110,3 +110,8 @@ class TestResponce(object):
         pkg = a2b('003d001a79004c')
         ok_(self.res.set_epr_image(pkg))
 
+    @raises(ResponceError)
+    def test_set_epr_image_with_wrong_cmd(self):
+        pkg = a2b('003e001a790002')
+        self.res.set_epr_image(pkg)
+

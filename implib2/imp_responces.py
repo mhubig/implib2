@@ -106,6 +106,6 @@ class Responce(object):
     def set_epr_image(self, packet):
         responce = self.pkg.unpack(packet)
         if not responce['header']['cmd'] == 61:
-            raise ResponceError("CMD does not macht!")
+            raise ResponceError("Responce command doesn't match!")
         return True
 
