@@ -27,47 +27,18 @@ class MaximCRCError(Exception):
     pass
 
 class MaximCRC(object):
-    """
-    Class to compute the dallas-1-wire crc of a given hexstring.
-    Uses a table driven implementation of the crc algorithm.
-    The used CRC polynom is x⁸*x⁵*x⁴*1 or 100110001 or 0x131 or
-    (as the most significant bit may be ommitted) 0x31.
-
-    The used table is just a pre-computet list of the polynom
-    division of every 256 hex counts with the generator polynom
-    0x131.
-
-    The CRC Parametric Model of the dallas-1-wire crc algorithm
-    can be defined, in reverence of Ross N. Williams "The Rocksoft
-    Model", by these parameters:
-    
-    Width       = 8bit
-    Poly        = 0x131 or 0x31
-    ReflectIn   = True
-    XorIn       = 0x0
-    ReflectOut  = True
-    XorOut      = 0x0
-
-    http://www.ross.net/crc/download/crc_v3.txt
-
-    >>> crc = MaximCRC()
-    >>> c = crc.calc_crc(a2b('FD15ED09'))
-    >>> b2a(c)
-    'f3'
-    """
-
     def __init__(self):
         self.DEBUG = False
         self.tbl = self._maketbl()
 
     def _reflect(self, data, width):
-        """ reflect a data word, i.e. reverts the bit order. """
+        """ reflect a data word, means reverts the bit order. """
         x = data & 0x01
         for i in range(width - 1):
             data >>= 1
             x = (x << 1) | (data & 0x01)
         return x
-     
+
     def _maketbl(self):
         tbl = {}
         for i in range(1 << 8):
@@ -96,6 +67,3 @@ class MaximCRC(object):
             return False
         return True
 
-if __name__ == "__main__":
-    import doctest
-    doctest.testmod()
