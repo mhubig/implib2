@@ -76,9 +76,9 @@ class TestPackage(object):
 
     def test_unpack_header_and_data(self):
         # e.g. responce to get_serial(33211)
-        data = {'header': {'state': 0, 'cmd': 10, 'length': 4, 'serno': 33211},
+        data = {'header': {'state': 0, 'cmd': 10, 'length': 5, 'serno': 33211},
                 'data'  : '\xbb\x81\x00\x00'}
-        pkg = a2b('000a04bb810025bb810000cc')
+        pkg = a2b('000a05bb8100aabb810000cc')
         eq_(self.p.unpack(pkg), data)
 
     @raises(PackageError)
@@ -99,4 +99,11 @@ class TestPackage(object):
         random = os.urandom(252)
         crc = self.crc.calc_crc(random)
         pkg = a2b('fd3cffbb8100f0') + random + crc
+        self.p.unpack(pkg)
+
+    @raises(PackageError)
+    def test_unpack_header_with_probe_error_state(self):
+        random = os.urandom(250)
+        crc = self.crc.calc_crc(random)
+        pkg = a2b('bc3cffbb8100a2') + random + crc
         self.p.unpack(pkg)
