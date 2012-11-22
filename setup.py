@@ -32,7 +32,7 @@ def read(fname):
 setup(
         name = 'IMPLib2',
         version = 'release-0.5.2',
-        packages = find_packages(),
+        packages = find_packages(exclude=["tests"]),
 
         # Include the *.yaml files
         package_data = {
@@ -41,7 +41,6 @@ setup(
 
         # Install or upgrade the dependencies
         install_requires = [
-            'nose>=1.2.1',
             'PySerial>=2.6',
         ],
 
