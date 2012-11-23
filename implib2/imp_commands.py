@@ -23,9 +23,6 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 import struct
 from binascii import b2a_hex as b2a, a2b_hex as a2b
 
-from imp_tables import Tables, TablesError
-from imp_packages import Package, PackageError
-
 class CommandError(Exception):
     pass
 
