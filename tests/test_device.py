@@ -22,7 +22,6 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 
 import mox
 import serial
-from struct import pack, unpack
 from nose.tools import ok_, eq_, raises
 from binascii import b2a_hex as b2a, a2b_hex as a2b
 
@@ -41,41 +40,41 @@ class TestPackage(object):
     def test_open_device(self):
         self.ser.open()
         self.ser.flush()
-        self.mox.ReplayAll()
 
+        self.mox.ReplayAll()
         self.dev.open_device()
         self.mox.VerifyAll()
 
-    def test_close_device(self):
+    def test_close_device_WhichIsOpen(self):
+        self.ser.isOpen().AndReturn(True)
         self.ser.flush()
         self.ser.close()
-        self.mox.ReplayAll()
 
+        self.mox.ReplayAll()
         self.dev.close_device()
         self.mox.VerifyAll()
 
-    def test_close_device_WithValueError(self):
-        self.ser.flush().AndRaise(ValueError)
-        self.mox.ReplayAll()
+    def test_close_device_WhichIsClosed(self):
+        self.ser.isOpen().AndReturn(False)
 
+        self.mox.ReplayAll()
         self.dev.close_device()
         self.mox.VerifyAll()
 
     def test_write_pkg(self):
         packet = a2b('ffffff')
         self.ser.write(packet).AndReturn(3)
-        self.mox.ReplayAll()
 
-        res = self.dev.write_pkg(packet)
+        self.mox.ReplayAll()
+        ok_(self.dev.write_pkg(packet))
         self.mox.VerifyAll()
-        ok_(res)
 
     @raises(DeviceError)
     def test_write_pkg_ButNotAllBytes(self):
         packet = a2b('ffffff')
         self.ser.write(packet).AndReturn(2)
-        self.mox.ReplayAll()
 
+        self.mox.ReplayAll()
         self.dev.write_pkg(packet)
         self.mox.VerifyAll()
 
@@ -98,16 +97,14 @@ class TestPackage(object):
         self.ser.read().AndReturn(pkg[6])
 
         self.mox.ReplayAll()
-
-        res = self.dev.read_pkg()
+        eq_(self.dev.read_pkg(), pkg)
         self.mox.VerifyAll()
-        eq_(res, pkg)
 
     @raises(DeviceError)
     def test_read_pkg_OnlyHeaderWithTimeout(self):
         self.ser.inWaiting().MultipleTimes().AndReturn(0)
-        self.mox.ReplayAll()
 
+        self.mox.ReplayAll()
         self.dev.TIMEOUT = 0.5
         self.dev.read_pkg()
         self.mox.VerifyAll()
@@ -143,10 +140,8 @@ class TestPackage(object):
         self.ser.read().AndReturn(dat[4])
 
         self.mox.ReplayAll()
-
-        res = self.dev.read_pkg()
+        eq_(self.dev.read_pkg(), pkg + dat)
         self.mox.VerifyAll()
-        eq_(res, pkg + dat)
 
     @raises(DeviceError)
     def test_read_pkg_HeaderAndDataWithTimeout(self):
@@ -170,7 +165,6 @@ class TestPackage(object):
         self.ser.inWaiting().MultipleTimes().AndReturn(0)
 
         self.mox.ReplayAll()
-
         self.dev.TIMEOUT = 0.5
         self.dev.read_pkg()
         self.mox.VerifyAll()
@@ -184,16 +178,14 @@ class TestPackage(object):
         self.ser.read().AndReturn(pkg[1])
 
         self.mox.ReplayAll()
-
-        res = self.dev.read_bytes(2)
+        eq_(self.dev.read_bytes(2), pkg)
         self.mox.VerifyAll()
-        eq_(res, pkg)
 
     @raises(DeviceError)
     def test_read_bytes_WithTimeout(self):
         self.ser.inWaiting().MultipleTimes().AndReturn(0)
-        self.mox.ReplayAll()
 
+        self.mox.ReplayAll()
         self.dev.TIMEOUT = 0.5
         self.dev.read_bytes(1)
         self.mox.VerifyAll()
@@ -205,14 +197,12 @@ class TestPackage(object):
         self.ser.read().AndReturn(pkg)
 
         self.mox.ReplayAll()
-
-        res = self.dev.read_something()
+        ok_(self.dev.read_something(), pkg)
         self.mox.VerifyAll()
-        eq_(res, pkg)
 
     def test_read_something_ButGetNothing(self):
         self.ser.inWaiting().MultipleTimes().AndReturn(0)
-        self.mox.ReplayAll()
 
-        res = self.dev.read_something()
-        eq_(res, None)
+        self.mox.ReplayAll()
+        eq_(self.dev.read_something(), str())
+        self.mox.VerifyAll()

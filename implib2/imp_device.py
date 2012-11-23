@@ -53,11 +53,9 @@ class Device(object):
         self.ser.flush()
 
     def close_device(self):
-        try:
+        if self.ser.isOpen():
             self.ser.flush()
             self.ser.close()
-        except:
-            pass
 
     def write_pkg(self, packet):
         """ Writes IMPBUS2 packet to the serial line.
@@ -107,7 +105,7 @@ class Device(object):
         """
         bytes = str()
         tic = time.time()
-        while (time.time() - tic < self.TIMEOUT) and (len(bytes) < length): 
+        while (time.time() - tic < self.TIMEOUT) and (len(bytes) < length):
             if self.ser.inWaiting(): bytes += self.ser.read()
 
         if len(bytes) < length:
@@ -119,12 +117,12 @@ class Device(object):
         """ Tries to read _one_ byte from the serial line.
 
         This methode shold be as fast as possible. Returns
-        True or False. Useable for scanning the bus. 
+        True or False. Useable for scanning the bus.
         """
         byte = str()
         tic = time.time()
-        while (time.time() - tic < 0.25) and (len(byte) < 1): 
-            if self.ser.inWaiting(): byte += self.ser.read()
+        while (time.time() - tic < 0.05) and (len(byte) < 1):
+            if self.ser.inWaiting(): byte = self.ser.read()
 
-        return byte or None
+        return byte
 
