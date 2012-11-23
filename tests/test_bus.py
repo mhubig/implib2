@@ -197,3 +197,32 @@ class TestBus(object):
         eq_(self.bus.probe_range(rng), False)
         self.mox.VerifyAll()
 
+    def test_get(self):
+        serno = 31002
+        table = 'SYSTEM_PARAMETER_TABLE'
+        param = 'SerialNum'
+
+        pkg = a2b('fd0a031a7900290100c4')
+        res = a2b('000a051a7900181a79000042')
+        self.dev.write_pkg(pkg).AndReturn(True)
+        self.dev.read_pkg().AndReturn(res)
+
+        self.mox.ReplayAll()
+        eq_(self.bus.get(serno, table, param), (serno,))
+        self.mox.VerifyAll()
+
+    def test_set(self):
+        serno = 31002
+        table = 'PROBE_CONFIGURATION_PARAMETER_TABLE'
+        param = 'DeviceSerialNum'
+        value = [31003]
+
+        pkg = a2b('fd11071a79002b0c001b790000b0')
+        res = a2b('0011001a790095')
+        self.dev.write_pkg(pkg).AndReturn(True)
+        self.dev.read_pkg().AndReturn(res)
+
+        self.mox.ReplayAll()
+        eq_(self.bus.set(serno, table, param, value), True)
+        self.mox.VerifyAll()
+

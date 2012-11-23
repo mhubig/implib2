@@ -214,3 +214,20 @@ class Bus(object):
         bytes_recv = self.dev.read_something()
         return self.res.get_range_ack(bytes_recv)
 
+    def get(self, serno, table, param):
+        """General get_parameter command"""
+        package = self.cmd.get_parameter(serno, table, param)
+        self.dev.write_pkg(package)
+        time.sleep(0.05)
+        bytes_recv = self.dev.read_pkg()
+        return self.res.get_parameter(bytes_recv, table, param)
+
+    def set(self, serno, table, param, value, ad_param=0):
+        """General set_parameter command"""
+        package = self.cmd.set_parameter(serno, table, param,
+                value, ad_param)
+        self.dev.write_pkg(package)
+        time.sleep(0.05)
+        bytes_recv = self.dev.read_pkg()
+        return self.res.set_parameter(bytes_recv, serno, table)
+
