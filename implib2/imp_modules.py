@@ -22,20 +22,16 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 import time, struct
 from binascii import b2a_hex as b2a
 
-from imp_crc import MaximCRC, MaximCRCError
-from imp_eeprom import EEPROM, EEPROMError
+import implib2
 
 class ModuleError(Exception):
     pass
 
 class Module(object):
-    """ Class representing a IMPBus2 Module.
-
-    Small example of how to use is together with the IMPBus class:
-    """
+    """ Class representing a IMPBus2 Module. """
 
     def __init__(self, bus, serno):
-        self.crc = MaximCRC()
+        self.crc = implib2.imp_crc.MaximCRC()
         self.bus = bus
         self._unlocked = False
         self._serno    = serno
@@ -56,9 +52,9 @@ class Module(object):
         table = 'ACTION_PARAMETER_TABLE'
         param = 'SupportPW'
         value = passwd
-        self.bus.set(table, param, [value])
 
-        self._unlocked = True
+        self._unlocked = self.bus.set(self._serno, table, param, [value])
+        return self._unlocked
 
     def get_table(self, table):
         """Spezial Command to get a whole table.
@@ -140,17 +136,15 @@ class Module(object):
         if length % 252:
             pages += 1
 
-        eprimg = list()
+        eeprom = implib2.imp_eeprom.EEPRom()
         for page in range(0, pages):
-            package = self.cmd.get_epr_image(self._serno, page)
-            bytes_recv = self.bus.talk(package)
-            page = self.res.get_epr_image(bytes_recv)
-            eprimg.extend(page)
+            eeprom.set_page(self.bus.get_epr_page(self._serno, page))
             time.sleep(0.2)
 
-        if not len(eprimg) == length:
-            raise ModuleError("EEPROM length don't match!")
-        return eprimg
+        if not eeprom.length == length:
+            raise ModuleError("EEPRom length don't match! %s,%s"
+                    % (eeprom.length, length))
+        return eeprom
 
     def set_table(self, table, data):
         """Spezial Command to set the values of a whole table.
@@ -253,18 +247,17 @@ class Module(object):
         return self.bus.set(table, param, [mode])
 
     def write_eeprom(self, eeprom_file):
-        eeprom = EEPROM(eeprom_file)
+        eeprom = implib2.imp_eeprom.EEPROM()
+        eeprom.read_ept(eeprom_file)
 
         if not self._unlocked:
             self._unlock()
 
         for page_nr, page in eeprom:
-            package = self.cmd.set_epr_image(self._serno, page_nr, page)
-            bytes_recv = self.bus.talk(package)
-            responce = self.res.set_epr_image(bytes_recv)
-            if not self.res.set_epr_image(bytes_recv):
+            if not self.bus.set_eeprom_page(self._serno, page_nr, page):
                 raise ModuleError("Writing EEPROM Failed")
-            time.sleep(0.2)
+            time.sleep(0.05)
+
         return True
 
     def turn_ASIC_on(self):
