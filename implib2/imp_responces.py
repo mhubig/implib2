@@ -91,7 +91,7 @@ class Responce(object):
 
         return scan
 
-    def get_epr_image(self, packet):
+    def get_epr_page(self, packet):
         responce = self.pkg.unpack(packet)
         page = list()
 
@@ -100,7 +100,7 @@ class Responce(object):
 
         return page
 
-    def set_epr_image(self, packet):
+    def set_epr_page(self, packet):
         responce = self.pkg.unpack(packet)
         if not responce['header']['cmd'] == 61:
             raise ResponceError("Responce command doesn't match!")

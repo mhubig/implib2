@@ -101,17 +101,17 @@ class TestResponce(object):
         pkg = a2b('001e0c1a7900e811112fc44e3702f3e7fb3df5')
         self.res.do_tdr_scan(pkg)
 
-    def test_get_epr_image(self):
+    def test_get_epr_page(self):
         pkg = a2b('003c0b1a790015112fc44e3702f3e7fb3dc5')
         page = [17, 47, 196, 78, 55, 2, 243, 231, 251, 61]
-        eq_(self.res.get_epr_image(pkg), page)
+        eq_(self.res.get_epr_page(pkg), page)
 
-    def test_set_epr_image(self):
+    def test_set_epr_page(self):
         pkg = a2b('003d001a79004c')
-        ok_(self.res.set_epr_image(pkg))
+        ok_(self.res.set_epr_page(pkg))
 
     @raises(ResponceError)
-    def test_set_epr_image_with_wrong_cmd(self):
+    def test_set_epr_page_with_wrong_cmd(self):
         pkg = a2b('003e001a790002')
-        self.res.set_epr_image(pkg)
+        self.res.set_epr_page(pkg)
 
