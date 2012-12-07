@@ -226,3 +226,31 @@ class TestBus(object):
         eq_(self.bus.set(serno, table, param, value), True)
         self.mox.VerifyAll()
 
+    def test_get_eeprom_page(self):
+        serno = 30001
+        page_nr = 0
+        page = [17, 47, 196, 78, 55, 2, 243, 231, 251, 61]
+
+        pkg = a2b('fd3c0331750029ff0081')
+        res = a2b('003c0b1a790015112fc44e3702f3e7fb3dc5')
+        self.dev.write_pkg(pkg).AndReturn(True)
+        self.dev.read_pkg().AndReturn(res)
+
+        self.mox.ReplayAll()
+        eq_(self.bus.get_eeprom_page(serno, page_nr), page)
+        self.mox.VerifyAll()
+
+    def test_set_eeprom_page(self):
+        serno = 30001
+        page_nr = 7
+        page = [0, 0, 0, 0, 0, 0, 0, 0, 35, 255, 255, 0]
+
+        pkg = a2b('fd3d0f317500f6ff07000000000000000023ffff007b')
+        res = a2b('003d001a79004c')
+        self.dev.write_pkg(pkg).AndReturn(True)
+        self.dev.read_pkg().AndReturn(res)
+
+        self.mox.ReplayAll()
+        ok_(self.bus.set_eeprom_page(serno, page_nr, page))
+        self.mox.VerifyAll()
+

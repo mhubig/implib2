@@ -231,3 +231,17 @@ class Bus(object):
         bytes_recv = self.dev.read_pkg()
         return self.res.set_parameter(bytes_recv, serno, table)
 
+    def get_eeprom_page(self, serno, page_nr):
+        package = self.cmd.get_epr_page(serno, page_nr)
+        self.dev.write_pkg(package)
+        time.sleep(0.05)
+        bytes_recv = self.dev.read_pkg()
+        return self.res.get_epr_page(bytes_recv)
+
+    def set_eeprom_page(self, serno, page_nr, page):
+        package = self.cmd.set_epr_page(serno, page_nr, page)
+        self.dev.write_pkg(package)
+        time.sleep(0.05)
+        bytes_recv = self.dev.read_pkg()
+        return self.res.set_epr_page(bytes_recv)
+
