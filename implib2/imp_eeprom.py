@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 """
-Copyright (C) 2011, Markus Hubig <mhubig@imko.de>
+Copyright (C) 2011-2012, Markus Hubig <mhubig@imko.de>
 
 This file is part of IMPLib2 a small Python library implementing
 the IMPBUS-2 data transmission protocol.
@@ -20,112 +20,81 @@ You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 import os, re, struct
-from datetime import datetime
+from cStringIO import StringIO
+from implib2.imp_helper import _normalize
 
-class EEPROMError(Exception):
+class EEPRomError(Exception):
     pass
 
-class EEPROM(object):
-    """ Class to parse a EPT file.
-    
-    The Parser Class has an build in iterator which allowes
-    to iter about the eeprom pages stored in this class:
-    
-    >>> eeprom = EEPROM('../hexfiles/EEPROM.ept')
-    >>> buffer = list()
-    >>> for nr, page in eeprom:
-    ...     buffer.extend(page)
-    >>> len(buffer) == eeprom.length
-    True
-    >>> eeprom.comment[0]
-    "Don't change the structure of the file."
-    >>> eeprom.version
-    '1.120313'
-    >>> eeprom.date
-    datetime.datetime(2011, 3, 3, 14, 28, 6)
-    >>> eeprom.length
-    8192
-    >>> eeprom.eeprom[0:5]
-    [0, 60, 129, 95, 126]
-    """
-    def __init__(self, filename):
-        self._filename = os.path.abspath(filename)
-        self._eptbuffer = list()
-        self._cmtbuffer = list()
-        self._fwversion = str()
-        self._eptlength = int()
-        self._eptpath = str()
-        self._eptdate = str()
-        self._read_ept()
-    
+class EEPRom(object):
+    def __init__(self):
+        self._reload()
+
     def __iter__(self):
-        pages = self._eptlength/250
-        if pages*250 < self._eptlength:
-            pages += 1
-        for page in range(0, pages):
-            start = page*250
-            stop  = start+250
-            yield page, self._eptbuffer[start:stop]
-    
-    def _read_ept(self):
-        refwv = re.compile('^; Firmware Version = (.*)$')
-        relen = re.compile('^; EPRImage Length = (.*)$')
-        repath = re.compile('^; (.:\\\.*)$')
-        redate = re.compile('^; (\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d).*?$')
-        with open(self._filename) as ept:
-            for line in ept.readlines():
-                if not line.startswith(';'):
-                    self._eptbuffer.append(int(line.strip()))
-                if line.startswith(';'):
-                    version = refwv.match(line)
-                    length  = relen.match(line)
-                    path    = repath.match(line)
-                    date    = redate.match(line)
-                    if version:
-                        self._fwversion = float(version.groups()[0].strip())
-                    elif length:
-                        self._eptlength = int(length.groups()[0])
-                    elif path:
-                        self._eptpath = os.path.normpath(path.groups()[0].strip())
-                    elif date:
-                        self._eptdate = datetime.strptime(date.groups()[0], "%Y-%m-%d %H:%M:%S")
-                    else:
-                        line = line.rstrip()
-                        line = line.lstrip('; ')
-                        self._cmtbuffer.append(line.strip())
-        if not self._eptlength == len(self._eptbuffer):
-            raise EPTParserException("ERROR: 'EPRImage Length' doesn't match real length!")
-        
+        for page in range(0, self.pages):
+            yield page, self.get_page(page)
+
+    def _reload(self):
+        self._filename = None
+        self._header = dict()
+        self._stuff = list()
+        self._data = StringIO()
+
+    def read(self, filename):
+        self._reload()
+        self._filename = _normalize(filename)
+        regex = re.compile('^; (.*?) = (.*?)$')
+
+        with open(self._filename) as epr:
+                data = epr.read()
+
+        for line in data.splitlines():
+            if not line.startswith(';'):
+                byte = int(line.strip())
+                self.set_page(struct.pack('>B', byte))
+                continue
+
+            match = regex.match(line)
+            if match:
+                key, value = match.group(1,2)
+                self._header[key] = value
+                continue
+
+            self._stuff.append(line.lstrip('; '))
+
         return True
-        
+
+    def write(self, filename):
+        self._filename = _normalize(filename)
+        stuff = '; ' + '\n; '.join(self._stuff)
+        header = '; ' + '\n; '.join([ '%s = %s' % (x, self._header[x])
+            for x in self._header])
+        data = self._data.getvalue()
+        with open(self._filename, 'w') as epr:
+            if self._stuff: epr.write(stuff)
+            if self._header: epr.write(header)
+            epr.write(data)
+
+        return True
+
+    def get_page(self, page):
+        self._data.seek(page * 252)
+        return self._data.read(252)
+
+    def set_page(self, page):
+        self._data.seek(0,2)
+        self._data.write(page)
+        return True
+
     @property
-    def eeprom(self):
-        return self._eptbuffer
-        
-    @property
-    def comment(self):
-        return self._cmtbuffer
-        
+    def pages(self):
+        pages = self.length / 252
+        if self.length % 252:
+            pages += 1
+        return pages
+
     @property
     def length(self):
-        return self._eptlength
-        
-    @property
-    def version(self):
-        return "{0:f}".format(self._fwversion)
-        
-    @property
-    def date(self):
-        return self._eptdate
-        
-    @property
-    def file(self):
-        return self._filename
-        
-    @property
-    def origin(self):
-        return self._eptpath
-            
-if __name__ == '__main__':
-    import doctest
-    doctest.testmod()
+        self._data.seek(0,2)
+        return self._data.tell()
+
