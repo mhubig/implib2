@@ -83,7 +83,7 @@ class Command(object):
         package = self.pkg.pack(serno=serno,cmd=0x1e,data=data)
         return package
 
-    def get_epr_image(self, serno, page_nr):
+    def get_epr_page(self, serno, page_nr):
         param_no = struct.pack('<B', 255)
         param_ad = struct.pack('<B', page_nr)
         data = param_no + param_ad
@@ -91,7 +91,7 @@ class Command(object):
         package = self.pkg.pack(serno=serno,cmd=0x3c,data=data)
         return package
 
-    def set_epr_image(self, serno, page_nr, page):
+    def set_epr_page(self, serno, page_nr, page):
         if len(page) > 250:
             raise CommandError("Page to big, exeeds 250 Bytes!")
 

@@ -71,17 +71,17 @@ class TestCommand(object):
         pkg = self.cmd.do_tdr_scan(30001, 1, 126, 2, 64)
         eq_(pkg, a2b('fd1e06317500d3017e024000a4'))
 
-    def test_get_epr_image(self):
-        pkg = self.cmd.get_epr_image(30001, 0)
+    def test_get_epr_page(self):
+        pkg = self.cmd.get_epr_page(30001, 0)
         eq_(pkg, a2b('fd3c0331750029ff0081'))
 
-    def test_set_epr_image(self):
+    def test_set_epr_page(self):
         page = [0,0,0,0,0,0,0,0,35,255,255,0]
-        pkg = self.cmd.set_epr_image(30001, 7, page)
+        pkg = self.cmd.set_epr_page(30001, 7, page)
         eq_(pkg, a2b('fd3d0f317500f6ff07000000000000000023ffff007b'))
 
     @raises(CommandError)
-    def test_set_epr_image_page_to_big(self):
+    def test_set_epr_page_to_big(self):
         page = range(0,251)
-        self.cmd.set_epr_image(30001, 7, page)
+        self.cmd.set_epr_page(30001, 7, page)
 
