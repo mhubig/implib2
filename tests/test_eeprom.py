@@ -20,19 +20,17 @@ You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 
-import os, re
-from mock import patch, MagicMock, mock_open, call
+import os
+from mock import patch, mock_open, call
 from nose.tools import ok_, eq_, raises
 
-from implib2.imp_eeprom import EEPRom, EEPRomError
+from implib2.imp_eeprom import EEPRom
 
 class TestEEPRom(object):
+    # pylint: disable=C0103,W0212
 
     def setUp(self):
         self.epr = EEPRom()
-
-    def tearDown(self):
-        pass
 
     def test_init(self):
         self.epr._filename = None
@@ -56,7 +54,7 @@ class TestEEPRom(object):
             eq_(self.epr.get_page(0), '\xff\xff\xff')
 
     @raises(ValueError)
-    def test_read_ReadsData(self):
+    def test_read_ReadsDataGetsValueError(self):
         data = "bad"
         mock = mock_open(read_data=data)
         with patch('__builtin__.open', mock, create=True):
@@ -163,4 +161,4 @@ class TestEEPRom(object):
             eq_(page, part)
             page_nrs.append(nr)
 
-        eq_(page_nrs, range(0,32))
+        eq_(page_nrs, range(0, 32))

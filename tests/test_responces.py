@@ -20,25 +20,18 @@ You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 
-import json
 from nose.tools import ok_, eq_, raises
-from binascii import b2a_hex as b2a, a2b_hex as a2b
+from binascii import a2b_hex as a2b
 
-from implib2.imp_crc import MaximCRC, MaximCRCError
-from implib2.imp_tables import Tables, TablesError
-from implib2.imp_packages import Package, PackageError
+from implib2.imp_tables import Tables
+from implib2.imp_packages import Package
 from implib2.imp_responces import Responce, ResponceError
 
 class TestResponce(object):
-
-    def __init__(self):
-        self.res = Responce(Tables(), Package())
+    # pylint: disable=C0103
 
     def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
+        self.res = Responce(Tables(), Package())
 
     def test_get_long_ack_right_serno(self):
         pkg = a2b('0002001a7900a7')

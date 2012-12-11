@@ -20,23 +20,16 @@ You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 
-import json, os
-from struct import pack
-from nose.tools import ok_, eq_, raises
-from binascii import b2a_hex as b2a, a2b_hex as a2b
+from nose.tools import ok_, eq_
+from binascii import a2b_hex as a2b
 
-from implib2.imp_crc import MaximCRC, MaximCRCError
+from implib2.imp_crc import MaximCRC
 
 class TestMaximCRC(object):
-
-    def __init__(self):
-        self.crc = MaximCRC()
+    # pylint: disable=C0103
 
     def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
+        self.crc = MaximCRC()
 
     def test_calc_crc(self):
         crc = a2b('f3')
