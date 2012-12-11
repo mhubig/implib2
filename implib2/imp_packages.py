@@ -21,9 +21,7 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 
 import struct
-from binascii import b2a_hex as b2a, a2b_hex as a2b
-
-from imp_crc import MaximCRC, MaximCRCError
+from implib2.imp_crc import MaximCRC
 
 class PackageError(Exception):
     pass
@@ -65,7 +63,8 @@ class Package(object):
         if not self.crc.check_crc(header):
             raise PackageError("Package with faulty header CRC!")
 
-        if state not in [0,122,123,160,161,162,163,164,165,166,253,255]:
+        states = [0, 122, 123, 160, 161, 162, 163, 164, 165, 166, 253, 255]
+        if state not in states:
             # TODO: Look up the real error msg!
             raise PackageError("Probe Error: {0}!".format(state))
 
@@ -74,10 +73,10 @@ class Package(object):
     def pack(self, serno, cmd, data=None):
         if data:
             data = self._pack_data(data)
-            header = self._pack_head(cmd,len(data),serno)
+            header = self._pack_head(cmd, len(data), serno)
             package = header + data
         else:
-            header = self._pack_head(cmd,0,serno)
+            header = self._pack_head(cmd, 0, serno)
             package = header
 
         return package

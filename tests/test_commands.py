@@ -20,24 +20,18 @@ You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 
-import json
-from nose.tools import ok_, eq_, raises
-from binascii import b2a_hex as b2a, a2b_hex as a2b
+from nose.tools import eq_, raises
+from binascii import a2b_hex as a2b
 
-from implib2.imp_tables import Tables, TablesError
-from implib2.imp_packages import Package, PackageError
+from implib2.imp_tables import Tables
+from implib2.imp_packages import Package
 from implib2.imp_commands import Command, CommandError
 
 class TestCommand(object):
-
-    def __init__(self):
-        self.cmd = Command(Tables(), Package())
+    # pylint: disable=C0103
 
     def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
+        self.cmd = Command(Tables(), Package())
 
     def test_get_long_ack(self):
         pkg = self.cmd.get_long_ack(31001)
@@ -76,12 +70,12 @@ class TestCommand(object):
         eq_(pkg, a2b('fd3c0331750029ff0081'))
 
     def test_set_epr_page(self):
-        page = [0,0,0,0,0,0,0,0,35,255,255,0]
+        page = [0, 0, 0, 0, 0, 0, 0, 0, 35, 255, 255, 0]
         pkg = self.cmd.set_epr_page(30001, 7, page)
         eq_(pkg, a2b('fd3d0f317500f6ff07000000000000000023ffff007b'))
 
     @raises(CommandError)
     def test_set_epr_page_to_big(self):
-        page = range(0,251)
+        page = range(0, 251)
         self.cmd.set_epr_page(30001, 7, page)
 

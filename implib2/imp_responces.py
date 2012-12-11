@@ -20,7 +20,6 @@ You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 import struct
-from binascii import b2a_hex as b2a, a2b_hex as a2b
 
 class ResponceError(Exception):
     pass
@@ -49,6 +48,7 @@ class Responce(object):
         return res_crc == packet
 
     def get_range_ack(self, packet):
+        # pylint: disable=R0201
         return len(packet) == 1
 
     def get_negative_ack(self, packet):
@@ -59,10 +59,10 @@ class Responce(object):
         data  = self.pkg.unpack(packet)['data']
         cmd = self.tbl.lookup(table, param)
 
-        format = self.data_types[cmd['Type'] % 0x80]
-        length = len(data)/struct.calcsize(format.format(1))
+        fmt = self.data_types[cmd['Type'] % 0x80]
+        length = len(data)/struct.calcsize(fmt.format(1))
 
-        return struct.unpack(format.format(length), data)
+        return struct.unpack(fmt.format(length), data)
 
     def set_parameter(self, packet, serno, table):
         responce = self.pkg.unpack(packet)

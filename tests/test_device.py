@@ -23,11 +23,12 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 import mox
 import serial
 from nose.tools import ok_, eq_, raises
-from binascii import b2a_hex as b2a, a2b_hex as a2b
+from binascii import a2b_hex as a2b
 
 from implib2.imp_device import Device, DeviceError
 
 class TestPackage(object):
+    # pylint: disable=C0103
 
     def setUp(self):
         self.mox = mox.Mox()

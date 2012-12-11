@@ -21,28 +21,26 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 
 from struct import pack
-from binascii import b2a_hex as b2a, a2b_hex as a2b
-
-class MaximCRCError(Exception):
-    pass
 
 class MaximCRC(object):
     def __init__(self):
-        self.DEBUG = False
         self.tbl = self._maketbl()
 
     def _reflect(self, data, width):
-        """ reflect a data word, means reverts the bit order. """
-        x = data & 0x01
+        """ reflect a data word, means revert the bit order. """
+        # pylint: disable=R0201
+        reflected = data & 0x01
+        # pylint: disable=W0612
         for i in range(width - 1):
             data >>= 1
-            x = (x << 1) | (data & 0x01)
-        return x
+            reflected = (reflected << 1) | (data & 0x01)
+        return reflected
 
     def _maketbl(self):
         tbl = {}
         for i in range(1 << 8):
             register = self._reflect(i, 8)
+            # pylint: disable=W0612
             for j in range(8):
                 if register & 128 != 0:
                     register = (register << 1) ^ 0x31
@@ -55,8 +53,8 @@ class MaximCRC(object):
     def calc_crc(self, byte_str):
         tbl = self.tbl
         register = 0x0
-        for c in byte_str:
-            tblidx   = (register ^ ord(c)) & 0xff
+        for char in byte_str:
+            tblidx   = (register ^ ord(char)) & 0xff
             register = ((register >> 8) ^ tbl[tblidx]) & 255
         return pack('>B', register)
 

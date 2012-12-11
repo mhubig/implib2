@@ -21,10 +21,11 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 
 import json
-from nose.tools import ok_, eq_, raises, with_setup
+from nose.tools import ok_, eq_, raises
 from implib2.imp_tables import Tables, TablesError
 
 class TestTables(object):
+    # pylint: disable=C0103,W0212
 
     def __init__(self):
         with open('implib2/imp_tables.json') as js:
@@ -33,19 +34,17 @@ class TestTables(object):
     def setUp(self):
         self.t = Tables()
 
-    def tearDown(self):
-        pass
-
     def test_load_json(self):
         eq_(self.t._tables, self.j)
 
     @raises(IOError)
     def test_load_json_no_file(self):
-        json = Tables('dont_exists.json')
+        # pylint: disable=R0201
+        Tables('dont_exists.json')
 
     @raises(ValueError)
     def test_load_json_falty_file(self):
-        json = self.t._load_json('imp_tables.py')
+        self.t._load_json('imp_tables.py')
 
     @raises(TablesError)
     def test_lookup_unknown_table(self):
@@ -63,10 +62,10 @@ class TestTables(object):
         else:
             eq_(len(row) + 2, len(value))
 
-    def _test_lookup_value(self):
+    def test_lookup_value(self):
         for table in self.j:
             for param in self.j[table]:
-                yield _lookup_value, table, param
+                yield self._lookup_value, table, param
 
     def _lookup_value_has_get(self, table, param):
         row = self.t.lookup(table, param)

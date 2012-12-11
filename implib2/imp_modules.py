@@ -20,22 +20,22 @@ You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 import time, struct
-from binascii import b2a_hex as b2a
-
-import implib2
+from implib2.imp_crc import MaximCRC
+from implib2.imp_eeprom import EEPRom
 
 class ModuleError(Exception):
     pass
 
 class Module(object):
     """ Class representing a IMPBus2 Module. """
+    # pylint: disable=R0904
 
     def __init__(self, bus, serno):
-        self.crc = implib2.imp_crc.MaximCRC()
+        self.crc = MaximCRC()
         self.bus = bus
         self._unlocked = False
-        self._serno    = serno
-        self.EVENT_MODES = {
+        self._serno = serno
+        self.event_modes = {
             "NormalMeasure":    0x00,
             "TRDScan":          0x01,
             "AnalogOut":        0x02,
@@ -73,6 +73,7 @@ class Module(object):
         You can use the parameters GetData, DataSize and TableSize to gain
         information about the spezific table.
         """
+        # pylint: disable=W0613,R0201
         raise ModuleError("Not yet implemented!")
 
     def get_serial(self):
@@ -113,7 +114,7 @@ class Module(object):
     def get_event_mode(self):
         table = 'ACTION_PARAMETER_TABLE'
         param = 'Event'
-        modes = {v:k for k, v in self.EVENT_MODES.items()}
+        modes = {v:k for k, v in self.event_modes.items()}
 
         try:
             mode = modes[self.bus.get(self._serno, table, param)[0] % 0x80]
@@ -139,7 +140,7 @@ class Module(object):
         if length % 252:
             pages += 1
 
-        eeprom = implib2.imp_eeprom.EEPRom()
+        eeprom = EEPRom()
         for page in range(0, pages):
             eeprom.set_page(self.bus.get_epr_page(self._serno, page))
             time.sleep(0.2)
@@ -156,6 +157,7 @@ class Module(object):
         You can use the parameters GetData, DataSize and TableSize to gain
         information about the spezific table.
         """
+        # pylint: disable=W0613,R0201
         raise ModuleError("Not yet implemented!")
 
     def set_serno(self, serno):
@@ -171,15 +173,15 @@ class Module(object):
         return self.bus.set(old_serno, table, param, [serno])
 
     def set_analog_moist(self, mvolt=500):
-        if not mvolt in range(0,1001):
+        if not mvolt in range(0, 1001):
             raise ModuleError("Value out of range!")
 
         table = 'MEASURE_PARAMETER_TABLE'
         param = 'Moist'
 
-        min = self.get_moist_min_value()
-        max = self.get_moist_max_value()
-        value = (max - min) / 1000.0 * mvolt + min
+        min_value = self.get_moist_min_value()
+        max_value = self.get_moist_max_value()
+        value = (max_value - min_value) / 1000.0 * mvolt + min_value
 
         if not self.set_event_mode("AnalogOut"): 
             raise ModuleError("Could not set event mode!")
@@ -187,22 +189,22 @@ class Module(object):
         return self.bus.set(self._serno, table, param, [value])
 
     def set_analog_temp(self, mvolt=500):
-        if not mvolt in range(0,1001):
+        if not mvolt in range(0, 1001):
             raise ModuleError('Value out of range!')
 
         table = 'MEASURE_PARAMETER_TABLE'
         param = 'CompTemp'
 
-        min = self.get_temp_min_value()
-        max = self.get_temp_max_value()
-        value = (max - min) / 1000.0 * mvolt + min
+        min_value = self.get_temp_min_value()
+        max_value = self.get_temp_max_value()
+        value = (max_value - min_value) / 1000.0 * mvolt + min_value
 
         if not self.set_event_mode("AnalogOut"):
             raise ModuleError("Could not set event mode!")
 
         return self.bus.set(self._serno, table, param, [value])
 
-    def set_event_mode(self, event_mode="NormalMeasure"):
+    def set_event_mode(self, mode="NormalMeasure"):
         """" Command to set the Event Mode of the probe.
 
         EventMode is used to control the slave to fulfil
@@ -213,17 +215,17 @@ class Module(object):
         table = 'ACTION_PARAMETER_TABLE'
         param = 'Event'
 
-        if not event_mode in self.EVENT_MODES:
+        if not mode in self.event_modes:
             raise ModuleError("Invalid EventMode!")
 
-        value = self.EVENT_MODES[event_mode]
+        value = self.event_modes[mode]
 
         if not self._unlocked:
             self._unlock()
 
         return self.bus.set(self._serno, table, param, [value])
 
-    def set_measure_mode(self, mode=0, default=False):
+    def set_measure_mode(self, mode=0):
         if not self.get_event_mode() == "NormalMeasure":
             self.set_event_mode("NormalMeasure")
 
@@ -247,8 +249,8 @@ class Module(object):
         return self.bus.set(self._serno, table, param, [mode])
 
     def write_eeprom(self, eprfile):
-        eeprom = implib2.imp_eeprom.EEPRom()
-        eeprom.read_ept(eprfile)
+        eeprom = EEPRom()
+        eeprom.read(eprfile)
 
         if not self._unlocked:
             self._unlock()
@@ -260,7 +262,7 @@ class Module(object):
 
         return True
 
-    def turn_ASIC_on(self):
+    def turn_asic_on(self):
         """" Command to start the selftest of the probe.
 
         SelfTest is used for primary for internal test by IMKO.
@@ -268,14 +270,14 @@ class Module(object):
         """
         table    = 'ACTION_PARAMETER_TABLE'
         param    = 'SelfTest'
-        value    = [1,1,63,0]
+        value    = [1, 1, 63, 0]
 
         if not self.set_event_mode("SelfTest"):
             raise ModuleError("Coul'd not set event mode!")
 
         return self.bus.set(self._serno, table, param, value)
 
-    def turn_ASIC_off(self):
+    def turn_asic_off(self):
         """" Command to start the selftest of the probe.
 
         SelfTest is used for primary for internal test by IMKO.
@@ -283,14 +285,14 @@ class Module(object):
         """
         table = 'ACTION_PARAMETER_TABLE'
         param = 'SelfTest'
-        value = [1,0,255,0]
+        value = [1, 0, 255, 0]
 
         if not self.set_event_mode("SelfTest"):
             raise ModuleError("Coul'd not set event mode!")
 
         return self.bus.set(self._serno, table, param, value)
 
-    def get_measurement(self, type='Moist'):
+    def get_measurement(self, kind='Moist'):
         table = 'ACTION_PARAMETER_TABLE'
         param = 'StartMeasure'
         value = 1
@@ -310,11 +312,11 @@ class Module(object):
             time.sleep(0.5)
 
         table = 'MEASURE_PARAMETER_TABLE'
-        param = type
+        param = kind
         return self.bus.get(self._serno, table, param)[0]
 
     def get_moisture(self):
-        return self.get_measurement(type='Moist')
+        return self.get_measurement(kind='Moist')
 
     def get_transit_time_tdr(self):
         # ** Internal usage - Trime IBT

@@ -21,6 +21,13 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 
 def _normalize(filename):
+    """ .. function:: _normalize(filename)
+
+    Prepends the filename with the path pointing to the main file.
+
+    :type filename: string
+    :rtype: string
+    """
     import os
     abs_path = os.path.abspath(__file__)
     dir_name = os.path.dirname(abs_path)

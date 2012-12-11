@@ -19,7 +19,7 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
-import os, re, struct
+import re, struct
 from cStringIO import StringIO
 from implib2.imp_helper import _normalize
 
@@ -28,7 +28,10 @@ class EEPRomError(Exception):
 
 class EEPRom(object):
     def __init__(self):
-        self._reload()
+        self._filename = None
+        self._header = dict()
+        self._stuff = list()
+        self._data = StringIO()
 
     def __iter__(self):
         for page in range(0, self.pages):
@@ -46,7 +49,7 @@ class EEPRom(object):
         regex = re.compile('^; (.*?) = (.*?)$')
 
         with open(self._filename) as epr:
-                data = epr.read()
+            data = epr.read()
 
         for line in data.splitlines():
             if not line.startswith(';'):
@@ -56,7 +59,7 @@ class EEPRom(object):
 
             match = regex.match(line)
             if match:
-                key, value = match.group(1,2)
+                key, value = match.group(1, 2)
                 self._header[key] = value
                 continue
 
@@ -71,8 +74,10 @@ class EEPRom(object):
             for x in self._header])
         data = self._data.getvalue()
         with open(self._filename, 'w') as epr:
-            if self._stuff: epr.write(stuff)
-            if self._header: epr.write(header)
+            if self._stuff:
+                epr.write(stuff)
+            if self._header:
+                epr.write(header)
             epr.write(data)
 
         return True
@@ -82,7 +87,7 @@ class EEPRom(object):
         return self._data.read(252)
 
     def set_page(self, page):
-        self._data.seek(0,2)
+        self._data.seek(0, 2)
         self._data.write(page)
         return True
 
@@ -95,6 +100,6 @@ class EEPRom(object):
 
     @property
     def length(self):
-        self._data.seek(0,2)
+        self._data.seek(0, 2)
         return self._data.tell()
 

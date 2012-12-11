@@ -22,8 +22,7 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 
 import time
 import serial
-from struct import pack, unpack
-from binascii import b2a_hex as b2a, a2b_hex as a2b
+from struct import unpack
 
 class DeviceError(Exception):
     pass
@@ -38,7 +37,7 @@ class Device(object):
     def __init__(self, ser, port):
         self.ser = ser
         self.ser.port = port
-        self.TIMEOUT = 5.0
+        self.timeout = 5.0
 
     def open_device(self, baudrate=9600):
         self.ser.baudrate = baudrate
@@ -79,18 +78,20 @@ class Device(object):
         header = str()
         length = 7
         tic = time.time()
-        while (time.time() - tic < self.TIMEOUT/2) and (len(header) < length): 
-            if self.ser.inWaiting(): header += self.ser.read()
+        while (time.time() - tic < self.timeout/2) and (len(header) < length):
+            if self.ser.inWaiting():
+                header += self.ser.read()
 
         if len(header) < length:
             raise DeviceError('Timeout reading header!')
 
         # read data, length is known from header
         data = str()
-        length = unpack('<B',header[2])[0]
+        length = unpack('<B', header[2])[0]
         tic = time.time()
-        while (time.time() - tic < self.TIMEOUT/2) and (len(data) < length):
-            if self.ser.inWaiting(): data += self.ser.read()
+        while (time.time() - tic < self.timeout/2) and (len(data) < length):
+            if self.ser.inWaiting():
+                data += self.ser.read()
 
         if len(data) < length:
             raise DeviceError('Timeout reading data!')
@@ -103,15 +104,16 @@ class Device(object):
         Methode to read a given amount of byter from the serial
         line. Returns the result as BYTE string.
         """
-        bytes = str()
+        rbs = str()
         tic = time.time()
-        while (time.time() - tic < self.TIMEOUT) and (len(bytes) < length):
-            if self.ser.inWaiting(): bytes += self.ser.read()
+        while (time.time() - tic < self.timeout) and (len(rbs) < length):
+            if self.ser.inWaiting():
+                rbs += self.ser.read()
 
-        if len(bytes) < length:
+        if len(rbs) < length:
             raise DeviceError('Timeout reading bytes!')
 
-        return bytes
+        return rbs
 
     def read_something(self):
         """ Tries to read _one_ byte from the serial line.
@@ -122,7 +124,8 @@ class Device(object):
         byte = str()
         tic = time.time()
         while (time.time() - tic < 0.05) and (len(byte) < 1):
-            if self.ser.inWaiting(): byte = self.ser.read()
+            if self.ser.inWaiting():
+                byte = self.ser.read()
 
         return byte
 

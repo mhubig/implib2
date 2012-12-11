@@ -21,13 +21,11 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 import time
 
-from binascii import b2a_hex as b2a, a2b_hex as a2b
-
-from imp_device import Device, DeviceError
-from imp_tables import Tables, TablesError
-from imp_packages import Package, PackageError
-from imp_commands import Command, CommandError
-from imp_responces import Responce, ResponceError
+from implib2.imp_tables import Tables
+from implib2.imp_packages import Package
+from implib2.imp_commands import Command
+from implib2.imp_responces import Responce
+from implib2.imp_device import DeviceError
 
 class BusError(Exception):
     pass
@@ -96,7 +94,7 @@ class Bus(object):
         self.dev.open_device(baudrate=1200)
         package = self.cmd.set_parameter(address, table,
                 param, [value], ad_param)
-        bytes_send = self.dev.write_pkg(package)
+        self.dev.write_pkg(package)
         time.sleep(0.5)
         self.dev.close_device()
 
@@ -104,7 +102,7 @@ class Bus(object):
         self.dev.open_device(baudrate=2400)
         package = self.cmd.set_parameter(address, table, param,
                 [value], ad_param)
-        bytes_send = self.dev.write_pkg(package)
+        self.dev.write_pkg(package)
         time.sleep(0.5)
         self.dev.close_device()
 
@@ -112,7 +110,7 @@ class Bus(object):
         self.dev.open_device(baudrate=4800)
         package = self.cmd.set_parameter(address, table, param,
                 [value], ad_param)
-        bytes_send = self.dev.write_pkg(package)
+        self.dev.write_pkg(package)
         time.sleep(0.5)
         self.dev.close_device()
 
@@ -120,7 +118,7 @@ class Bus(object):
         self.dev.open_device(baudrate=9600)
         package = self.cmd.set_parameter(address, table, param,
                 [value], ad_param)
-        bytes_send = self.dev.write_pkg(package)
+        self.dev.write_pkg(package)
         time.sleep(0.5)
         self.dev.close_device()
 
@@ -159,7 +157,7 @@ class Bus(object):
         try:
             self.dev.write_pkg(package)
             bytes_recv = self.dev.read_pkg()
-        except DeviceError as e:
+        except DeviceError:
             return (False,)
         serno = self.res.get_negative_ack(bytes_recv)
         return (serno,)
@@ -176,8 +174,8 @@ class Bus(object):
         try:
             self.dev.write_pkg(package)
             bytes_recv = self.dev.read_pkg()
-        except DeviceError as e:
-            return False
+        except DeviceError:
+            return (False,)
         return self.res.get_long_ack(bytes_recv, serno)
 
     def probe_module_short(self, serno):
@@ -194,14 +192,14 @@ class Bus(object):
         try:
             self.dev.write_pkg(package)
             bytes_recv = self.dev.read_bytes(1)
-        except DeviceError as e:
-            return False
+        except DeviceError:
+            return (False,)
         return self.res.get_short_ack(bytes_recv, serno)
 
     def probe_range(self, broadcast):
         """ PROBE ADDRESSRANGE
 
-        This command is very similar to the previous one. However,
+        This command is very similar to probe_module_short(). However,
         it addresses not just one single serial number, but a serial
         number range. This value of byte 4 to byte 6 symbolizes a
         whole range according to a broacast pattern. For more details
@@ -215,7 +213,6 @@ class Bus(object):
         return self.res.get_range_ack(bytes_recv)
 
     def get(self, serno, table, param):
-        """General get_parameter command"""
         package = self.cmd.get_parameter(serno, table, param)
         self.dev.write_pkg(package)
         time.sleep(0.05)
@@ -223,7 +220,7 @@ class Bus(object):
         return self.res.get_parameter(bytes_recv, table, param)
 
     def set(self, serno, table, param, value, ad_param=0):
-        """General set_parameter command"""
+        # pylint: disable=R0913
         package = self.cmd.set_parameter(serno, table, param,
                 value, ad_param)
         self.dev.write_pkg(package)
