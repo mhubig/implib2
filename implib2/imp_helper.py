@@ -33,3 +33,16 @@ def _normalize(filename):
     dir_name = os.path.dirname(abs_path)
     return os.path.join(dir_name, filename)
 
+def _load_json(filename):
+    """ .. funktion:: _load_json(filename)
+
+    Reads the spezific json file.
+
+    :type filename: string
+    :rtype: dict
+    """
+    import json
+    filename = _normalize(filename)
+    with open(filename) as js_file:
+        return json.load(js_file)
+

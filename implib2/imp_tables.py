@@ -20,8 +20,7 @@ You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 
-import json
-from implib2.imp_helper import _normalize
+from implib2.imp_helper import _load_json
 
 class TablesError(Exception):
     pass
@@ -30,13 +29,7 @@ class Tables(object):
     # pylint: disable=R0903
 
     def __init__(self, filename='imp_tables.json'):
-        self._tables = self._load_json(filename)
-
-    def _load_json(self, filename):
-        # pylint: disable=R0201
-        filename = _normalize(filename)
-        with open(filename) as tables:
-            return json.load(tables)
+        self._tables = _load_json(filename)
 
     def lookup(self, table, param):
         try:

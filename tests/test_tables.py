@@ -28,10 +28,8 @@ class TestTables(object):
     # pylint: disable=C0103,W0212
 
     def __init__(self):
-        with open('implib2/imp_tables.json') as js:
+        with open('tests/test_tables.json') as js:
             self.j = json.load(js)
-
-    def setUp(self):
         self.t = Tables()
 
     def test_load_json(self):
@@ -44,7 +42,8 @@ class TestTables(object):
 
     @raises(ValueError)
     def test_load_json_falty_file(self):
-        self.t._load_json('imp_tables.py')
+        # pylint: disable=R0201
+        Tables('imp_tables.py')
 
     @raises(TablesError)
     def test_lookup_unknown_table(self):

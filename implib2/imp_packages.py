@@ -22,6 +22,7 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 
 import struct
 from implib2.imp_crc import MaximCRC
+from implib2.imp_errors import Errors
 
 class PackageError(Exception):
     pass
@@ -30,6 +31,7 @@ class Package(object):
 
     def __init__(self):
         self.crc = MaximCRC()
+        self.err = Errors()
 
     def _pack_data(self, data):
         if len(data)> 253:
@@ -65,8 +67,7 @@ class Package(object):
 
         states = [0, 122, 123, 160, 161, 162, 163, 164, 165, 166, 253, 255]
         if state not in states:
-            # TODO: Look up the real error msg!
-            raise PackageError("Probe Error: {0}!".format(state))
+            raise PackageError("{0}".format(self.err.lookup(state)))
 
         return {'state': state, 'cmd': cmd, 'length': length, 'serno': serno}
 

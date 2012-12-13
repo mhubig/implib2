@@ -19,11 +19,18 @@ You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 import os
+import json
 from nose.tools import eq_
 
-from implib2.imp_helper import _normalize
+from implib2.imp_helper import _normalize, _load_json
 
-def test_helper():
+def test_normalize():
     filename = os.path.abspath('implib2/imp_helper.py')
     eq_(_normalize(filename), filename)
+
+def test_load_json():
+    filename = os.path.abspath('implib2/imp_tables.json')
+    with open(filename) as js_file:
+        jsdict = json.load(js_file)
+    eq_(_load_json('imp_tables.json'), jsdict)
 
