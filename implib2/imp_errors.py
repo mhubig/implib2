@@ -20,29 +20,19 @@ You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 
-def _normalize(filename):
-    """ .. function:: _normalize(filename)
+from implib2.imp_helper import _load_json
 
-    Prepends the filename with the path pointing to the main file.
+class ErrorsError(Exception):
+    pass
 
-    :type filename: string
-    :rtype: string
-    """
-    import os
-    abs_path = os.path.abspath(__file__)
-    dir_name = os.path.dirname(abs_path)
-    return os.path.join(dir_name, filename)
+class Errors(object):
+    # pylint: disable=R0903
+    def __init__(self, filename='imp_errors.json'):
+        self._errors = _load_json(filename)
 
-def _load_json(filename):
-    """ .. funktion:: _load_json(filename)
-
-    Reads the spezific json file.
-
-    :type filename: string
-    :rtype: dict
-    """
-    import json
-    filename = _normalize(filename)
-    with open(filename) as js_file:
-        return json.load(js_file)
+    def lookup(self, errno):
+        try:
+            return self._errors[str(errno)]
+        except KeyError:
+            raise ErrorsError("Unknown error number: {}".format(errno))
 

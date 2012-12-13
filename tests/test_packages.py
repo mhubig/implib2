@@ -100,5 +100,5 @@ class TestPackage(object):
     def test_unpack_header_with_probe_error_state(self):
         random = os.urandom(250)
         crc = self.crc.calc_crc(random)
-        pkg = a2b('bc3cffbb8100a2') + random + crc
+        pkg = a2b('853cffbb8100d9') + random + crc
         self.pkg.unpack(pkg)
