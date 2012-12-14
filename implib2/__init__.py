@@ -21,3 +21,8 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 __version__ = 'release-0.6.0'
 
+from implib2.imp_bus import Bus, BusError
+from implib2.imp_modules import Module, ModuleError
+
+__all__ = ["Bus", "BusError", "Module", "ModuleError"]
+

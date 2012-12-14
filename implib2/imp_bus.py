@@ -26,19 +26,19 @@ from implib2.imp_packages import Package
 from implib2.imp_datatypes import DataTypes
 from implib2.imp_commands import Command
 from implib2.imp_responces import Responce
-from implib2.imp_device import DeviceError
+from implib2.imp_device import Device, DeviceError
 
 class BusError(Exception):
     pass
 
 class Bus(object):
-    def __init__(self, device):
+    def __init__(self, port='/dev/ttyUSB0'):
         tbl = Tables()
         pkg = Package()
         dts = DataTypes()
         self.cmd = Command(tbl, pkg, dts)
         self.res = Responce(tbl, pkg, dts)
-        self.dev = device
+        self.dev = Device(port)
         self.bus_synced = False
 
     def _divide_and_conquer(self, low, high, found):
