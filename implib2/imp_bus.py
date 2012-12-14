@@ -23,6 +23,7 @@ import time
 
 from implib2.imp_tables import Tables
 from implib2.imp_packages import Package
+from implib2.imp_datatypes import DataTypes
 from implib2.imp_commands import Command
 from implib2.imp_responces import Responce
 from implib2.imp_device import DeviceError
@@ -32,10 +33,11 @@ class BusError(Exception):
 
 class Bus(object):
     def __init__(self, device):
-        tables = Tables()
-        package = Package()
-        self.cmd = Command(tables, package)
-        self.res = Responce(tables, package)
+        tbl = Tables()
+        pkg = Package()
+        dts = DataTypes()
+        self.cmd = Command(tbl, pkg, dts)
+        self.res = Responce(tbl, pkg, dts)
         self.dev = device
         self.bus_synced = False
 

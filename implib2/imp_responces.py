@@ -25,18 +25,10 @@ class ResponceError(Exception):
     pass
 
 class Responce(object):
-    def __init__(self, tables, package):
+    def __init__(self, tables, package, datatypes):
         self.tbl = tables
         self.pkg = package
-        self.data_types = {
-            0x00: '<{0}B', #  8-bit unsigned char
-            0x01: '<{0}b', #  8-bit signed char
-            0x02: '<{0}H', # 16-bit unsigned short
-            0x03: '<{0}h', # 16-bit signed short
-            0x04: '<{0}I', # 32-bit unsigned integer
-            0x05: '<{0}i', # 32-bit signed integer
-            0x06: '<{0}f', # 32-bit float
-            0x07: '<{0}d'} # 64-bit double
+        self.dts = datatypes
 
     def get_long_ack(self, packet, serno):
         responce = self.pkg.unpack(packet)
@@ -59,7 +51,7 @@ class Responce(object):
         data  = self.pkg.unpack(packet)['data']
         cmd = self.tbl.lookup(table, param)
 
-        fmt = self.data_types[cmd['Type'] % 0x80]
+        fmt = self.dts.lookup(cmd['Type'] % 0x80)
         length = len(data)/struct.calcsize(fmt.format(1))
 
         return struct.unpack(fmt.format(length), data)
