@@ -1,7 +1,7 @@
-Lizence:
-========
-
-Copyright (C) 2011-2012, Markus Hubig <mhubig@imko.de>
+#!/usr/bin/env python
+# -*- coding: UTF-8 -*-
+"""
+Copyright (C) 2011, Markus Hubig <mhubig@imko.de>
 
 This file is part of IMPLib2 a small Python library implementing
 the IMPBUS-2 data transmission protocol.
@@ -18,27 +18,24 @@ GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
+"""
 
-Requirements:
-=============
+from nose.tools import ok_, eq_
+from binascii import a2b_hex as a2b
 
-Before you can use the IMPLib2 software you have to make sure that
-you have at least the following software installed.
+from implib2.imp_crc import MaximCRC
 
-- Python 2.7 (http://python.org)
-- PySerial 2.5 (http://pyserial.sourceforge.net/)
-- PyYAML 3.10 (http://pyyaml.org/)
-- SQLAlchemie 0.7.2 (http://sqlalchemy.org/)
+class TestMaximCRC(object):
+    # pylint: disable=C0103
 
-Installation:
-=============
+    def setUp(self):
+        self.crc = MaximCRC()
 
-Just install the stable branch with pip using git:
+    def test_calc_crc(self):
+        crc = a2b('f3')
+        eq_(self.crc.calc_crc(a2b('FD15ED09')), crc)
 
-    $ pip install git+http://bitbucket.org/imko/implib2.git@master
+    def test_check_crc(self):
+        data = a2b('FD15ED09f3')
+        ok_(self.crc.check_crc(data))
 
-Of if you brave enough:
-
-    $ pip install git+http://bitbucket.org/imko/implib2.git@develop
-
-Depending on your system you may have to prefix these commands with ``sudo``!

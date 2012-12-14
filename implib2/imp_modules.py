@@ -20,84 +20,47 @@ You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 import time, struct
-from binascii import b2a_hex as b2a
-
-from imp_crc import MaximCRC, MaximCRCError
-from imp_eeprom import EEPROM, EEPROMError
-from imp_commands import Command, CommandError
-from imp_responces import Responce, ResponceError
-from imp_serialdevice import SerialDevice, SerialDeviceError
+from implib2.imp_crc import MaximCRC
+from implib2.imp_eeprom import EEPRom
 
 class ModuleError(Exception):
     pass
 
 class Module(object):
-    """ Class representing a IMPBus2 Module.
-    
-    Small example of how to use is together with the IMPBus class:
-    
-    >>> from imp_bus import IMPBus
-    >>> bus = IMPBus('/dev/tty.usbserial-A700eQFp')
-    >>> bus.synchronise_bus()
-    True
-    >>> modules = bus.scan_bus()
-    >>> for module in modules:
-    ...     print module.get_serial()
-    32344
-    """
+    """ Class representing a IMPBus2 Module. """
+    # pylint: disable=R0904
+
     def __init__(self, bus, serno):
-        self.cmd = Command()
-        self.res = Responce()
         self.crc = MaximCRC()
         self.bus = bus
         self._unlocked = False
-        self._serno    = serno
-        self.EVENT_MODES = {
+        self._serno = serno
+        self.event_modes = {
             "NormalMeasure":    0x00,
             "TRDScan":          0x01,
             "AnalogOut":        0x02,
             "ACIC_TC":          0x03,
             "SelfTest":         0x04,
             "MatTempSensor":    0x05}
-        
-    def _get(self, table, param):
-        """General get_parameter command"""
-        package = self.cmd.get_parameter(self._serno, table, param)
-        bytes_recv = self.bus.talk(package)
-        responce = self.res.get_parameter(bytes_recv, table, param)
-        time.sleep(0.1)
-        return responce
-    
-    def _set(self, table, param, value, ad_param=0):
-        """General set_parameter command"""
-        package = self.cmd.set_parameter(self._serno, table, param, ad_param, value)
-        bytes_recv = self.bus.talk(package)
-        responce = self.res.set_parameter(bytes_recv, self._serno, table)
-        time.sleep(0.1)
-        return responce
-    
+
     def _unlock(self):
         # Calculate the SupportPW: calc_crc(serno) + 0x8000
         passwd = struct.pack('<I', self._serno)
         passwd = struct.unpack('<B', self.crc.calc_crc(passwd))[0] + 0x8000
-        
+
         # Unlock the device with the password
         table = 'ACTION_PARAMETER_TABLE'
         param = 'SupportPW'
         value = passwd
-        self._set(table, param, [value])
-        
-        self._unlocked = True
-    
-    #######################################
-    # reading data from the module tables #
-    #######################################
-    
+
+        self._unlocked = self.bus.set(self._serno, table, param, [value])
+        return self._unlocked
+
     def get_table(self, table):
         """Spezial Command to get a whole table.
-        
+
         **Not implemented yet!**
-        
+
         Basicly you get a whole table, witch means the data-part of the
         recieved package consists of the concatinated table values. If
         the table don't fit into one package the status byte of the
@@ -106,87 +69,86 @@ class Module(object):
         concatenated table-values you have to split the data in order of the
         Parameter-No., the length of each value can is equal to the
         Parameter-Length.
-        
+
         You can use the parameters GetData, DataSize and TableSize to gain
         information about the spezific table.
         """
-        param = 'GetData'
+        # pylint: disable=W0613,R0201
         raise ModuleError("Not yet implemented!")
-        return False
-    
+
     def get_serial(self):
         table = 'SYSTEM_PARAMETER_TABLE'
         param = 'SerialNum'
-        return self._get(table, param)[0]
-    
+        return self.bus.get(self._serno, table, param)[0]
+
     def get_hw_version(self):
         table = 'SYSTEM_PARAMETER_TABLE'
         param = 'HWVersion'
-        return '{0:.2f}'.format(self._get(table, param)[0])
-    
+        return '{0:.2f}'.format(self.bus.get(self._serno, table, param)[0])
+
     def get_fw_version(self):
         table = 'SYSTEM_PARAMETER_TABLE'
         param = 'FWVersion'
-        return '{0:.6f}'.format(self._get(table, param)[0])
-    
+        return '{0:.6f}'.format(self.bus.get(self._serno, table, param)[0])
+
     def get_moist_max_value(self):
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
         param = 'MoistMaxValue'
-        return self._get(table, param)[0]
-    
+        return self.bus.get(self._serno, table, param)[0]
+
     def get_moist_min_value(self):
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
         param = 'MoistMinValue'
-        return self._get(table, param)[0]
-    
+        return self.bus.get(self._serno, table, param)[0]
+
     def get_temp_max_value(self):
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
         param = 'TempMaxValue'
-        return self._get(table, param)[0]
-    
+        return self.bus.get(self._serno, table, param)[0]
+
     def get_temp_min_value(self):
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
         param = 'TempMinValue'
-        return self._get(table, param)[0]
-    
+        return self.bus.get(self._serno, table, param)[0]
+
     def get_event_mode(self):
         table = 'ACTION_PARAMETER_TABLE'
         param = 'Event'
-        # Doesn't work on python 2.6.x
-        # modes = {v:k for k, v in self.EVENT_MODES.items()}
-        keys   = self.EVENT_MODES.keys()
-        values = self.EVENT_MODES.values()
-        modes  = dict(zip(values,keys))
-        return modes[self._get(table, param)[0] % 0x80]
-    
+        modes = {v:k for k, v in self.event_modes.items()}
+
+        try:
+            mode = modes[self.bus.get(self._serno, table, param)[0] % 0x80]
+        except KeyError:
+            raise ModuleError("Unknown event mode!")
+
+        return mode
+
+    def get_measure_mode(self):
+        table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
+        param = 'MeasMode'
+        return self.bus.get(self._serno, table, param)
+
     def read_eeprom(self):
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
         param = 'EPRByteLen'
-        length = self._get(table, param)[0]
-        
+        length = self.bus.get(self._serno, table, param)[0]
+
         if not self._unlocked:
-            self._unlock()        
-        
+            self._unlock()
+
         pages = length / 252
         if length % 252:
             pages += 1
-        
-        eprimg = list()
-        for page in range(0,pages):    
-            package = self.cmd.get_epr_image(self._serno, page)
-            bytes_recv = self.bus.talk(package)
-            page = self.res.get_epr_image(bytes_recv)
-            eprimg.extend(page)
+
+        eeprom = EEPRom()
+        for page in range(0, pages):
+            eeprom.set_page(self.bus.get_epr_page(self._serno, page))
             time.sleep(0.2)
-        
-        if not len(eprimg) == length:
-            raise ModuleError("EEPROM length don't match!")
-        return eprimg
-    
-    ################################
-    # change the module settings   #
-    ################################
-    
+
+        if not eeprom.length == length:
+            raise ModuleError("EEPRom length don't match!")
+        return eeprom
+
     def set_table(self, table, data):
         """Spezial Command to set the values of a whole table.
 
@@ -195,55 +157,56 @@ class Module(object):
         You can use the parameters GetData, DataSize and TableSize to gain
         information about the spezific table.
         """
-        param = 'GetData'
+        # pylint: disable=W0613,R0201
         raise ModuleError("Not yet implemented!")
-        return False
-    
-    def set_serial(self, serno):
+
+    def set_serno(self, serno):
         """Set the serialnumber of the module."""
         table = 'SYSTEM_PARAMETER_TABLE'
         param = 'SerialNum'
-        
+
         if not self._unlocked:
             self._unlock()
-        
-        state = self._set(table, param, [serno])
+
+        old_serno = self._serno
         self._serno = serno
-        return state
-    
+        return self.bus.set(old_serno, table, param, [serno])
+
     def set_analog_moist(self, mvolt=500):
-        if not mvolt in range(0,1001):
+        if not mvolt in range(0, 1001):
             raise ModuleError("Value out of range!")
-        
-        min = self.get_moist_min_value()
-        max = self.get_moist_max_value()
-        value = (max - min) / 1000.0 * mvolt + min
+
         table = 'MEASURE_PARAMETER_TABLE'
         param = 'Moist'
-        
+
+        min_value = self.get_moist_min_value()
+        max_value = self.get_moist_max_value()
+        value = (max_value - min_value) / 1000.0 * mvolt + min_value
+
         if not self.set_event_mode("AnalogOut"): 
             raise ModuleError("Could not set event mode!")
-        
-        return self._set(table, param, [value])
-        
+
+        return self.bus.set(self._serno, table, param, [value])
+
     def set_analog_temp(self, mvolt=500):
-        if not mvolt in range(0,1001):
+        if not mvolt in range(0, 1001):
             raise ModuleError('Value out of range!')
-        
-        min = self.get_temp_min_value()
-        max = self.get_temp_max_value()
-        value = (max - min) / 1000.0 * mvolt + min
+
         table = 'MEASURE_PARAMETER_TABLE'
         param = 'CompTemp'
-        
+
+        min_value = self.get_temp_min_value()
+        max_value = self.get_temp_max_value()
+        value = (max_value - min_value) / 1000.0 * mvolt + min_value
+
         if not self.set_event_mode("AnalogOut"):
-            raise ModuleError("Coul'd not set event mode!")
-        
-        return self._set(table, param, [value])
-    
-    def set_event_mode(self, event_mode="NormalMeasure"):
+            raise ModuleError("Could not set event mode!")
+
+        return self.bus.set(self._serno, table, param, [value])
+
+    def set_event_mode(self, mode="NormalMeasure"):
         """" Command to set the Event Mode of the probe.
-        
+
         EventMode is used to control the slave to fulfil
         the different events.They are NormalMeasure, TDRScan,
         AnalogOut, ASIC_TC (Temperature Compensation),
@@ -251,174 +214,142 @@ class Module(object):
         """
         table = 'ACTION_PARAMETER_TABLE'
         param = 'Event'
-        if event_mode in self.EVENT_MODES:
-            value = self.EVENT_MODES[event_mode]
-        else:
+
+        if not mode in self.event_modes:
             raise ModuleError("Invalid EventMode!")
-        
+
+        value = self.event_modes[mode]
+
         if not self._unlocked:
             self._unlock()
-        return self._set(table, param, [value])
-    
-    def set_measmode(self,mode=0):
+
+        return self.bus.set(self._serno, table, param, [value])
+
+    def set_measure_mode(self, mode=0):
         if not self.get_event_mode() == "NormalMeasure":
             self.set_event_mode("NormalMeasure")
 
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
         param = 'MeasMode'
-        self._set(table, param, [mode])
-        time.sleep(0.1)
-        return self._set(table, param, [mode])
-        
-    def set_default_measmode(self,mode=2):
+
+        return self.bus.set(self._serno, table, param, [mode])
+
+    def set_default_measure_mode(self, mode=2):
         if not self.get_event_mode() == "NormalMeasure":
             self.set_event_mode("NormalMeasure")
 
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
         param = 'DefaultMeasMode'
-        self._set(table, param, [mode])
-        time.sleep(0.1)
-        return self._set(table, param, [mode])
-        
-    def set_average_mode(self,mode=0):
+
+        return self.bus.set(self._serno, table, param, [mode])
+
+    def set_average_mode(self, mode=0):
         table = 'APPLICATION_PARAMETER_TABLE'
         param = 'AverageMode'
-        self._set(table, param, [mode])
-        time.sleep(0.1)
-        return self._set(table, param, [mode])
-            
-    def write_eeprom(self, eeprom_file):
-        eeprom = EEPROM(eeprom_file)
-        
+        return self.bus.set(self._serno, table, param, [mode])
+
+    def write_eeprom(self, eprfile):
+        eeprom = EEPRom()
+        eeprom.read(eprfile)
+
         if not self._unlocked:
             self._unlock()
-        
+
         for page_nr, page in eeprom:
-            package = self.cmd.set_epr_image(self._serno, page_nr, page)
-            bytes_recv = self.bus.talk(package)
-            responce = self.res.set_epr_image(bytes_recv)
-            if not self.res.set_epr_image(bytes_recv):
-                raise ModuleError("Writing EEPROM Failed")
-            time.sleep(0.2)
+            if not self.bus.set_eeprom_page(self._serno, page_nr, page):
+                raise ModuleError("Writing EEPRom failed!")
+            time.sleep(0.05)
+
         return True
 
-    def turn_ASIC_on(self):
+    def turn_asic_on(self):
         """" Command to start the selftest of the probe.
-	        
+
         SelfTest is used for primary for internal test by IMKO.
-	    In this context, it will be used to 'ON' the ASIC.
+        In this context, it will be used to 'ON' the ASIC.
         """
         table    = 'ACTION_PARAMETER_TABLE'
         param    = 'SelfTest'
-        value    = [1,1,63,0]
+        value    = [1, 1, 63, 0]
 
         if not self.set_event_mode("SelfTest"):
             raise ModuleError("Coul'd not set event mode!")
-         
-        return self._set(table, param, value)
-    
-    def turn_ASIC_off(self):
+
+        return self.bus.set(self._serno, table, param, value)
+
+    def turn_asic_off(self):
         """" Command to start the selftest of the probe.
-	        
+
         SelfTest is used for primary for internal test by IMKO.
-	    In this context, it will be used to 'OFF' the ASIC.
+        In this context, it will be used to 'OFF' the ASIC.
         """
         table = 'ACTION_PARAMETER_TABLE'
         param = 'SelfTest'
-        value = [1,0,255,0]
-        
+        value = [1, 0, 255, 0]
+
         if not self.set_event_mode("SelfTest"):
             raise ModuleError("Coul'd not set event mode!")
-        
-        return self._set(table, param, value)
-     
 
-    #################################
-    # perform measurment commands   #  
-    #################################
-    
+        return self.bus.set(self._serno, table, param, value)
+
+    def get_measurement(self, kind='Moist'):
+        table = 'ACTION_PARAMETER_TABLE'
+        param = 'StartMeasure'
+        value = 1
+
+        # Refer Protocol Handbook page 18.
+        if not self.get_measure_mode() == 0:
+            assert self.set_measure_mode(0)
+
+        # set NormalMeasure
+        if not self.get_event_mode() == "NormalMeasure":
+            assert self.set_event_mode("NormalMeasure")
+
+        assert self.bus.set(self._serno, table, param, [value])
+        time.sleep(1.0)
+
+        while self.bus.get(self._serno, table, param)[0]:
+            time.sleep(0.5)
+
+        table = 'MEASURE_PARAMETER_TABLE'
+        param = kind
+        return self.bus.get(self._serno, table, param)[0]
+
     def get_moisture(self):
-        
-        # set MeasMode ModeA
-        # Refer Protocol Handbook page 18.
-        self.set_measmode(mode=0)
-        
-        # set NormalMeasure
-        if not self.get_event_mode() == "NormalMeasure":
-            self.set_event_mode("NormalMeasure")
-        
-        table = 'ACTION_PARAMETER_TABLE'
-        param = 'StartMeasure'
-        self._set(table, param, [1])
-        time.sleep(1.0)
-        
-        while self._get(table, param)[0]:
-            time.sleep(0.5)
-	
-        table = 'MEASURE_PARAMETER_TABLE'
-        param = 'Moist'
-        return self._get(table, param)[0]
-        
-    def get_measure(self,strName):
-        
-        if strName == 'RbC': strName = 'Info1'
-        
-        # set MeasMode ModeA
-        # Refer Protocol Handbook page 18.
-        self.set_measmode(mode=0)
-        
-        # set NormalMeasure
-        if not self.get_event_mode() == "NormalMeasure":
-            self.set_event_mode("NormalMeasure")
-        
-        table = 'ACTION_PARAMETER_TABLE'
-        param = 'StartMeasure'
-        self._set(table, param, [1])
-        time.sleep(1.0)
-        
-        while self._get(table, param)[0]:
-            time.sleep(0.5)
-	
-        table = 'MEASURE_PARAMETER_TABLE'
-        param = strName
-        return self._get(table, param)[0]
+        return self.get_measurement(kind='Moist')
 
     def get_transit_time_tdr(self):
-        # ** Internal usage - Trime IBT 
-        
+        # ** Internal usage - Trime IBT
         if not self.get_event_mode() == "NormalMeasure":
-            self.set_event_mode("NormalMeasure")
+            assert self.set_event_mode("NormalMeasure")
 
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
         param = 'MeasMode'
-        self._set(table, param, [0])
+        value = 0
+        assert self.bus.set(self._serno, table, param, [value])
         time.sleep(0.1)
 
         table = 'ACTION_PARAMETER_TABLE'
         param = 'StartMeasure'
-        self._set(table, param, [1])
+        value = 1
+        assert self.bus.set(self._serno, table, param, [value])
         time.sleep(1.0)
 
-        while self._get(table, param)[0]:
+        while self.bus.get(self._serno, table, param)[0]:
             time.sleep(0.5)
 
         table = 'MEASURE_PARAMETER_TABLE'
         param = 'TransitTime'
-        tt = self._get(table, param)[0]
+        transit_time = self.bus.get(self._serno, table, param)[0]
 
         param = 'TDRValue'
-        tdr = self._get(table, param)[0]
+        tdr_value = self.bus.get(self._serno, table, param)[0]
 
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
         param = 'MeasMode'
-        self._set(table, param, [2])
+        value = 2
+        assert self.bus.set(self._serno, table, param, [value])
         time.sleep(0.1)
 
-        return tt, tdr
-        
-    
-        
-if __name__ == "__main__":
-    import doctest
-    doctest.testmod()
+        return (transit_time, tdr_value)
 

@@ -29,21 +29,28 @@ from setuptools import setup, find_packages
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
+CLASSIFIERS = filter(None, map(str.strip,
+"""
+"Development Status :: 4 - Beta",
+"Topic :: Software Development :: Libraries",
+"Intended Audience :: Developers",
+"Programming Language :: Python :: 2.7",
+"License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)"
+""".splitlines()))
+
 setup(
         name = 'IMPLib2',
-        version = 'release-0.5.2',
-        packages = find_packages(),
+        version = 'release-0.6.0',
+        packages = find_packages(exclude=["tests"]),
 
         # Include the *.yaml files
         package_data = {
-            'implib2': ['*.yaml'],
+            'implib2': ['*.json'],
         },
 
         # Install or upgrade the dependencies
         install_requires = [
             'PySerial>=2.6',
-            'PyYAML>=3.10',
-            'SQLAlchemy>=0.7.9',
         ],
 
         # metadata for upload to PyPI
@@ -55,12 +62,5 @@ setup(
         long_description=read('README.md'),
         license = "LGPL",
         keywords = "serial impbus imko",
-
-        classifiers = [
-            "Development Status :: 4 - Beta",
-            "Topic :: Software Development :: Libraries",
-            "Intended Audience :: Developers",
-            "Programming Language :: Python :: 2.7",
-            "License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)",
-        ],
+        classifiers = CLASSIFIERS,
 )

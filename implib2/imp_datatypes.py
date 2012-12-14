@@ -1,6 +1,6 @@
-Lizence:
-========
-
+#!/usr/bin/env python
+# -*- coding: UTF-8 -*-
+"""
 Copyright (C) 2011-2012, Markus Hubig <mhubig@imko.de>
 
 This file is part of IMPLib2 a small Python library implementing
@@ -18,27 +18,23 @@ GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
+"""
 
-Requirements:
-=============
+class DataTypes(object):
+    # pylint: disable=R0903
+    def __init__(self):
+        self._dtypes = {
+            0x00: '<{0}B', #  8-bit unsigned char
+            0x01: '<{0}b', #  8-bit signed char
+            0x02: '<{0}H', # 16-bit unsigned short
+            0x03: '<{0}h', # 16-bit signed short
+            0x04: '<{0}I', # 32-bit unsigned integer
+            0x05: '<{0}i', # 32-bit signed integer
+            0x06: '<{0}f', # 32-bit float
+            0x07: '<{0}d'} # 64-bit double
 
-Before you can use the IMPLib2 software you have to make sure that
-you have at least the following software installed.
+    def __contains__(self, item):
+        return item in self._dtypes
 
-- Python 2.7 (http://python.org)
-- PySerial 2.5 (http://pyserial.sourceforge.net/)
-- PyYAML 3.10 (http://pyyaml.org/)
-- SQLAlchemie 0.7.2 (http://sqlalchemy.org/)
-
-Installation:
-=============
-
-Just install the stable branch with pip using git:
-
-    $ pip install git+http://bitbucket.org/imko/implib2.git@master
-
-Of if you brave enough:
-
-    $ pip install git+http://bitbucket.org/imko/implib2.git@develop
-
-Depending on your system you may have to prefix these commands with ``sudo``!
+    def lookup(self, dtype):
+        return self._dtypes[dtype]

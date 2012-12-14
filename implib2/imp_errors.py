@@ -1,6 +1,6 @@
-Lizence:
-========
-
+#!/usr/bin/env python
+# -*- coding: UTF-8 -*-
+"""
 Copyright (C) 2011-2012, Markus Hubig <mhubig@imko.de>
 
 This file is part of IMPLib2 a small Python library implementing
@@ -18,27 +18,21 @@ GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
+"""
 
-Requirements:
-=============
+from implib2.imp_helper import _load_json
 
-Before you can use the IMPLib2 software you have to make sure that
-you have at least the following software installed.
+class ErrorsError(Exception):
+    pass
 
-- Python 2.7 (http://python.org)
-- PySerial 2.5 (http://pyserial.sourceforge.net/)
-- PyYAML 3.10 (http://pyyaml.org/)
-- SQLAlchemie 0.7.2 (http://sqlalchemy.org/)
+class Errors(object):
+    # pylint: disable=R0903
+    def __init__(self, filename='imp_errors.json'):
+        self._errors = _load_json(filename)
 
-Installation:
-=============
+    def lookup(self, errno):
+        try:
+            return self._errors[str(errno)]
+        except KeyError:
+            raise ErrorsError("Unknown error number: {}".format(errno))
 
-Just install the stable branch with pip using git:
-
-    $ pip install git+http://bitbucket.org/imko/implib2.git@master
-
-Of if you brave enough:
-
-    $ pip install git+http://bitbucket.org/imko/implib2.git@develop
-
-Depending on your system you may have to prefix these commands with ``sudo``!

@@ -21,57 +21,26 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 
 from struct import pack
-from binascii import b2a_hex as b2a, a2b_hex as a2b
-
-class MaximCRCError(Exception):
-    pass
 
 class MaximCRC(object):
-    """
-    Class to compute the dallas-1-wire crc of a given hexstring.
-    Uses a table driven implementation of the crc algorithm.
-    The used CRC polynom is x⁸*x⁵*x⁴*1 or 100110001 or 0x131 or
-    (as the most significant bit may be ommitted) 0x31.
-
-    The used table is just a pre-computet list of the polynom
-    division of every 256 hex counts with the generator polynom
-    0x131.
-
-    The CRC Parametric Model of the dallas-1-wire crc algorithm
-    can be defined, in reverence of Ross N. Williams "The Rocksoft
-    Model", by these parameters:
-    
-    Width       = 8bit
-    Poly        = 0x131 or 0x31
-    ReflectIn   = True
-    XorIn       = 0x0
-    ReflectOut  = True
-    XorOut      = 0x0
-
-    http://www.ross.net/crc/download/crc_v3.txt
-
-    >>> crc = MaximCRC()
-    >>> c = crc.calc_crc(a2b('FD15ED09'))
-    >>> b2a(c)
-    'f3'
-    """
-
     def __init__(self):
-        self.DEBUG = False
         self.tbl = self._maketbl()
 
     def _reflect(self, data, width):
-        """ reflect a data word, i.e. reverts the bit order. """
-        x = data & 0x01
+        """ reflect a data word, means revert the bit order. """
+        # pylint: disable=R0201
+        reflected = data & 0x01
+        # pylint: disable=W0612
         for i in range(width - 1):
             data >>= 1
-            x = (x << 1) | (data & 0x01)
-        return x
-     
+            reflected = (reflected << 1) | (data & 0x01)
+        return reflected
+
     def _maketbl(self):
         tbl = {}
         for i in range(1 << 8):
             register = self._reflect(i, 8)
+            # pylint: disable=W0612
             for j in range(8):
                 if register & 128 != 0:
                     register = (register << 1) ^ 0x31
@@ -84,8 +53,8 @@ class MaximCRC(object):
     def calc_crc(self, byte_str):
         tbl = self.tbl
         register = 0x0
-        for c in byte_str:
-            tblidx   = (register ^ ord(c)) & 0xff
+        for char in byte_str:
+            tblidx   = (register ^ ord(char)) & 0xff
             register = ((register >> 8) ^ tbl[tblidx]) & 255
         return pack('>B', register)
 
@@ -96,6 +65,3 @@ class MaximCRC(object):
             return False
         return True
 
-if __name__ == "__main__":
-    import doctest
-    doctest.testmod()

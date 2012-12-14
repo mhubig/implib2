@@ -1,5 +1,12 @@
 *.pyc
+*.DS_Store
 .tox/
+.coverage
+coverage.xml
+nosetests.xml
+pylint_*
 build/
 dist/
 IMPLib2.egg-info/
+docs/_build/
+tests/.coverage

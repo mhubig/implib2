@@ -23,15 +23,20 @@ function usage () {
 }
 
 function update_version_init () {
-    sed "s/^__version__ = .*$/__version__ = 'release-$1'/g" \
+    sed -e "s/^__version__ = .*$/__version__ = 'release-$1'/g" \
         implib2/__init__.py > .__init__.new
 }
 
 function update_version_setup () {
-    sed "s/version = .*$/version = 'release-$1',/g" \
+    sed -e "s/version = .*$/version = 'release-$1',/g" \
         setup.py > .setup.new
 }
 
+function update_version_sphinx () {
+    sed -e "s/version = .*$/version = '$1'/g" \
+        -e "s/release = .*$/release = '$1'/g" \
+        docs/conf.py > .conf.new
+}
 
 if [ $# -ne 1 ]; then
     usage
@@ -52,6 +57,9 @@ else
     mv .setup.new setup.py
 fi
 
-git add implib2/__init__.py setup.py
-git commit -s -m "Bumped version number to release-$1" \
-    implib2/__init__.py setup.py
+if ! update_version_sphinx $1; then
+    echo "Could not replace version in 'docs/conf.py'!" >&2
+    exit 2
+else
+    mv .conf.new docs/conf.py
+fi

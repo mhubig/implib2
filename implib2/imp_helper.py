@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 """
-Copyright (C) 2011, Markus Hubig <mhubig@imko.de>
+Copyright (C) 2011-2012, Markus Hubig <mhubig@imko.de>
 
 This file is part of IMPLib2 a small Python library implementing
 the IMPBUS-2 data transmission protocol.
@@ -19,11 +19,30 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
-from decorator import decorator
 
-def _trace(f, *args, **kw):
-    print "calling %s with args %s, %s" % (f.__name__, args, kw)
-    return f(*args, **kw)
+def _normalize(filename):
+    """ .. function:: _normalize(filename)
 
-def trace(f):
-    return decorator(_trace, f)
+    Prepends the filename with the path pointing to the main file.
+
+    :type filename: string
+    :rtype: string
+    """
+    import os
+    abs_path = os.path.abspath(__file__)
+    dir_name = os.path.dirname(abs_path)
+    return os.path.join(dir_name, filename)
+
+def _load_json(filename):
+    """ .. funktion:: _load_json(filename)
+
+    Reads the spezific json file.
+
+    :type filename: string
+    :rtype: dict
+    """
+    import json
+    filename = _normalize(filename)
+    with open(filename) as js_file:
+        return json.load(js_file)
+
