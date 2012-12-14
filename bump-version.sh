@@ -63,7 +63,3 @@ if ! update_version_sphinx $1; then
 else
     mv .conf.new docs/conf.py
 fi
-
-git add implib2/__init__.py setup.py
-git commit -s -m "Bumped version number to release-$1" \
-    implib2/__init__.py setup.py
