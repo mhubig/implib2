@@ -24,7 +24,7 @@ from nose.tools import ok_, eq_, raises
 from implib2.imp_datatypes import DataTypes
 
 class TestDataTypes(object):
-
+    # pylint: disable=C0103
     def setUp(self):
         self._dict = {
                 0x00: '<{0}B', #  8-bit unsigned char
@@ -35,21 +35,21 @@ class TestDataTypes(object):
                 0x05: '<{0}i', # 32-bit signed integer
                 0x06: '<{0}f', # 32-bit float
                 0x07: '<{0}d'} # 64-bit double
-        self.dt = DataTypes()
+        self.dts = DataTypes()
 
     def test_in(self):
         for d_nr in self._dict:
-            ok_(d_nr in self.dt)
+            ok_(d_nr in self.dts)
 
     def test_in_NonExistentKey(self):
-        answer = 0x08 in self.dt
+        answer = 0x08 in self.dts
         eq_(False, answer)
 
     def test_lookup(self):
         for d_nr in self._dict:
-            eq_(self._dict[d_nr], self.dt.lookup(d_nr))
+            eq_(self._dict[d_nr], self.dts.lookup(d_nr))
 
     @raises(KeyError)
     def test_lookup_NonExistentKey(self):
-        self.dt.lookup(0x08)
+        self.dts.lookup(0x08)
 

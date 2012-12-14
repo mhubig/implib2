@@ -21,6 +21,7 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 
 class DataTypes(object):
+    # pylint: disable=R0903
     def __init__(self):
         self._dtypes = {
             0x00: '<{0}B', #  8-bit unsigned char
