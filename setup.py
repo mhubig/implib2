@@ -40,7 +40,7 @@ CLASSIFIERS = filter(None, map(str.strip,
 
 setup(
         name = 'IMPLib2',
-        version = 'release-0.5.2',
+        version = 'release-0.6.0',
         packages = find_packages(exclude=["tests"]),
 
         # Include the *.yaml files
