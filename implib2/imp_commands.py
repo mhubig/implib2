@@ -26,18 +26,10 @@ class CommandError(Exception):
     pass
 
 class Command(object):
-    def __init__(self, tables, package):
+    def __init__(self, tables, package, datatypes):
         self.tbl = tables
         self.pkg = package
-        self.data_types = {
-            0x00: '<{0}B', #  8-bit unsigned char
-            0x01: '<{0}b', #  8-bit signed char
-            0x02: '<{0}H', # 16-bit unsigned short
-            0x03: '<{0}h', # 16-bit signed short
-            0x04: '<{0}I', # 32-bit unsigned integer
-            0x05: '<{0}i', # 32-bit signed integer
-            0x06: '<{0}f', # 32-bit float
-            0x07: '<{0}d'} # 64-bit double
+        self.dts = datatypes
 
     def get_long_ack(self, serno):
         return self.pkg.pack(serno=serno, cmd=0x02)
@@ -63,7 +55,7 @@ class Command(object):
     def set_parameter(self, serno, table, param, values, ad_param=0):
         # pylint: disable=R0913
         cmd = self.tbl.lookup(table, param)
-        fmt = self.data_types[cmd['Type'] % 0x80]
+        fmt = self.dts.lookup(cmd['Type'] % 0x80)
 
         param_no = struct.pack('<B', cmd['No'])
         param_ad = struct.pack('<B', ad_param)

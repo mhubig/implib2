@@ -25,13 +25,14 @@ from binascii import a2b_hex as a2b
 
 from implib2.imp_tables import Tables
 from implib2.imp_packages import Package
+from implib2.imp_datatypes import DataTypes
 from implib2.imp_commands import Command, CommandError
 
 class TestCommand(object):
     # pylint: disable=C0103
 
     def setUp(self):
-        self.cmd = Command(Tables(), Package())
+        self.cmd = Command(Tables(), Package(), DataTypes())
 
     def test_get_long_ack(self):
         pkg = self.cmd.get_long_ack(31001)
