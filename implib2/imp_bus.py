@@ -89,37 +89,32 @@ class Bus(object):
         if not value in (12, 24, 48, 96):
             raise BusError("Unknown baudrate!")
 
+        package = self.cmd.set_parameter(address, table,
+                param, [value], ad_param)
+
         # first close the device
         self.dev.close_device()
 
         # trying to set baudrate at 1200
         self.dev.open_device(baudrate=1200)
-        package = self.cmd.set_parameter(address, table,
-                param, [value], ad_param)
         self.dev.write_pkg(package)
         time.sleep(0.5)
         self.dev.close_device()
 
         # trying to set baudrate at 2400
         self.dev.open_device(baudrate=2400)
-        package = self.cmd.set_parameter(address, table, param,
-                [value], ad_param)
         self.dev.write_pkg(package)
         time.sleep(0.5)
         self.dev.close_device()
 
         # trying to set baudrate at 4800
         self.dev.open_device(baudrate=4800)
-        package = self.cmd.set_parameter(address, table, param,
-                [value], ad_param)
         self.dev.write_pkg(package)
         time.sleep(0.5)
         self.dev.close_device()
 
         # trying to set baudrate at 9600
         self.dev.open_device(baudrate=9600)
-        package = self.cmd.set_parameter(address, table, param,
-                [value], ad_param)
         self.dev.write_pkg(package)
         time.sleep(0.5)
         self.dev.close_device()
@@ -161,8 +156,8 @@ class Bus(object):
             bytes_recv = self.dev.read_pkg()
         except DeviceError:
             return (False,)
-        serno = self.res.get_negative_ack(bytes_recv)
-        return (serno,)
+
+        return(self.res.get_negative_ack(bytes_recv),)
 
     def probe_module_long(self, serno):
         """ PROBE MODULE (LONGCOMMAND)

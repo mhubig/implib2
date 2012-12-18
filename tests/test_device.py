@@ -20,16 +20,15 @@ You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 
-import serial
-from mock import patch, call, MagicMock
-from nose.tools import ok_, eq_, raises
+import serial # pylint: disable=W0611
+from mock import patch, call
+from nose.tools import eq_, raises
 from binascii import a2b_hex as a2b
 
 from implib2.imp_device import Device, DeviceError
 
 class TestPackage(object):
     # pylint: disable=C0103
-
     def setUp(self):
         with patch('serial.Serial') as mock:
             self.ser = mock()
@@ -55,7 +54,7 @@ class TestPackage(object):
     def test_write_pkg(self):
         packet = a2b('ffffff')
         self.ser.write.return_value = 3
-        ok_(self.dev.write_pkg(packet))
+        eq_(self.dev.write_pkg(packet), True)
         self.ser.write.assert_called_once_with(packet)
 
     @raises(DeviceError)
@@ -127,7 +126,7 @@ class TestPackage(object):
         pkg = a2b('ff')
         self.ser.inWaiting.return_value = 1
         self.ser.read.return_value = pkg
-        ok_(self.dev.read_something(), pkg)
+        eq_(self.dev.read_something(), pkg)
         self.ser.inWaiting.assert_called_once_with()
         self.ser.read.assert_called_once_with()
 

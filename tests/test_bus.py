@@ -20,59 +20,80 @@ You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 
-import mox
-from nose.tools import ok_, eq_, raises
+from mock import patch, call, MagicMock
+from nose.tools import eq_, raises
 from binascii import a2b_hex as a2b
 
 from implib2.imp_bus import Bus, BusError
-from implib2.imp_device import Device, DeviceError
+from implib2.imp_device import Device, DeviceError # pylint: disable=W0611
+from implib2.imp_commands import Command           # pylint: disable=W0611
+from implib2.imp_responces import Responce         # pylint: disable=W0611
 
 class TestBus(object):
-    # pylint: disable=C0103
-
+    # pylint: disable=C0103,R0902
     def setUp(self):
-        self.mox = mox.Mox()
-        self.dev = self.mox.CreateMock(Device)
-        self.bus = Bus(self.dev)
+        self.patcher1 = patch('implib2.imp_bus.Device')
+        self.patcher2 = patch('implib2.imp_bus.Command')
+        self.patcher3 = patch('implib2.imp_bus.Responce')
+
+        mock_dev = self.patcher1.start()
+        mock_cmd = self.patcher2.start()
+        mock_res = self.patcher3.start()
+
+        self.dev = mock_dev()
+        self.cmd = mock_cmd()
+        self.res = mock_res()
+
+        self.manager = MagicMock()
+        self.manager.attach_mock(self.dev, 'dev')
+        self.manager.attach_mock(self.cmd, 'cmd')
+        self.manager.attach_mock(self.res, 'res')
+
+        self.bus = Bus()
 
     def tearDown(self):
-        self.mox.UnsetStubs()
+        self.patcher1.stop()
+        self.patcher2.stop()
+        self.patcher3.stop()
 
     def test_synchronise_bus(self):
+        address  = 16777215
+        table    = 'SYSTEM_PARAMETER_TABLE'
+        param    = 'Baudrate'
         baudrate = 9600
+        value    = baudrate/100
+        ad_param = 0
+        package  = a2b('fd0b05ffffffaf0400600054')
 
-        self.dev.close_device()
+        expected_calls = [
+            call.cmd.set_parameter(address, table, param, [value], ad_param),
+            call.dev.close_device(),
 
-        # baudrate at 1200
-        self.dev.open_device(baudrate=1200)
-        pkg = a2b('fd0b05ffffffaf0400600054')
-        self.dev.write_pkg(pkg).AndReturn(12)
-        self.dev.close_device()
+            call.dev.open_device(baudrate=1200),
+            call.dev.write_pkg(package),
+            call.dev.close_device(),
 
-        # baudrate at 2400
-        self.dev.open_device(baudrate=2400)
-        pkg = a2b('fd0b05ffffffaf0400600054')
-        self.dev.write_pkg(pkg).AndReturn(12)
-        self.dev.close_device()
+            call.dev.open_device(baudrate=2400),
+            call.dev.write_pkg(package),
+            call.dev.close_device(),
 
-        # baudrate at 4800
-        self.dev.open_device(baudrate=4800)
-        pkg = a2b('fd0b05ffffffaf0400600054')
-        self.dev.write_pkg(pkg).AndReturn(12)
-        self.dev.close_device()
+            call.dev.open_device(baudrate=4800),
+            call.dev.write_pkg(package),
+            call.dev.close_device(),
 
-        # baudrate at 9600
-        self.dev.open_device(baudrate=9600)
-        pkg = a2b('fd0b05ffffffaf0400600054')
-        self.dev.write_pkg(pkg).AndReturn(12)
-        self.dev.close_device()
+            call.dev.open_device(baudrate=9600),
+            call.dev.write_pkg(package),
+            call.dev.close_device(),
 
-        # open with 'baudrate'
-        self.dev.open_device(baudrate=baudrate)
+            call.dev.open_device(baudrate=baudrate)
+        ]
 
-        self.mox.ReplayAll()
+        self.cmd.set_parameter.return_value = package
+        self.dev.write_pkg.return_value = True
+
         self.bus.synchronise_bus(baudrate=baudrate)
-        self.mox.VerifyAll()
+        eq_(self.bus.bus_synced, True)
+        eq_(self.manager.mock_calls, expected_calls)
 
     @raises(BusError)
     def test_synchronise_bus_WithWrongBaudrate(self):
@@ -82,175 +103,265 @@ class TestBus(object):
         minserial = 0
         maxserial = 1
 
-        pkg = a2b('fd06000100000f')
-        res = a2b('ab')
-        self.dev.write_pkg(pkg).AndReturn(True)
-        self.dev.read_something().AndReturn(res)
+        self.bus.probe_range = MagicMock()
+        self.bus.probe_range.side_effect = [True]
+        self.bus.probe_module_short = MagicMock()
+        self.bus.probe_module_short.side_effect = [False, True]
 
-        pkg = a2b('fd040000000027')
-        res = a2b('')
-        self.dev.write_pkg(pkg).AndReturn(True)
-        self.dev.read_bytes(1).AndReturn(res)
-
-        pkg = a2b('fd04000100008c')
-        res = a2b('ab')
-        self.dev.write_pkg(pkg).AndReturn(True)
-        self.dev.read_bytes(1).AndReturn(res)
-
-        self.mox.ReplayAll()
         eq_(self.bus.scan_bus(minserial, maxserial), (1,))
-        self.mox.VerifyAll()
+        self.bus.probe_range.assert_called_once_with(1)
+        eq_(self.bus.probe_module_short.call_args_list, [call(0), call(1)])
 
     def test_scan_bus_ButNothingFound(self):
         minserial = 0
         maxserial = 1
 
-        pkg = a2b('fd06000100000f')
-        res = a2b('')
-        self.dev.write_pkg(pkg).AndReturn(True)
-        self.dev.read_something().AndReturn(res)
+        self.bus.probe_range = MagicMock()
+        self.bus.probe_range.side_effect = [False]
 
-        self.mox.ReplayAll()
         eq_(self.bus.scan_bus(minserial, maxserial), ())
-        self.mox.VerifyAll()
+        self.bus.probe_range.assert_called_once_with(1)
 
     def test_find_single_module(self):
-        pkg = a2b('fd0800ffffff60')
-        res = a2b('000805ffffffd91a79000042')
-        self.dev.write_pkg(pkg).AndReturn(True)
-        self.dev.read_pkg().AndReturn(res)
+        serno      = 31002
+        package    = a2b('fd0800ffffff60')
+        bytes_recv = a2b('000805ffffffd91a79000042')
 
-        self.mox.ReplayAll()
-        serno = self.bus.find_single_module()
-        self.mox.VerifyAll()
-        eq_(serno, (31002,))
+        expected_calls = [
+            call.cmd.get_negative_ack(),
+            call.dev.write_pkg(package),
+            call.dev.read_pkg(),
+            call.res.get_negative_ack(bytes_recv)
+        ]
+
+        self.cmd.get_negative_ack.return_value = package
+        self.dev.read_pkg.return_value = bytes_recv
+        self.res.get_negative_ack.return_value = serno
+
+        eq_(self.bus.find_single_module(), (serno,))
+        eq_(self.manager.mock_calls, expected_calls)
 
     def test_find_single_module_FindNothing(self):
-        pkg = a2b('fd0800ffffff60')
-        self.dev.write_pkg(pkg).AndReturn(True)
-        self.dev.read_pkg().AndRaise(DeviceError)
+        serno      = False
+        package    = a2b('fd0800ffffff60')
+        bytes_recv = DeviceError('Timeout reading header!')
 
-        self.mox.ReplayAll()
-        serno = self.bus.find_single_module()
-        self.mox.VerifyAll()
-        eq_(serno, (False,))
+        expected_calls = [
+            call.cmd.get_negative_ack(),
+            call.dev.write_pkg(package),
+            call.dev.read_pkg()
+        ]
+
+        self.cmd.get_negative_ack.return_value = package
+        self.dev.write_pkg.return_value = True
+        self.dev.read_pkg.side_effect = bytes_recv
+
+        eq_(self.bus.find_single_module(), (serno,))
+        eq_(self.manager.mock_calls, expected_calls)
 
     def test_probe_module_long(self):
-        serno = 31002
-        pkg = a2b('fd02001a79009f')
-        res = a2b('0002001a7900a7')
-        self.dev.write_pkg(pkg).AndReturn(True)
-        self.dev.read_pkg().AndReturn(res)
+        serno      = 31002
+        package    = a2b('fd02001a79009f')
+        bytes_recv = a2b('0002001a7900a7')
 
-        self.mox.ReplayAll()
-        ok_(self.bus.probe_module_long(serno))
-        self.mox.VerifyAll()
+        expected_calls = [
+            call.cmd.get_long_ack(serno),
+            call.dev.write_pkg(package),
+            call.dev.read_pkg(),
+            call.res.get_long_ack(bytes_recv, serno)
+        ]
+
+        self.cmd.get_long_ack.return_value = package
+        self.dev.write_pkg.return_value = True
+        self.dev.read_pkg.return_value = bytes_recv
+        self.res.get_long_ack.return_value = True
+
+        eq_(self.bus.probe_module_long(serno), True)
+        eq_(self.manager.mock_calls, expected_calls)
 
     def test_probe_module_long_ButGetDeviceError(self):
-        serno = 31002
-        pkg = a2b('fd02001a79009f')
-        self.dev.write_pkg(pkg).AndReturn(True)
-        self.dev.read_pkg().AndRaise(DeviceError)
+        serno      = 31002
+        package    = a2b('fd02001a79009f')
+        bytes_recv = DeviceError('Timeout reading header!')
 
-        self.mox.ReplayAll()
+        expected_calls = [
+            call.cmd.get_long_ack(serno),
+            call.dev.write_pkg(package),
+            call.dev.read_pkg(),
+        ]
+
+        self.cmd.get_long_ack.return_value = package
+        self.dev.write_pkg.return_value = True
+        self.dev.read_pkg.side_effect = bytes_recv
+
         eq_(self.bus.probe_module_long(serno), (False,))
-        self.mox.VerifyAll()
+        eq_(self.manager.mock_calls, expected_calls)
 
     def test_probe_module_short(self):
-        serno = 31002
-        pkg = a2b('fd04001a790003')
-        res = a2b('24')
-        self.dev.write_pkg(pkg).AndReturn(True)
-        self.dev.read_bytes(1).AndReturn(res)
+        serno      = 31002
+        package    = a2b('fd04001a790003')
+        bytes_recv = a2b('24')
 
-        self.mox.ReplayAll()
-        ok_(self.bus.probe_module_short(serno))
-        self.mox.VerifyAll()
+        expected_calls = [
+            call.cmd.get_short_ack(serno),
+            call.dev.write_pkg(package),
+            call.dev.read_bytes(1),
+            call.res.get_short_ack(bytes_recv, serno)
+        ]
+
+        self.cmd.get_short_ack.return_value = package
+        self.dev.write_pkg.return_value = True
+        self.dev.read_bytes.return_value = bytes_recv
+        self.res.get_short_ack.return_value = True
+
+        eq_(self.bus.probe_module_short(serno), True)
+        eq_(self.manager.mock_calls, expected_calls)
 
     def test_probe_module_short_ButGetDeviceError(self):
-        serno = 31002
-        pkg = a2b('fd04001a790003')
-        self.dev.write_pkg(pkg).AndReturn(True)
-        self.dev.read_bytes(1).AndRaise(DeviceError)
+        serno      = 31002
+        package    = a2b('fd04001a790003')
+        bytes_recv = DeviceError('Timeout reading header!')
 
-        self.mox.ReplayAll()
+        expected_calls = [
+            call.cmd.get_short_ack(serno),
+            call.dev.write_pkg(package),
+            call.dev.read_bytes(1)
+        ]
+
+        self.cmd.get_short_ack.return_value = package
+        self.dev.write_pkg.return_value = True
+        self.dev.read_bytes.side_effect = bytes_recv
+
         eq_(self.bus.probe_module_short(serno), (False,))
-        self.mox.VerifyAll()
+        eq_(self.manager.mock_calls, expected_calls)
 
     def test_probe_range(self):
-        rng = 0b111100000000000000000000
-        pkg = a2b('fd06000000f0d0')
-        self.dev.write_pkg(pkg).AndReturn(True)
-        self.dev.read_something().AndReturn(a2b('ff'))
+        broadcast  = 0b111100000000000000000000
+        package    = a2b('fd06000000f0d0')
+        bytes_recv = a2b('ff')
 
-        self.mox.ReplayAll()
-        ok_(self.bus.probe_range(rng))
-        self.mox.VerifyAll()
+        expected_calls = [
+            call.cmd.get_range_ack(broadcast),
+            call.dev.write_pkg(package),
+            call.dev.read_something(),
+            call.res.get_range_ack(bytes_recv)
+        ]
+
+        self.cmd.get_range_ack.return_value = package
+        self.dev.write_pkg.return_value = True
+        self.dev.read_something.return_value = bytes_recv
+        self.res.get_range_ack.return_value = True
+
+        eq_(self.bus.probe_range(broadcast), True)
+        eq_(self.manager.mock_calls, expected_calls)
 
     def test_probe_range_AndFindNothing(self):
-        rng = 0b111100000000000000000000
-        pkg = a2b('fd06000000f0d0')
-        self.dev.write_pkg(pkg).AndReturn(True)
-        self.dev.read_something().AndReturn(str())
+        broadcast  = 0b111100000000000000000000
+        package    = a2b('fd06000000f0d0')
+        bytes_recv = str()
 
-        self.mox.ReplayAll()
-        eq_(self.bus.probe_range(rng), False)
-        self.mox.VerifyAll()
+        expected_calls = [
+            call.cmd.get_range_ack(broadcast),
+            call.dev.write_pkg(package),
+            call.dev.read_something(),
+            call.res.get_range_ack(bytes_recv)
+        ]
+
+        self.cmd.get_range_ack.return_value = package
+        self.dev.write_pkg.return_value = True
+        self.dev.read_something.return_value = bytes_recv
+        self.res.get_range_ack.return_value = False
+
+        eq_(self.bus.probe_range(broadcast), False)
+        eq_(self.manager.mock_calls, expected_calls)
 
     def test_get(self):
-        serno = 31002
-        table = 'SYSTEM_PARAMETER_TABLE'
-        param = 'SerialNum'
+        serno      = 31002
+        table      = 'SYSTEM_PARAMETER_TABLE'
+        param      = 'SerialNum'
+        package    = a2b('fd0a031a7900290100c4')
+        bytes_recv = a2b('000a051a7900181a79000042')
 
-        pkg = a2b('fd0a031a7900290100c4')
-        res = a2b('000a051a7900181a79000042')
-        self.dev.write_pkg(pkg).AndReturn(True)
-        self.dev.read_pkg().AndReturn(res)
+        expected_calls = [
+            call.cmd.get_parameter(serno, table, param),
+            call.dev.write_pkg(package),
+            call.dev.read_pkg(),
+            call.res.get_parameter(bytes_recv, table, param)
+        ]
 
-        self.mox.ReplayAll()
+        self.cmd.get_parameter.return_value = package
+        self.dev.write_pkg.return_value = True
+        self.dev.read_pkg.return_value = bytes_recv
+        self.res.get_parameter.return_value = (31002,)
+
         eq_(self.bus.get(serno, table, param), (serno,))
-        self.mox.VerifyAll()
+        eq_(self.manager.mock_calls, expected_calls)
 
     def test_set(self):
-        serno = 31002
-        table = 'PROBE_CONFIGURATION_PARAMETER_TABLE'
-        param = 'DeviceSerialNum'
-        value = [31003]
+        serno      = 31002
+        table      = 'PROBE_CONFIGURATION_PARAMETER_TABLE'
+        param      = 'DeviceSerialNum'
+        value      = [31003]
+        ad_param   = 0
+        package    = a2b('fd11071a79002b0c001b790000b0')
+        bytes_recv = a2b('0011001a790095')
 
-        pkg = a2b('fd11071a79002b0c001b790000b0')
-        res = a2b('0011001a790095')
-        self.dev.write_pkg(pkg).AndReturn(True)
-        self.dev.read_pkg().AndReturn(res)
+        expected_calls = [
+            call.cmd.set_parameter(serno, table, param, value, ad_param),
+            call.dev.write_pkg(package),
+            call.dev.read_pkg(),
+            call.res.set_parameter(bytes_recv, serno, table)
+        ]
 
-        self.mox.ReplayAll()
+        self.cmd.set_parameter.return_value = package
+        self.dev.write_pkg.return_value = True
+        self.dev.read_pkg.return_value = bytes_recv
+        self.res.set_parameter.return_value = True
+
         eq_(self.bus.set(serno, table, param, value), True)
-        self.mox.VerifyAll()
+        eq_(self.manager.mock_calls, expected_calls)
 
     def test_get_eeprom_page(self):
-        serno = 30001
-        page_nr = 0
-        page = [17, 47, 196, 78, 55, 2, 243, 231, 251, 61]
+        serno      = 30001
+        page_nr    = 0
+        page       = [17, 47, 196, 78, 55, 2, 243, 231, 251, 61]
+        package    = a2b('fd3c0331750029ff0081')
+        bytes_recv = a2b('003c0b1a790015112fc44e3702f3e7fb3dc5')
 
-        pkg = a2b('fd3c0331750029ff0081')
-        res = a2b('003c0b1a790015112fc44e3702f3e7fb3dc5')
-        self.dev.write_pkg(pkg).AndReturn(True)
-        self.dev.read_pkg().AndReturn(res)
+        expected_calls = [
+            call.cmd.get_epr_page(serno, page_nr),
+            call.dev.write_pkg(package),
+            call.dev.read_pkg(),
+            call.res.get_epr_page(bytes_recv)
+        ]
 
-        self.mox.ReplayAll()
+        self.cmd.get_epr_page.return_value = package
+        self.dev.write_pkg.return_value = True
+        self.dev.read_pkg.return_value = bytes_recv
+        self.res.get_epr_page.return_value = page
+
         eq_(self.bus.get_eeprom_page(serno, page_nr), page)
-        self.mox.VerifyAll()
+        eq_(self.manager.mock_calls, expected_calls)
 
     def test_set_eeprom_page(self):
-        serno = 30001
-        page_nr = 7
-        page = [0, 0, 0, 0, 0, 0, 0, 0, 35, 255, 255, 0]
+        serno      = 30001
+        page_nr    = 7
+        page       = [0, 0, 0, 0, 0, 0, 0, 0, 35, 255, 255, 0]
+        package    = a2b('fd3d0f317500f6ff07000000000000000023ffff007b')
+        bytes_recv = a2b('003d001a79004c')
 
-        pkg = a2b('fd3d0f317500f6ff07000000000000000023ffff007b')
-        res = a2b('003d001a79004c')
-        self.dev.write_pkg(pkg).AndReturn(True)
-        self.dev.read_pkg().AndReturn(res)
+        expected_calls = [
+            call.cmd.set_epr_page(serno, page_nr, page),
+            call.dev.write_pkg(package),
+            call.dev.read_pkg(),
+            call.res.set_epr_page(bytes_recv)
+        ]
 
-        self.mox.ReplayAll()
-        ok_(self.bus.set_eeprom_page(serno, page_nr, page))
-        self.mox.VerifyAll()
+        self.cmd.set_epr_page.return_value = package
+        self.dev.write_pkg.return_value = True
+        self.dev.read_pkg.return_value = bytes_recv
+        self.res.set_epr_page.return_value = True
+
+        eq_(self.bus.set_eeprom_page(serno, page_nr, page), True)
+        eq_(self.manager.mock_calls, expected_calls)
 
