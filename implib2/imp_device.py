@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 """
-Copyright (C) 2011, Markus Hubig <mhubig@imko.de>
+Copyright (C) 2011-2012, Markus Hubig <mhubig@imko.de>
 
 This file is part of IMPLib2 a small Python library implementing
 the IMPBUS-2 data transmission protocol.
@@ -28,14 +28,8 @@ class DeviceError(Exception):
     pass
 
 class Device(object):
-    """ Class for sending and recieving IMPBUS2 Packets via a serial line.
-
-    This class takes care of the settings for the Serial Port and provides
-    the commands write, read and one called talk() which takes care of sending
-    a packet and recieving the answer.
-    """
-    def __init__(self, ser, port):
-        self.ser = ser
+    def __init__(self, port):
+        self.ser = serial.Serial()
         self.ser.port = port
         self.timeout = 5.0
 
@@ -57,11 +51,6 @@ class Device(object):
             self.ser.close()
 
     def write_pkg(self, packet):
-        """ Writes IMPBUS2 packet to the serial line.
-
-        Packet must be a pre-build BYTE string. Returns the
-        length in Bytes of the string written. 
-        """
         bytes_send = self.ser.write(packet)
         if not bytes_send == len(packet):
             raise DeviceError("Couldn't write all bytes!")
@@ -69,11 +58,6 @@ class Device(object):
         return True
 
     def read_pkg(self):
-        """ Read IMPBUS2 packet from serial line.
-
-        It automatically calculates the length from the header
-        information and Returns the recieved packet as BYTE string.
-        """
         # read header, always 7 bytes
         header = str()
         length = 7
@@ -99,11 +83,6 @@ class Device(object):
         return header + data
 
     def read_bytes(self, length):
-        """ Tries to read <length>-bytes from the serial line.
-
-        Methode to read a given amount of byter from the serial
-        line. Returns the result as BYTE string.
-        """
         rbs = str()
         tic = time.time()
         while (time.time() - tic < self.timeout) and (len(rbs) < length):
@@ -116,11 +95,6 @@ class Device(object):
         return rbs
 
     def read_something(self):
-        """ Tries to read _one_ byte from the serial line.
-
-        This methode shold be as fast as possible. Returns
-        True or False. Useable for scanning the bus.
-        """
         byte = str()
         tic = time.time()
         while (time.time() - tic < 0.05) and (len(byte) < 1):
