@@ -85,7 +85,7 @@ class Device(object):
     def read_bytes(self, length):
         rbs = str()
         tic = time.time()
-        while (time.time() - tic < self.timeout) and (len(rbs) < length):
+        while (time.time() - tic < self.timeout/2) and (len(rbs) < length):
             if self.ser.inWaiting():
                 rbs += self.ser.read()
 
