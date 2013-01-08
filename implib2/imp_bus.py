@@ -21,6 +21,8 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 import time
 
+from binascii import b2a_hex as b2a
+
 from implib2.imp_tables import Tables
 from implib2.imp_packages import Package
 from implib2.imp_datatypes import DataTypes
@@ -49,9 +51,11 @@ class Bus(object):
         without a module. The found module serials are stored in the parameter
         list 'found'.
         """
+        print "low: {}, high: {}".format(low, high)
 
         # if we have only one serial left check them direct.
         if high == low:
+            print "probe_module_short({})".format(high)
             if self.probe_module_short(high):
                 found.append(high)
                 return True
@@ -60,6 +64,7 @@ class Bus(object):
             # calculate the broadcast address for range [low-high] and check
             # if there are some modules whithin the range, abort if not!
             broadcast = low + (high-low+1)/2
+            print "probe_range({})".format(broadcast)
             if not self.probe_range(broadcast):
                 return False
 
@@ -155,9 +160,9 @@ class Bus(object):
             self.dev.write_pkg(package)
             bytes_recv = self.dev.read_pkg()
         except DeviceError:
-            return (False,)
+            return False
 
-        return(self.res.get_negative_ack(bytes_recv),)
+        return self.res.get_negative_ack(bytes_recv)
 
     def probe_module_long(self, serno):
         """ PROBE MODULE (LONGCOMMAND)
@@ -172,7 +177,7 @@ class Bus(object):
             self.dev.write_pkg(package)
             bytes_recv = self.dev.read_pkg()
         except DeviceError:
-            return (False,)
+            return False
         return self.res.get_long_ack(bytes_recv, serno)
 
     def probe_module_short(self, serno):
@@ -190,7 +195,7 @@ class Bus(object):
             self.dev.write_pkg(package)
             bytes_recv = self.dev.read_bytes(1)
         except DeviceError:
-            return (False,)
+            return False
         return self.res.get_short_ack(bytes_recv, serno)
 
     def probe_range(self, broadcast):
@@ -205,6 +210,7 @@ class Bus(object):
         IMPBUS2, 2008-11-18".
         """
         package = self.cmd.get_range_ack(broadcast)
+        print "Package: {}".format(b2a(package))
         self.dev.write_pkg(package)
         bytes_recv = self.dev.read_something()
         return self.res.get_range_ack(bytes_recv)

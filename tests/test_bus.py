@@ -138,11 +138,10 @@ class TestBus(object):
         self.dev.read_pkg.return_value = bytes_recv
         self.res.get_negative_ack.return_value = serno
 
-        eq_(self.bus.find_single_module(), (serno,))
+        eq_(self.bus.find_single_module(), serno)
         eq_(self.manager.mock_calls, expected_calls)
 
     def test_find_single_module_FindNothing(self):
-        serno      = False
         package    = a2b('fd0800ffffff60')
         bytes_recv = DeviceError('Timeout reading header!')
 
@@ -156,7 +155,7 @@ class TestBus(object):
         self.dev.write_pkg.return_value = True
         self.dev.read_pkg.side_effect = bytes_recv
 
-        eq_(self.bus.find_single_module(), (serno,))
+        eq_(self.bus.find_single_module(), False)
         eq_(self.manager.mock_calls, expected_calls)
 
     def test_probe_module_long(self):
@@ -194,7 +193,7 @@ class TestBus(object):
         self.dev.write_pkg.return_value = True
         self.dev.read_pkg.side_effect = bytes_recv
 
-        eq_(self.bus.probe_module_long(serno), (False,))
+        eq_(self.bus.probe_module_long(serno), False)
         eq_(self.manager.mock_calls, expected_calls)
 
     def test_probe_module_short(self):
@@ -232,7 +231,7 @@ class TestBus(object):
         self.dev.write_pkg.return_value = True
         self.dev.read_bytes.side_effect = bytes_recv
 
-        eq_(self.bus.probe_module_short(serno), (False,))
+        eq_(self.bus.probe_module_short(serno), False)
         eq_(self.manager.mock_calls, expected_calls)
 
     def test_probe_range(self):
