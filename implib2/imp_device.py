@@ -31,7 +31,7 @@ class Device(object):
     def __init__(self, port):
         self.ser = serial.Serial()
         self.ser.port = port
-        self.timeout = 5.0
+        self.timeout = 0.1
 
     def open_device(self, baudrate=9600):
         self.ser.baudrate = baudrate
