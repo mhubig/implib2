@@ -29,6 +29,7 @@ from implib2.imp_datatypes import DataTypes
 from implib2.imp_commands import Command
 from implib2.imp_responces import Responce
 from implib2.imp_device import Device, DeviceError
+from implib2.imp_helper import _imprange
 
 class BusError(Exception):
     pass
@@ -43,35 +44,32 @@ class Bus(object):
         self.dev = Device(port)
         self.bus_synced = False
 
-    def _divide_and_conquer(self, low, high, found):
+    def _search(self, rng, mark, found):
         """ Recursiv divide-and-conquer algorithm to scan the IMPBUS.
 
-        Divides the given address range [max 24bit, 0 - 16777215] in equal
-        parts and uses the get_range_ack() methode to sort out the rages
-        without a module. The found module serials are stored in the parameter
-        list 'found'.
+        Divides the given range address by shifting the mark bit left and use
+        the get_range_ack() methode to sort out the rages without a module. The
+        found module serials are stored in the parameter list 'found'.
         """
-        print "low: {}, high: {}".format(low, high)
+        bcast = rng + mark
 
-        # if we have only one serial left check them direct.
-        if high == low:
-            print "probe_module_short({})".format(high)
-            if self.probe_module_short(high):
-                found.append(high)
-                return True
-            return False
+        # if the mark is shifted completly to the right we have only two
+        # serials left, so check them directly.
+        if mark == 1:
+            if self.probe_module_short(bcast):
+                found.append(bcast)
+
+            if self.probe_module_short(bcast - 1):
+                found.append(bcast - 1)
+
+            return True
         else:
-            # calculate the broadcast address for range [low-high] and check
-            # if there are some modules whithin the range, abort if not!
-            broadcast = low + (high-low+1)/2
-            print "probe_range({})".format(broadcast)
-            if not self.probe_range(broadcast):
+            if not self.probe_range(bcast):
                 return False
 
         # divide-and-conquer by splitting the range into two pices.
-        mid = (low + high)/2
-        self._divide_and_conquer(low, mid, found)
-        self._divide_and_conquer(mid+1, high, found)
+        self._search(bcast, mark >> 1, found)
+        self._search(rng,   mark >> 1, found)
         return True
 
     def synchronise_bus(self, baudrate=9600):
@@ -139,11 +137,15 @@ class Bus(object):
         number range. The values of byte 4 to byte 6 of the IMPBus2 header
         package spans a 24bit [0 - 16777215] address range.
 
-        It's basiclly just a small wrapper around _divide_and_conquer().
+        It's basiclly just a small wrapper around _search().
         """
 
         sernos  = list()
-        self._divide_and_conquer(minserial, maxserial, sernos)
+        rng, mark = _imprange(minserial, maxserial)
+        self._search(rng, mark, sernos)
+
+        sernos = [x for x in sernos if x >= minserial and x <= maxserial]
+        sernos.sort()
 
         return tuple(sernos)
 
