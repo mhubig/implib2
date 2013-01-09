@@ -138,7 +138,9 @@ class TestBus(object):
                 call(0b0000)  #  0
         ]
 
-        eq_(self.bus.scan_bus(minserial, maxserial), (1,2,3,4,5,6,7,8,9,10))
+        results = (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, )
+
+        eq_(self.bus.scan_bus(minserial, maxserial), results)
         eq_(self.bus.probe_range.call_args_list, range_list)
         eq_(self.bus.probe_module_short.call_args_list, modules_list)
 
