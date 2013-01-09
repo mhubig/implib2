@@ -99,28 +99,78 @@ class TestBus(object):
     def test_synchronise_bus_WithWrongBaudrate(self):
         self.bus.synchronise_bus(baudrate=6666)
 
-    def test_scan_bus(self):
-        minserial = 0
-        maxserial = 1
+    def test_scan_bus_AndFindEverything(self):
+        minserial = 0b0001 #  1
+        maxserial = 0b1010 # 10
 
         self.bus.probe_range = MagicMock()
-        self.bus.probe_range.side_effect = [True]
-        self.bus.probe_module_short = MagicMock()
-        self.bus.probe_module_short.side_effect = [False, True]
+        self.bus.probe_range.return_value = True
 
-        eq_(self.bus.scan_bus(minserial, maxserial), (1,))
-        self.bus.probe_range.assert_called_once_with(1)
-        eq_(self.bus.probe_module_short.call_args_list, [call(0), call(1)])
+        self.bus.probe_module_short = MagicMock()
+        self.bus.probe_module_short.return_value = True
+
+        range_list = [
+                call(0b1000), #  8
+                call(0b1100), # 12
+                call(0b1110), # 14
+                call(0b1010), # 10
+                call(0b0100), #  4
+                call(0b0110), #  6
+                call(0b0010)  #  2
+        ]
+
+        modules_list = [
+                call(0b1111), # 15
+                call(0b1110), # 14
+                call(0b1101), # 13
+                call(0b1100), # 12
+                call(0b1011), # 11
+                call(0b1010), # 10
+                call(0b1001), #  9
+                call(0b1000), #  8
+                call(0b0111), #  7
+                call(0b0110), #  6
+                call(0b0101), #  5
+                call(0b0100), #  4
+                call(0b0011), #  3
+                call(0b0010), #  2
+                call(0b0001), #  1
+                call(0b0000)  #  0
+        ]
+
+        self.bus.scan_bus(minserial, maxserial)
+        #eq_(self.bus.scan_bus(minserial, maxserial), (1,2,3,4,5,6,7,8,9,10))
+        eq_(self.bus.probe_range.call_args_list, range_list)
+        eq_(self.bus.probe_module_short.call_args_list, modules_list)
 
     def test_scan_bus_ButNothingFound(self):
-        minserial = 0
-        maxserial = 1
+        minserial = 0b0001 #  1
+        maxserial = 0b1010 # 10
 
         self.bus.probe_range = MagicMock()
-        self.bus.probe_range.side_effect = [False]
+        self.bus.probe_range.return_value = False
 
         eq_(self.bus.scan_bus(minserial, maxserial), ())
-        self.bus.probe_range.assert_called_once_with(1)
+        self.bus.probe_range.assert_called_once_with(0b1000)
+
+    def test_scan_bus_AndFindOne(self):
+        minserial = 33000
+        maxserial = 34000
+
+        self.bus.probe_range = MagicMock()
+        self.bus.probe_range.return_value = True
+
+        def side_effect(*args):
+            probes = [33000, 34000, 33216, 32999, 34001]
+            if args[0] in probes:
+                return True
+            return False
+
+        self.bus.probe_module_short = MagicMock()
+        self.bus.probe_module_short.side_effect = side_effect
+
+        eq_(self.bus.scan_bus(minserial, maxserial), (33000, 33216, 34000))
+
 
     def test_find_single_module(self):
         serno      = 31002
@@ -138,11 +188,10 @@ class TestBus(object):
         self.dev.read_pkg.return_value = bytes_recv
         self.res.get_negative_ack.return_value = serno
 
-        eq_(self.bus.find_single_module(), (serno,))
+        eq_(self.bus.find_single_module(), serno)
         eq_(self.manager.mock_calls, expected_calls)
 
     def test_find_single_module_FindNothing(self):
-        serno      = False
         package    = a2b('fd0800ffffff60')
         bytes_recv = DeviceError('Timeout reading header!')
 
@@ -156,7 +205,7 @@ class TestBus(object):
         self.dev.write_pkg.return_value = True
         self.dev.read_pkg.side_effect = bytes_recv
 
-        eq_(self.bus.find_single_module(), (serno,))
+        eq_(self.bus.find_single_module(), False)
         eq_(self.manager.mock_calls, expected_calls)
 
     def test_probe_module_long(self):
@@ -194,7 +243,7 @@ class TestBus(object):
         self.dev.write_pkg.return_value = True
         self.dev.read_pkg.side_effect = bytes_recv
 
-        eq_(self.bus.probe_module_long(serno), (False,))
+        eq_(self.bus.probe_module_long(serno), False)
         eq_(self.manager.mock_calls, expected_calls)
 
     def test_probe_module_short(self):
@@ -232,7 +281,7 @@ class TestBus(object):
         self.dev.write_pkg.return_value = True
         self.dev.read_bytes.side_effect = bytes_recv
 
-        eq_(self.bus.probe_module_short(serno), (False,))
+        eq_(self.bus.probe_module_short(serno), False)
         eq_(self.manager.mock_calls, expected_calls)
 
     def test_probe_range(self):

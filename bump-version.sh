@@ -22,6 +22,12 @@ function usage () {
     echo "usage: bump-version <version-id>"
 }
 
+function commit_hint () {
+    msg1="Now please commit with something like:"
+    msg2="git commit -a -s -m \"Bumped version number to release-$1\!\""
+    echo $msg1 $msg2
+}
+
 function update_version_init () {
     sed -e "s/^__version__ = .*$/__version__ = 'release-$1'/g" \
         implib2/__init__.py > .__init__.new
@@ -63,3 +69,5 @@ if ! update_version_sphinx $1; then
 else
     mv .conf.new docs/conf.py
 fi
+
+commit_hint $1
