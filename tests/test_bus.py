@@ -113,10 +113,18 @@ class TestBus(object):
                 call(0b1000), #  8
                 call(0b1100), # 12
                 call(0b1110), # 14
+                call(0b1111), # 15
+                call(0b1101), # 13
                 call(0b1010), # 10
+                call(0b1011), # 11
+                call(0b1001), #  9
                 call(0b0100), #  4
                 call(0b0110), #  6
-                call(0b0010)  #  2
+                call(0b0111), #  7
+                call(0b0101), #  5
+                call(0b0010), #  2
+                call(0b0011), #  3
+                call(0b0001)  #  1
         ]
 
         modules_list = [
@@ -138,8 +146,9 @@ class TestBus(object):
                 call(0b0000)  #  0
         ]
 
-        self.bus.scan_bus(minserial, maxserial)
-        #eq_(self.bus.scan_bus(minserial, maxserial), (1,2,3,4,5,6,7,8,9,10))
+        results = (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, )
+
+        eq_(self.bus.scan_bus(minserial, maxserial), results)
         eq_(self.bus.probe_range.call_args_list, range_list)
         eq_(self.bus.probe_module_short.call_args_list, modules_list)
 
@@ -153,24 +162,33 @@ class TestBus(object):
         eq_(self.bus.scan_bus(minserial, maxserial), ())
         self.bus.probe_range.assert_called_once_with(0b1000)
 
-    def test_scan_bus_AndFindOne(self):
-        minserial = 33000
-        maxserial = 34000
+    def _scan_bus(self, minserial, maxserial, probe):
+
+        def check_range(bcast):
+            serno = probe
+            while not bcast & 1:
+                bcast = bcast >> 1
+                serno = serno >> 1
+            return (bcast >> 1) == (serno >> 1)
+
+        def check_serno(serno):
+            return serno == probe
 
         self.bus.probe_range = MagicMock()
-        self.bus.probe_range.return_value = True
-
-        def side_effect(*args):
-            probes = [33000, 34000, 33216, 32999, 34001]
-            if args[0] in probes:
-                return True
-            return False
+        self.bus.probe_range.side_effect = check_range
 
         self.bus.probe_module_short = MagicMock()
-        self.bus.probe_module_short.side_effect = side_effect
+        self.bus.probe_module_short.side_effect = check_serno
 
-        eq_(self.bus.scan_bus(minserial, maxserial), (33000, 33216, 34000))
+        eq_(self.bus.scan_bus(minserial, maxserial), (probe,))
 
+    def test_scan_bus_FindOne(self):
+        minserial = 33000
+        maxserial = 34000
+        probes = range(33000, 34001)
+
+        for serno in probes:
+            yield self._scan_bus, minserial, maxserial, serno
 
     def test_find_single_module(self):
         serno      = 31002
