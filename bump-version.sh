@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Copyright (C) 2011-2012, Markus Hubig <mhubig@imko.de>
 #
