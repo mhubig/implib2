@@ -53,9 +53,7 @@ class Bus(object):
         """
         bcast = rng + mark
 
-        # if the mark is shifted completly to the right we have only two
-        # serials left, so check them directly.
-        if mark == 1:
+        if mark == 1 and self.probe_range(bcast):
             if self.probe_module_short(bcast):
                 found.append(bcast)
 
