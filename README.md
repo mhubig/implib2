@@ -26,9 +26,7 @@ Before you can use the IMPLib2 software you have to make sure that
 you have at least the following software installed.
 
 - Python 2.7 (http://python.org)
-- PySerial 2.5 (http://pyserial.sourceforge.net/)
-- PyYAML 3.10 (http://pyyaml.org/)
-- SQLAlchemie 0.7.2 (http://sqlalchemy.org/)
+- PySerial 2.6 (http://pyserial.sourceforge.net/)
 
 Installation:
 =============
