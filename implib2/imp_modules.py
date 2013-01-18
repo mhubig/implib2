@@ -76,7 +76,7 @@ class Module(object):
         # pylint: disable=W0613,R0201
         raise ModuleError("Not yet implemented!")
 
-    def get_serial(self):
+    def get_serno(self):
         table = 'SYSTEM_PARAMETER_TABLE'
         param = 'SerialNum'
         return self.bus.get(self._serno, table, param)[0]
@@ -170,6 +170,7 @@ class Module(object):
 
         old_serno = self._serno
         self._serno = serno
+        self._unlocked = False
         return self.bus.set(old_serno, table, param, [serno])
 
     def set_analog_moist(self, mvolt=500):
