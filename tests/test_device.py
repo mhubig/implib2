@@ -36,14 +36,14 @@ class TestPackage(object):
 
     def test_open_device(self):
         self.dev.open_device()
-        self.ser.open.assert_called_once_with()
-        self.ser.flush.assert_called_once_with()
+        eq_(self.ser.open.call_args_list, [call(), call()])
+        eq_(self.ser.flush.call_args_list, [call(), call()])
 
     def test_close_device_WhichIsOpen(self):
         self.ser.isOpen.return_value = True
         self.dev.close_device()
         self.ser.isOpen.assert_called_once_with()
-        self.ser.flush.assert_called_once_with()
+        eq_(self.ser.flush.call_args_list, [call(), call()])
         self.ser.close.assert_called_once_with()
 
     def test_close_device_WhichIsClosed(self):
@@ -122,15 +122,15 @@ class TestPackage(object):
         self.dev.TIMEOUT = 0.1
         self.dev.read_bytes(1)
 
-    def test_read_something(self):
+    def test_read(self):
         pkg = a2b('ff')
         self.ser.inWaiting.return_value = 1
         self.ser.read.return_value = pkg
-        eq_(self.dev.read_something(), pkg)
+        eq_(self.dev.read(), pkg)
         self.ser.inWaiting.assert_called_once_with()
         self.ser.read.assert_called_once_with()
 
     def test_read_something_ButGetNothing(self):
         self.ser.inWaiting.return_value = 0
-        eq_(self.dev.read_something(), str())
+        eq_(self.dev.read(), str())
 

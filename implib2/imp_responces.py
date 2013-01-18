@@ -39,7 +39,6 @@ class Responce(object):
         return True
 
     def get_short_ack(self, packet, serno):
-        serial = serno
         serno = struct.pack('<I', serno)[:-1]
         res_crc = self.pkg.crc.calc_crc(serno)
 

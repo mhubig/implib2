@@ -310,13 +310,13 @@ class TestBus(object):
         expected_calls = [
             call.cmd.get_range_ack(broadcast),
             call.dev.write_pkg(package),
-            call.dev.read_something(),
+            call.dev.read(),
             call.res.get_range_ack(bytes_recv)
         ]
 
         self.cmd.get_range_ack.return_value = package
         self.dev.write_pkg.return_value = True
-        self.dev.read_something.return_value = bytes_recv
+        self.dev.read.return_value = bytes_recv
         self.res.get_range_ack.return_value = True
 
         eq_(self.bus.probe_range(broadcast), True)
@@ -330,13 +330,13 @@ class TestBus(object):
         expected_calls = [
             call.cmd.get_range_ack(broadcast),
             call.dev.write_pkg(package),
-            call.dev.read_something(),
+            call.dev.read(),
             call.res.get_range_ack(bytes_recv)
         ]
 
         self.cmd.get_range_ack.return_value = package
         self.dev.write_pkg.return_value = True
-        self.dev.read_something.return_value = bytes_recv
+        self.dev.read.return_value = bytes_recv
         self.res.get_range_ack.return_value = False
 
         eq_(self.bus.probe_range(broadcast), False)
