@@ -56,6 +56,25 @@ class TestBus(object):
         self.patcher2.stop()
         self.patcher3.stop()
 
+    def test_wakeup(self):
+        address  = 16777215
+        table    = 'ACTION_PARAMETER_TABLE'
+        param    = 'EnterSleep'
+        value    = 0
+        ad_param = 0
+        package  = a2b('fd1504fffffffe05000035')
+
+        expected_calls = [
+            call.cmd.set_parameter(address, table, param, [value], ad_param),
+            call.dev.write_pkg(package),
+        ]
+
+        self.cmd.set_parameter.return_value = package
+        self.dev.write_pkg.return_value = True
+
+        eq_(self.bus.wakeup(), True)
+        eq_(self.manager.mock_calls, expected_calls)
+
     def test_synchronise_bus(self):
         address  = 16777215
         table    = 'SYSTEM_PARAMETER_TABLE'
@@ -310,13 +329,13 @@ class TestBus(object):
         expected_calls = [
             call.cmd.get_range_ack(broadcast),
             call.dev.write_pkg(package),
-            call.dev.read_something(),
+            call.dev.read(),
             call.res.get_range_ack(bytes_recv)
         ]
 
         self.cmd.get_range_ack.return_value = package
         self.dev.write_pkg.return_value = True
-        self.dev.read_something.return_value = bytes_recv
+        self.dev.read.return_value = bytes_recv
         self.res.get_range_ack.return_value = True
 
         eq_(self.bus.probe_range(broadcast), True)
@@ -330,13 +349,13 @@ class TestBus(object):
         expected_calls = [
             call.cmd.get_range_ack(broadcast),
             call.dev.write_pkg(package),
-            call.dev.read_something(),
+            call.dev.read(),
             call.res.get_range_ack(bytes_recv)
         ]
 
         self.cmd.get_range_ack.return_value = package
         self.dev.write_pkg.return_value = True
-        self.dev.read_something.return_value = bytes_recv
+        self.dev.read.return_value = bytes_recv
         self.res.get_range_ack.return_value = False
 
         eq_(self.bus.probe_range(broadcast), False)

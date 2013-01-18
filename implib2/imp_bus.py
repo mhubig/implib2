@@ -21,28 +21,32 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 import time
 
-from binascii import b2a_hex as b2a
-
-from implib2.imp_tables import Tables
-from implib2.imp_packages import Package
+from implib2.imp_device import Device, DeviceError
 from implib2.imp_datatypes import DataTypes
+from implib2.imp_packages import Package
 from implib2.imp_commands import Command
 from implib2.imp_responces import Responce
-from implib2.imp_device import Device, DeviceError
+from implib2.imp_tables import Tables
 from implib2.imp_helper import _imprange
 
 class BusError(Exception):
     pass
 
 class Bus(object):
-    def __init__(self, port='/dev/ttyUSB0'):
+    def __init__(self, port='/dev/ttyUSB0', rs485=False):
         tbl = Tables()
         pkg = Package()
         dts = DataTypes()
+
         self.cmd = Command(tbl, pkg, dts)
         self.res = Responce(tbl, pkg, dts)
         self.dev = Device(port)
         self.bus_synced = False
+
+        # timing magic, adds some extra love for rs485
+        self.trans_wait = 0.001 if not rs485 else 0.070
+        self.cycle_wait = 0.020 if not rs485 else 0.070
+        self.range_wait = 0.020 if not rs485 else 0.070
 
     def _search(self, rng, mark, found):
         """ Recursiv divide-and-conquer algorithm to scan the IMPBUS.
@@ -51,23 +55,39 @@ class Bus(object):
         the get_range_ack() methode to sort out the rages without a module. The
         found module serials are stored in the parameter list 'found'.
         """
+        probes = len(found)
         bcast = rng + mark
 
-        if mark == 1 and self.probe_range(bcast):
+        if not self.probe_range(bcast):
+            return False
+
+        if mark == 1:
             if self.probe_module_short(bcast):
                 found.append(bcast)
 
             if self.probe_module_short(bcast - 1):
                 found.append(bcast - 1)
 
-            return True
-        else:
-            if not self.probe_range(bcast):
-                return False
+            return not probes == len(found)
 
         # divide-and-conquer by splitting the range into two pices.
         self._search(bcast, mark >> 1, found)
         self._search(rng,   mark >> 1, found)
+        return True
+
+    def wakeup(self):
+        address  = 16777215
+        table    = 'ACTION_PARAMETER_TABLE'
+        param    = 'EnterSleep'
+        value    = 0
+        ad_param = 0
+
+        package = self.cmd.set_parameter(address, table,
+                param, [value], ad_param)
+
+        self.dev.write_pkg(package)
+        time.sleep(0.300)
+
         return True
 
     def synchronise_bus(self, baudrate=9600):
@@ -99,31 +119,31 @@ class Bus(object):
         # trying to set baudrate at 1200
         self.dev.open_device(baudrate=1200)
         self.dev.write_pkg(package)
-        time.sleep(0.5)
+        time.sleep(0.500)
         self.dev.close_device()
 
         # trying to set baudrate at 2400
         self.dev.open_device(baudrate=2400)
         self.dev.write_pkg(package)
-        time.sleep(0.5)
+        time.sleep(0.420)
         self.dev.close_device()
 
         # trying to set baudrate at 4800
         self.dev.open_device(baudrate=4800)
         self.dev.write_pkg(package)
-        time.sleep(0.5)
+        time.sleep(0.340)
         self.dev.close_device()
 
         # trying to set baudrate at 9600
         self.dev.open_device(baudrate=9600)
         self.dev.write_pkg(package)
-        time.sleep(0.5)
+        time.sleep(0.260)
         self.dev.close_device()
 
         # at last open the device with the setted baudrate
         self.dev.open_device(baudrate=baudrate)
         self.bus_synced = True
-        time.sleep(0.5)
+        time.sleep(1.000)
 
         return True
 
@@ -156,11 +176,15 @@ class Bus(object):
         returns a Modules Object.
         """
         package = self.cmd.get_negative_ack()
+
         try:
             self.dev.write_pkg(package)
+            time.sleep(self.trans_wait)
             bytes_recv = self.dev.read_pkg()
         except DeviceError:
             return False
+        finally:
+            time.sleep(self.cycle_wait)
 
         return self.res.get_negative_ack(bytes_recv)
 
@@ -173,11 +197,16 @@ class Bus(object):
         of a module in conjunction with the quality of the bus connection.
         """
         package = self.cmd.get_long_ack(serno)
+
         try:
             self.dev.write_pkg(package)
+            time.sleep(self.trans_wait)
             bytes_recv = self.dev.read_pkg()
         except DeviceError:
             return False
+        finally:
+            time.sleep(self.cycle_wait)
+
         return self.res.get_long_ack(bytes_recv, serno)
 
     def probe_module_short(self, serno):
@@ -191,11 +220,16 @@ class Bus(object):
         block. It can be used to test the presence of a module.
         """
         package = self.cmd.get_short_ack(serno)
+
         try:
             self.dev.write_pkg(package)
+            time.sleep(self.trans_wait)
             bytes_recv = self.dev.read_bytes(1)
         except DeviceError:
             return False
+        finally:
+            time.sleep(self.cycle_wait)
+
         return self.res.get_short_ack(bytes_recv, serno)
 
     def probe_range(self, broadcast):
@@ -210,16 +244,18 @@ class Bus(object):
         IMPBUS2, 2008-11-18".
         """
         package = self.cmd.get_range_ack(broadcast)
-        print "Package: {}".format(b2a(package))
         self.dev.write_pkg(package)
-        bytes_recv = self.dev.read_something()
+        time.sleep(self.range_wait)
+        bytes_recv = self.dev.read()
+        time.sleep(self.cycle_wait)
         return self.res.get_range_ack(bytes_recv)
 
     def get(self, serno, table, param):
         package = self.cmd.get_parameter(serno, table, param)
         self.dev.write_pkg(package)
-        time.sleep(0.05)
+        time.sleep(self.trans_wait)
         bytes_recv = self.dev.read_pkg()
+        time.sleep(self.cycle_wait)
         return self.res.get_parameter(bytes_recv, table, param)
 
     def set(self, serno, table, param, value, ad_param=0):
@@ -227,21 +263,24 @@ class Bus(object):
         package = self.cmd.set_parameter(serno, table, param,
                 value, ad_param)
         self.dev.write_pkg(package)
-        time.sleep(0.05)
+        time.sleep(self.trans_wait)
         bytes_recv = self.dev.read_pkg()
+        time.sleep(self.cycle_wait)
         return self.res.set_parameter(bytes_recv, serno, table)
 
     def get_eeprom_page(self, serno, page_nr):
         package = self.cmd.get_epr_page(serno, page_nr)
         self.dev.write_pkg(package)
-        time.sleep(0.05)
+        time.sleep(self.trans_wait)
         bytes_recv = self.dev.read_pkg()
+        time.sleep(self.cycle_wait)
         return self.res.get_epr_page(bytes_recv)
 
     def set_eeprom_page(self, serno, page_nr, page):
         package = self.cmd.set_epr_page(serno, page_nr, page)
         self.dev.write_pkg(package)
-        time.sleep(0.05)
+        time.sleep(self.trans_wait)
         bytes_recv = self.dev.read_pkg()
+        time.sleep(self.cycle_wait)
         return self.res.set_epr_page(bytes_recv)
 

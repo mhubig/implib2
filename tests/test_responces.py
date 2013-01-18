@@ -38,14 +38,16 @@ class TestResponce(object):
         pkg = a2b('0002001a7900a7')
         ok_(self.res.get_long_ack(pkg, 31002))
 
+    @raises(ResponceError)
     def test_get_long_ack_wrong_serno(self):
         pkg = a2b('0002001a7900a7')
-        eq_(self.res.get_long_ack(pkg, 31003), False)
+        self.res.get_long_ack(pkg, 31003)
 
     def test_get_short_ack_right_serno(self):
         pkg = a2b('24')
         ok_(self.res.get_short_ack(pkg, 31002))
 
+    @raises(ResponceError)
     def test_get_short_ack_wrong_serno(self):
         pkg = a2b('24')
         eq_(self.res.get_short_ack(pkg, 31003), False)

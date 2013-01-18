@@ -32,12 +32,20 @@ class Responce(object):
 
     def get_long_ack(self, packet, serno):
         responce = self.pkg.unpack(packet)
-        return serno == responce['header']['serno']
+
+        if not serno == responce['header']['serno']:
+            raise ResponceError("Wrong serno in responce!")
+
+        return True
 
     def get_short_ack(self, packet, serno):
         serno = struct.pack('<I', serno)[:-1]
         res_crc = self.pkg.crc.calc_crc(serno)
-        return res_crc == packet
+
+        if not res_crc == packet:
+            raise ResponceError("Wrong CRC for serno!")
+
+        return True
 
     def get_range_ack(self, packet):
         # pylint: disable=R0201

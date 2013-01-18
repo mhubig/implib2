@@ -38,11 +38,11 @@ class TestModule(object):
     def test_get_table(self):
         self.mod.get_table('ACTION_PARAMETER_TABLE')
 
-    def test_get_serial(self):
+    def test_get_serno(self):
         table = 'SYSTEM_PARAMETER_TABLE'
         param = 'SerialNum'
         self.bus.get.return_value = (self.serno,)
-        eq_(self.mod.get_serial(), self.serno)
+        eq_(self.mod.get_serno(), self.serno)
         self.bus.get.assert_called_once_with(self.serno, table, param)
 
     def test_get_hw_version(self):
@@ -237,6 +237,7 @@ class TestModule(object):
         ok_(self.mod.set_serno(value))
 
         eq_(self.mod._serno, value)
+        eq_(self.mod._unlocked, False)
         self.bus.set.assert_called_once_with(self.serno, table, param, [value])
 
     def test_set_serno_ModuleNotAlreadyUnlocked(self):
@@ -251,6 +252,7 @@ class TestModule(object):
         ok_(self.mod.set_serno(value))
 
         eq_(self.mod._serno, value)
+        eq_(self.mod._unlocked, False)
         self.mod._unlock.assert_called_once_with()
         self.bus.set.assert_called_once_with(self.serno, table, param, [value])
 
