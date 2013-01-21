@@ -49,14 +49,13 @@ class Bus(object):
         self.range_wait = 0.020 if not rs485 else 0.070
 
     def _search(self, range_address, range_marker, found):
-        """ .. function:: _search(range_address, range_marker, found)
-
-        Recursiv divide-and-conquer algorithm to scan the IMPBUS for modules.
+        """ Recursiv divide-and-conquer algorithm to scan the IMPBUS.
 
         :param range_address: Address range to search.
         :param range_marker: Range start marker.
         :param found: Container to store the found modules.
         :type found: list
+        :rtype: bool
 
         Divides the given range address by shifting the mark bit left and use
         the get_range_ack() methode to sort out the rages without a module. The
@@ -83,12 +82,11 @@ class Bus(object):
         return True
 
     def wakeup(self):
-        """ .. py:function:: wakeup()
-
-        This function sends out a broadcast packet which sets the 'EnterSleep'
-        parameter of the 'ACTION_PARAMETER_TABLE' to '0', which actually means
-        to disable the sleep mode of all connected modules. But the real aim of
-        this command is to wake up sleeping modules be sending 'something'.
+        """ This function sends out a broadcast packet which sets the
+        'EnterSleep' parameter of the 'ACTION_PARAMETER_TABLE' to '0', which
+        actually means to disable the sleep mode of all connected modules. But
+        the real aim of this command is to wake up sleeping modules be sending
+        'something'.
         """
         address  = 16777215 # 0xFFFFFF
         table    = 'ACTION_PARAMETER_TABLE'
@@ -105,7 +103,10 @@ class Bus(object):
         return True
 
     def synchronise_bus(self, baudrate=9600):
-        """ IMPBUS BAUDRATE SYNCHRONIZATION
+        """ IMPBus2 baudrate syncroisation.
+
+        :param baudrate: Serial baudrate to use (e.g.: 9600)
+        :type baudrate: int
 
         The communication between master and slaves can only be successful
         if they are on the same baud rate. In order to synchronise SM-modules
@@ -162,16 +163,65 @@ class Bus(object):
         return True
 
     def scan_bus(self, minserial=0, maxserial=16777215):
-        """ High level command to scan the IMPBUS for connected probes.
+        """ Command to scan the IMPBUS for connected probes.
 
-        This command is very similar to the short_probe_module() one. However,
-        it addresses not just one single serial number, but a whole serial
-        number range. The values of byte 4 to byte 6 of the IMPBus2 header
-        package spans a 24bit [0 - 16777215] address range.
+        This command can be uses to search the IMPBus2 for connected probes. It
+        uses the :func:`probe_range` command, to address a whole serial number
+        range and in the case of some 'answers' from the range it recursively
+        devides the range into equal parts and repeads this binary search
+        schema until the all probes are found.
 
-        It's basiclly just a small wrapper around _search().
+        .. admonition:: Searching the IMPBus2
+
+            The 3 bytes IMPBus2 serial numbers spans a 24bit [0 - 16777215]
+            address range, which is a whole lot of serial numbers to try. So in
+            order to quickly identify the connected probes the command
+            :func:`probe_range` can be used. In order to address more than one
+            probe a a time the header package of the :func:`probe_range`
+            command contains a range pattern where you would normaly find the
+            target probes serial number. Example: ::
+
+                range serno:   10010001 10000000 00000000 (0x918000)
+                range address: 10010001 00000000 00000000
+                range mark:    00000000 10000000 00000000
+
+            As you can see in the example above, the "range serno" from the
+            header package consists of a range address and a range marker. The
+            Range marker is alwayse the most right '1' of the "range serno"::
+
+                range min:     10010001 00000000 00000000 (0x910000)
+                range max:     10010001 11111111 11111111 (0x91ffff)
+
+            So all probes with serial numbers between min and max would answer
+            to a :func:`probe_range` command with the "range serno" 0x918000.
+            The probes would send the CRC of there serial number as reply to
+            this command. But because the probes share the same bus it is higly
+            possible the replyes are damaged when red from the serial line. So
+            the onoly thing we will know from a :func:`probe_range` command is
+            whether or not there is someone in the addressed range. So the next
+            thing to do, if we get something back from the addressed range, is
+            to devide the range into two pices by shifting the range mark
+            right::
+
+                range mark:  00000000 01000000 00000000 (new range mark)
+                lower half:  10010001 00000000 00000000 (old mark gets 0)
+                higher half: 10010001 10000000 00000000 (old mark gets 1)
+
+            So the new "range sernos" ("range address" + "range mark") are::
+
+                lower half:  10010001 01000000 00000000 (0x914000)
+                higher half: 10010001 11000000 00000000 (0x91c000)
+
+            This way we recursively divide the range until we hit the last
+            ranges, spanning only two serial numbers. Than we can query them
+            directly, using the :func:`probe_module_short` command.
+
+        :param minserial: Start of the range to search (usually: 0).
+        :type minserial: int
+        :param maxserial: End of the range to search (usually: 16777215).
+        :type maxserial: int
+        :rtype: tuple
         """
-
         sernos  = list()
         rng, mark = _imprange(minserial, maxserial)
         self._search(rng, mark, sernos)

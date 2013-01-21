@@ -23,6 +23,9 @@ __version__ = 'release-0.7.3'
 
 from .imp_bus import Bus, BusError
 from .imp_modules import Module, ModuleError
+from .imp_eeprom import EEPRom, EEPRomError
 
-__all__ = ["Bus", "BusError", "Module", "ModuleError"]
+__all__ = [ "Bus", "BusError",
+            "Module", "ModuleError",
+            "EEPRom", "EEPRomError"]
 

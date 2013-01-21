@@ -149,7 +149,7 @@ class TestModule(object):
         param = 'SupportPW'
         value = 66 + 0x8000
         self.bus.set.return_value = True
-        ok_(self.mod._unlock())
+        ok_(self.mod.unlock())
         ok_(self.mod._unlocked)
         self.bus.set.assert_called_once_with(self.serno, table, param, [value])
 
@@ -197,13 +197,13 @@ class TestModule(object):
         with patch('implib2.imp_modules.EEPRom') as mock:
             eeprom = mock()
             eeprom.length = length
-            self.mod._unlock = MagicMock()
+            self.mod.unlock = MagicMock()
             self.mod._unlocked = False
             eq_(self.mod.read_eeprom(), eeprom)
             expected = [call(x) for x in pages]
             eq_(eeprom.set_page.call_args_list, expected)
 
-        self.mod._unlock.assert_called_once_with()
+        self.mod.unlock.assert_called_once_with()
         self.bus.get.assert_called_once_with(self.serno, table, param)
 
         expected = [call(self.serno, x) for x in range(0, 32)]
@@ -247,13 +247,13 @@ class TestModule(object):
 
         self.bus.set.return_value = True
         self.mod._unlocked = False
-        self.mod._unlock = MagicMock()
+        self.mod.unlock = MagicMock()
 
         ok_(self.mod.set_serno(value))
 
         eq_(self.mod._serno, value)
         eq_(self.mod._unlocked, False)
-        self.mod._unlock.assert_called_once_with()
+        self.mod.unlock.assert_called_once_with()
         self.bus.set.assert_called_once_with(self.serno, table, param, [value])
 
     @raises(ModuleError)
@@ -379,10 +379,10 @@ class TestModule(object):
         mode = "NormalMeasure"
 
         self.mod._unlocked = False
-        self.mod._unlock = MagicMock()
+        self.mod.unlock = MagicMock()
 
         ok_(self.mod.set_event_mode(mode))
-        self.mod._unlock.assert_called_once_with()
+        self.mod.unlock.assert_called_once_with()
         self.bus.set.assert_called_once_with(self.serno, table, param, [value])
 
     @raises(ModuleError)
@@ -477,10 +477,10 @@ class TestModule(object):
             eeprom.__iter__.return_value = gen
             self.bus.set_eeprom_page.return_value = True
             self.mod._unlocked = False
-            self.mod._unlock = MagicMock()
+            self.mod.unlock = MagicMock()
             ok_(self.mod.write_eeprom(epr_file))
 
-        self.mod._unlock.assert_called_once_with()
+        self.mod.unlock.assert_called_once_with()
         expected = [call(self.serno, x[0], x[1]) for x in [head, mid, tail]]
         eq_(self.bus.set_eeprom_page.call_args_list, expected)
 
@@ -497,7 +497,7 @@ class TestModule(object):
             eeprom.__iter__.return_value = gen
             self.bus.set_eeprom_page.side_effect = [True, True, False]
             self.mod._unlocked = False
-            self.mod._unlock = MagicMock()
+            self.mod.unlock = MagicMock()
             ok_(self.mod.write_eeprom(epr_file))
 
     def test_turn_asic_on(self):
