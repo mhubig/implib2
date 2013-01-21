@@ -43,7 +43,7 @@ class Module(object):
             "SelfTest":         0x04,
             "MatTempSensor":    0x05}
 
-    def _unlock(self):
+    def unlock(self):
         # Calculate the SupportPW: calc_crc(serno) + 0x8000
         passwd = struct.pack('<I', self._serno)
         passwd = struct.unpack('<B', self.crc.calc_crc(passwd))[0] + 0x8000
@@ -134,7 +134,7 @@ class Module(object):
         length = self.bus.get(self._serno, table, param)[0]
 
         if not self._unlocked:
-            self._unlock()
+            self.unlock()
 
         pages = length / 252
         if length % 252:
@@ -166,7 +166,7 @@ class Module(object):
         param = 'SerialNum'
 
         if not self._unlocked:
-            self._unlock()
+            self.unlock()
 
         old_serno = self._serno
         self._serno = serno
@@ -222,7 +222,7 @@ class Module(object):
         value = self.event_modes[mode]
 
         if not self._unlocked:
-            self._unlock()
+            self.unlock()
 
         return self.bus.set(self._serno, table, param, [value])
 
@@ -254,7 +254,7 @@ class Module(object):
         eeprom.read(eprfile)
 
         if not self._unlocked:
-            self._unlock()
+            self.unlock()
 
         for page_nr, page in eeprom:
             if not self.bus.set_eeprom_page(self._serno, page_nr, page):
