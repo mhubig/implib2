@@ -21,8 +21,8 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 
 import struct
-from implib2.imp_crc import MaximCRC
-from implib2.imp_errors import Errors
+from .imp_crc import MaximCRC
+from .imp_errors import Errors
 
 class PackageError(Exception):
     pass

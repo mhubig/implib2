@@ -21,13 +21,13 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 import time
 
-from implib2.imp_device import Device, DeviceError
-from implib2.imp_datatypes import DataTypes
-from implib2.imp_packages import Package
-from implib2.imp_commands import Command
-from implib2.imp_responces import Responce
-from implib2.imp_tables import Tables
-from implib2.imp_helper import _imprange
+from .imp_device import Device, DeviceError
+from .imp_datatypes import DataTypes
+from .imp_packages import Package
+from .imp_commands import Command
+from .imp_responces import Responce
+from .imp_tables import Tables
+from .imp_helper import _imprange
 
 class BusError(Exception):
     pass
@@ -48,35 +48,49 @@ class Bus(object):
         self.cycle_wait = 0.020 if not rs485 else 0.070
         self.range_wait = 0.020 if not rs485 else 0.070
 
-    def _search(self, rng, mark, found):
-        """ Recursiv divide-and-conquer algorithm to scan the IMPBUS.
+    def _search(self, range_address, range_marker, found):
+        """ .. function:: _search(range_address, range_marker, found)
+
+        Recursiv divide-and-conquer algorithm to scan the IMPBUS for modules.
+
+        :param range_address: Address range to search.
+        :param range_marker: Range start marker.
+        :param found: Container to store the found modules.
+        :type found: list
 
         Divides the given range address by shifting the mark bit left and use
         the get_range_ack() methode to sort out the rages without a module. The
         found module serials are stored in the parameter list 'found'.
         """
         probes = len(found)
-        bcast = rng + mark
+        broadcast = range_address + range_marker
 
-        if not self.probe_range(bcast):
+        if not self.probe_range(broadcast):
             return False
 
-        if mark == 1:
-            if self.probe_module_short(bcast):
-                found.append(bcast)
+        if range_marker == 1:
+            if self.probe_module_short(broadcast):
+                found.append(broadcast)
 
-            if self.probe_module_short(bcast - 1):
-                found.append(bcast - 1)
+            if self.probe_module_short(broadcast - 1):
+                found.append(broadcast - 1)
 
             return not probes == len(found)
 
         # divide-and-conquer by splitting the range into two pices.
-        self._search(bcast, mark >> 1, found)
-        self._search(rng,   mark >> 1, found)
+        self._search(broadcast,     range_marker >> 1, found)
+        self._search(range_address, range_marker >> 1, found)
         return True
 
     def wakeup(self):
-        address  = 16777215
+        """ .. py:function:: wakeup()
+
+        This function sends out a broadcast packet which sets the 'EnterSleep'
+        parameter of the 'ACTION_PARAMETER_TABLE' to '0', which actually means
+        to disable the sleep mode of all connected modules. But the real aim of
+        this command is to wake up sleeping modules be sending 'something'.
+        """
+        address  = 16777215 # 0xFFFFFF
         table    = 'ACTION_PARAMETER_TABLE'
         param    = 'EnterSleep'
         value    = 0
@@ -238,7 +252,7 @@ class Bus(object):
         This command is very similar to probe_module_short(). However,
         it addresses not just one single serial number, but a serial
         number range. This value of byte 4 to byte 6 symbolizes a
-        whole range according to a broacast pattern. For more details
+        whole range according to a broadcast pattern. For more details
         refer to the doctring of get_acknowledge_for_serial_number_range()
         or the the "Developers Manual, Data Transmission Protocol for
         IMPBUS2, 2008-11-18".

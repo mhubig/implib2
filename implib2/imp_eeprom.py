@@ -21,7 +21,7 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 import re, struct
 from cStringIO import StringIO
-from implib2.imp_helper import _normalize
+from .imp_helper import _normalize
 
 class EEPRomError(Exception):
     pass

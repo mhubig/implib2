@@ -20,8 +20,8 @@ You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 import time, struct
-from implib2.imp_crc import MaximCRC
-from implib2.imp_eeprom import EEPRom
+from .imp_crc import MaximCRC
+from .imp_eeprom import EEPRom
 
 class ModuleError(Exception):
     pass
