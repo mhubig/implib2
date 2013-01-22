@@ -33,6 +33,23 @@ class BusError(Exception):
     pass
 
 class Bus(object):
+    """The Bus object represents the IMPBus2 master device. It is used to
+    initialize the Bus, set the baudrate and find the connected probes. A
+    simple example of how to initialize and search the bus would be::
+
+        >>> from implib2 import Bus, Module
+        >>> bus = Bus('/dev/ttyUSB0')
+        >>> bus.sync()
+        >>> bus.scan()
+
+    :param port: The serial port to use, defaults to `/dev/ttyUSB0`
+    :type  port: string
+
+    :param rs485: Set this to `True` in order to use the way more
+                  relaxed rs485 timings. Defaults to `False`.
+    :type  rs485: bool
+
+    """
     def __init__(self, port='/dev/ttyUSB0', rs485=False):
         tbl = Tables()
         pkg = Package()
@@ -49,18 +66,6 @@ class Bus(object):
         self.range_wait = 0.020 if not rs485 else 0.070
 
     def _search(self, range_address, range_marker, found):
-        """ Recursiv divide-and-conquer algorithm to scan the IMPBUS.
-
-        :param range_address: Address range to search.
-        :param range_marker: Range start marker.
-        :param found: Container to store the found modules.
-        :type found: list
-        :rtype: bool
-
-        Divides the given range address by shifting the mark bit left and use
-        the get_range_ack() methode to sort out the rages without a module. The
-        found module serials are stored in the parameter list 'found'.
-        """
         probes = len(found)
         broadcast = range_address + range_marker
 
@@ -82,11 +87,13 @@ class Bus(object):
         return True
 
     def wakeup(self):
-        """ This function sends out a broadcast packet which sets the
-        'EnterSleep' parameter of the 'ACTION_PARAMETER_TABLE' to '0', which
-        actually means to disable the sleep mode of all connected modules. But
-        the real aim of this command is to wake up sleeping modules be sending
-        'something'.
+        """This function sends a broadcast packet which sets the 'EnterSleep'
+        parameter of the 'ACTION_PARAMETER_TABLE' to '0', which actually means
+        to disable the sleep mode of all connected modules. But the real aim of
+        this command is to wake up sleeping modules by sending 'something'.
+
+        :rtype: :const:`True`
+
         """
         address  = 16777215 # 0xFFFFFF
         table    = 'ACTION_PARAMETER_TABLE'
@@ -102,19 +109,21 @@ class Bus(object):
 
         return True
 
-    def synchronise_bus(self, baudrate=9600):
-        """ IMPBus2 baudrate syncroisation.
-
-        :param baudrate: Serial baudrate to use (e.g.: 9600)
-        :type baudrate: int
+    def sync(self, baudrate=9600):
+        """This command synchronises the connected modules to the given
+        baudrate.
 
         The communication between master and slaves can only be successful
-        if they are on the same baud rate. In order to synchronise SM-modules
-        on a given baud rate, the bus master has to transmit the broadcast
-        command "SetSysPara" with the parameter Baudrate on all possible baud
-        rates (1200-2400-4800-9600). There must be a delay of at least 500ms
-        after each command! The SM-modules understands one of these commands
-        and will switch to the desired baud rate.
+        if they use the same baudrate. In order to synchronise the modules
+        on a given baudrate, the bus master has to transmit the broadcast
+        command "SetSysPara" with the parameter Baudrate on all possible
+        baudrates. There must be a delay of at least 500ms after each command!
+
+        :param baudrate: Baudrate to use (1200-2400-4800-9600).
+        :type  baudrate: int
+
+        :rtype: :const:`True`
+
         """
         address  = 16777215
         table    = 'SYSTEM_PARAMETER_TABLE'
@@ -162,7 +171,7 @@ class Bus(object):
 
         return True
 
-    def scan_bus(self, minserial=0, maxserial=16777215):
+    def scan(self, minserial=0, maxserial=16777215):
         """ Command to scan the IMPBUS for connected probes.
 
         This command can be uses to search the IMPBus2 for connected probes. It
@@ -217,10 +226,13 @@ class Bus(object):
             directly, using the :func:`probe_module_short` command.
 
         :param minserial: Start of the range to search (usually: 0).
-        :type minserial: int
+        :type  minserial: int
+
         :param maxserial: End of the range to search (usually: 16777215).
-        :type maxserial: int
+        :type  maxserial: int
+
         :rtype: tuple
+
         """
         sernos  = list()
         rng, mark = _imprange(minserial, maxserial)
@@ -232,12 +244,14 @@ class Bus(object):
         return tuple(sernos)
 
     def find_single_module(self):
-        """ Find a single module on the Bus
+        """ Find a single module on the Bus.
 
         This command is used to identify a single module on the bus
         which serial number is unknown. It is a broadcast command and
-        serves to get the serial number of the module. This command
-        returns a Modules Object.
+        serves to get the serial number of the module.
+
+        :rtype: :const:`False` or :const:`tuple` containing the serial number.
+
         """
         package = self.cmd.get_negative_ack()
 
@@ -253,12 +267,16 @@ class Bus(object):
         return self.res.get_negative_ack(bytes_recv)
 
     def probe_module_long(self, serno):
-        """ PROBE MODULE (LONGCOMMAND)
-
-        This command with will call up the slave which is addressed
+        """ This command with will call up the slave which is addressed
         by its serial number. In return, the slave replies with a
         complete address block. It can be used to test the presence
         of a module in conjunction with the quality of the bus connection.
+
+        :param serno: Serial number of the probe do connect.
+        :type  serno: int
+
+        :rtype: :const:`bool`
+
         """
         package = self.cmd.get_long_ack(serno)
 
@@ -274,14 +292,17 @@ class Bus(object):
         return self.res.get_long_ack(bytes_recv, serno)
 
     def probe_module_short(self, serno):
-        """ PROBE MODULE (SHORTCOMMAND)
+        """This command will call up the slave which is addressed by its serial
+        number. In return, the slave replies by just one byte: The CRC of its
+        serial number. It is the shortest possible command without the transfer
+        of any data block and the only one without a complete address block. It
+        can be used to test the presence of a module.
 
-        This command will call up the slave which is addressed
-        by its serial number. In return, the slave replies by
-        just one byte: The CRC of its serial number. It is the
-        shortest possible command without the transfer of any
-        data block and the only one without a complete address
-        block. It can be used to test the presence of a module.
+        :param serno: Serial number of the probe do connect.
+        :type  serno: int
+
+        :rtype: :const:`bool`
+
         """
         package = self.cmd.get_short_ack(serno)
 
@@ -297,15 +318,17 @@ class Bus(object):
         return self.res.get_short_ack(bytes_recv, serno)
 
     def probe_range(self, broadcast):
-        """ PROBE ADDRESSRANGE
-
-        This command is very similar to probe_module_short(). However,
+        """ This command is very similar to probe_module_short(). However,
         it addresses not just one single serial number, but a serial
-        number range. This value of byte 4 to byte 6 symbolizes a
-        whole range according to a broadcast pattern. For more details
-        refer to the doctring of get_acknowledge_for_serial_number_range()
-        or the the "Developers Manual, Data Transmission Protocol for
-        IMPBUS2, 2008-11-18".
+        number range. This is done by setting the values of byte 4 to byte 6
+        of the package header to a broadcast pattern. For more details refer to
+        the explanation at :func:`scan`.
+
+        :param serno: Broadcast address.
+        :type  serno: int
+
+        :rtype: :const:`bool`
+
         """
         package = self.cmd.get_range_ack(broadcast)
         self.dev.write_pkg(package)
@@ -315,6 +338,29 @@ class Bus(object):
         return self.res.get_range_ack(bytes_recv)
 
     def get(self, serno, table, param):
+        """This is the base command for getting some information from the
+        probes. Instead of using this command directly, it's highly recommendet
+        to use the higher level `API` commands in :class:`Module`. Nevertheless
+        here is a small example of how to use this command to request the
+        serial number of a probe::
+
+            >>> table = 'SYSTEM_PARAMETER_TABLE'
+            >>> param = 'SerialNum'
+            >>> serno = 33912
+            >>> bus.get(serno, table, param)
+
+        :param serno: Serial number of the probe to request.
+        :type  serno: int
+
+        :param table: System table containing the requested infomation.
+        :type  table: string
+
+        :param param: Parameter od row containing the requested infomation.
+        :type  param: string
+
+        :rtype: :const:`bool`
+
+        """
         package = self.cmd.get_parameter(serno, table, param)
         self.dev.write_pkg(package)
         time.sleep(self.trans_wait)
@@ -323,6 +369,34 @@ class Bus(object):
         return self.res.get_parameter(bytes_recv, table, param)
 
     def set(self, serno, table, param, value, ad_param=0):
+        """This is the base command for sending and storing some information in
+        the tables of the probes. It's the counterpart of the :func:`get`
+        command. Instead of using this command directly, it's highly
+        recommendet to use the higher level `API` commands in :class:`Module`.
+        Nevertheless here is a small example of how to use this command to
+        set the serial number of a probe::
+
+            >>> table = 'SYSTEM_PARAMETER_TABLE'
+            >>> param = 'SerialNum'
+            >>> serno = 33912
+            >>> new_serno = 33913
+            >>> bus.set(serno, table, param, [new_serno])
+
+        :param serno: Serial number of the probe to address.
+        :type  serno: int
+
+        :param table: System table to store the infomation.
+        :type  table: string
+
+        :param param: Parameter od row containing the requested infomation.
+        :type  param: string
+
+        :param value: Values to store.
+        :type  value: iterable
+
+        :rtype: :const:`bool`
+
+        """
         # pylint: disable=R0913
         package = self.cmd.set_parameter(serno, table, param,
                 value, ad_param)
@@ -333,6 +407,18 @@ class Bus(object):
         return self.res.set_parameter(bytes_recv, serno, table)
 
     def get_eeprom_page(self, serno, page_nr):
+        """This is the base command for reading a single page of EEPRom data
+        from a particular probe. It is later used within some higher `API`
+        commands within the :class:`Module`-Class. For more Information please
+        refer to the description in the :class:`EEPRom`-Class.
+
+        :param serno: Serial number of the probe to address.
+        :type  serno: int
+
+        :param page_nr: EEPRom Page to get.
+        :type  page_nr: int
+
+        """
         package = self.cmd.get_epr_page(serno, page_nr)
         self.dev.write_pkg(package)
         time.sleep(self.trans_wait)
@@ -341,6 +427,21 @@ class Bus(object):
         return self.res.get_epr_page(bytes_recv)
 
     def set_eeprom_page(self, serno, page_nr, page):
+        """This is the base command for writing a single page of EEPRom data
+        into a particular probe. It is later used within some higher `API`
+        commands within the :class:`Module`-Class. For more Information please
+        refer to the description in the :class:`EEPRom`-Class.
+
+        :param serno: Serial number of the probe to address.
+        :type  serno: int
+
+        :param page_nr: EEPRom Page to write.
+        :type  page_nr: int
+
+        :param page: EEPRom page data.
+        :type  page: bytes
+
+        """
         package = self.cmd.set_epr_page(serno, page_nr, page)
         self.dev.write_pkg(package)
         time.sleep(self.trans_wait)

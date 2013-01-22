@@ -151,7 +151,7 @@ class Module(object):
         return eeprom
 
     def set_table(self, table, data):
-        """Spezial Command to set the values of a whole table.
+        """Special command to set the values of a whole table.
 
         **Not implemented yet!**
 
