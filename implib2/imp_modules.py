@@ -28,8 +28,48 @@ class ModuleError(Exception):
     pass
 
 class Module(object):
-    """ Class representing a IMPBus2 Module. """
     # pylint: disable=R0904
+    """The Module object represents a IMPBus2 probe. It is used to provide a
+    easy to use interface for the probe specific commands. It is mostly just a
+    small wrapper around the much more general :func:`Bus.set` and
+    :func:`Bus.get` commands. To create a `Module` object you first to supply a
+    :class:`Bus` object and a serial number. As a quick example we will catch
+    up with the code from :class:`Bus` and extend that a bit, pretending we
+    have two probes with the serial numbers 10010 and 10011 connected to the
+    bus::
+
+        >>> from implib2 import Bus, Module
+        >>> bus = Bus('/dev/ttyUSB0')
+        >>> bus.sync()
+        >>> bus.scan()
+        (10010, 10011)
+
+    Now that we found our two probes lets create the :class:`Module` objects::
+
+        >>> module10 = Module(bus, 10010)
+        >>> module11 = Module(bus, 10011)
+
+    And now, lets use the :class:`Module` objects to gain some informations
+    from the probes::
+
+        >>> module10.get_hw_version()
+        1.14
+        >>> module10.get_fw_version()
+        1.140301
+        >>> module11.get_hw_version()
+        1.14
+        >>> module11.get_fw_version()
+        1.140301
+
+    :param bus: An instaciated :class:`Bus` object to use.
+    :type  bus: :class:`Bus`
+
+    :param serno: The serial number of the probe to address.
+    :type  serno: int
+
+    :rtype: Instance of :class:`Module`
+
+    """
 
     def __init__(self, bus, serno):
         self.crc = MaximCRC()
@@ -45,6 +85,7 @@ class Module(object):
             "MatTempSensor":    0x05}
 
     def unlock(self):
+        """Command to unlock the write protected rows on the """
         # Calculate the SupportPW: calc_crc(serno) + 0x8000
         passwd = struct.pack('<I', self._serno)
         passwd = struct.unpack('<B', self.crc.calc_crc(passwd))[0] + 0x8000
