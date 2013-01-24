@@ -122,6 +122,8 @@ class Bus(object):
         :param baudrate: Baudrate to use (1200-2400-4800-9600).
         :type  baudrate: int
 
+        :raises BusError: If baudrate is unknown.
+
         :rtype: :const:`True`
 
         """
@@ -180,7 +182,7 @@ class Bus(object):
         devides the range into equal parts and repeads this binary search
         schema until the all probes are found.
 
-        .. admonition:: Searching the IMPBus2
+        .. note:: Searching the IMPBus2
 
             The 3 bytes IMPBus2 serial numbers spans a 24bit [0 - 16777215]
             address range, which is a whole lot of serial numbers to try. So in

@@ -67,10 +67,9 @@ class Module(object):
     :param serno: The serial number of the probe to address.
     :type  serno: int
 
-    :rtype: Instance of :class:`Module`
+    :rtype: :class:`Module`
 
     """
-
     def __init__(self, bus, serno):
         self.crc = MaximCRC()
         self.bus = bus
@@ -113,7 +112,7 @@ class Module(object):
     def get_table(self, table):
         """Spezial Command to get a whole table.
 
-        **Not yet implemented!**
+        .. warning:: **Not yet implemented!**
 
         Basicly you get a whole table, witch means the data-part of the
         recieved package consists of the concatinated table values. If
@@ -127,6 +126,11 @@ class Module(object):
         You can use the parameters GetData, DataSize and TableSize to gain
         information about the spezific table.
 
+        :param table: Table to retrieve from probe.
+        :type  table: string
+
+        :rtype: json
+
         """
         # pylint: disable=W0613,R0201
         raise ModuleError("Not yet implemented!")
@@ -135,6 +139,7 @@ class Module(object):
         """Command to retrieve the serial number of the probe.
 
         :rtype: int
+
         """
         table = 'SYSTEM_PARAMETER_TABLE'
         param = 'SerialNum'
@@ -144,6 +149,7 @@ class Module(object):
         """Command to retrieve the hardware version number of the probe.
 
         :rtype: float
+
         """
         table = 'SYSTEM_PARAMETER_TABLE'
         param = 'HWVersion'
@@ -153,36 +159,103 @@ class Module(object):
         """Command to retrieve the firmware version number of the probe.
 
         :rtype: float
+
         """
         table = 'SYSTEM_PARAMETER_TABLE'
         param = 'FWVersion'
         return '{0:.6f}'.format(self.bus.get(self._serno, table, param)[0])
 
-    def get_moist_max_value(self):
-        """Command to retrieve the firmware version number of the probe.
+    def get_analog_output_mode(self):
+        """Command to retrieve the analog output mode.
 
-        :rtype: float
+        This setting option, twogether with :func:`get_moist_min_value` and
+        :func:`get_analog_output_mode` can be used to determine the mean of
+        the analog moisture/temperatur output signal. For more information
+        look at :func:`set_analog_output_mode`.
+
+        .. note::
+            | AnalogOutputMode 0: => 0.0V - 1.0V
+            | AnalogOutputMode 1: => 0.2V - 1.0V
+
+        Analog output mode 1 is mainly intended to be used with a
+        U/I-Converter.
+
+        :rtype: int
+
+        """
+        table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
+        param = 'AnalogOutputMode'
+        return self.bus.get(self._serno, table, param)[0]
+
+    def get_moist_max_value(self):
+        """Command to retrieve the maximum moisture setting.
+
+        This setting option, twogether with :func:`get_moist_min_value` and
+        :func:`get_analog_output_mode` can be used to determine the mean of
+        the analog moisture output signal. For more information look at
+        :func:`set_analog_output_mode`.
+
+        :rtype: int
+
         """
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
         param = 'MoistMaxValue'
         return self.bus.get(self._serno, table, param)[0]
 
     def get_moist_min_value(self):
+        """Command to retrieve the minimum moisture setting.
+
+        This setting option, twogether with :func:`get_moist_max_value` and
+        :func:`get_analog_output_mode` can be used to determine the mean of
+        the analog moisture output signal. For more information look at
+        :func:`set_analog_output_mode`.
+
+        :rtype: int
+
+        """
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
         param = 'MoistMinValue'
         return self.bus.get(self._serno, table, param)[0]
 
     def get_temp_max_value(self):
+        """Command to retrieve the maximum moisture setting.
+
+        This setting option, twogether with :func:`get_temp_min_value` and
+        :func:`get_analog_output_mode` can be used to determine the mean of
+        the analog temperature output signal. For more information look at
+        :func:`set_analog_output_mode`.
+
+        :rtype: int
+
+        """
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
         param = 'TempMaxValue'
         return self.bus.get(self._serno, table, param)[0]
 
     def get_temp_min_value(self):
+        """Command to retrieve the minimum moisture setting.
+
+        This setting option, twogether with :func:`get_temp_max_value` and
+        :func:`get_analog_output_mode` can be used to determine the mean of
+        the analog temperature output signal. For more information look at
+        :func:`set_analog_output_mode`.
+
+        :rtype: int
+
+        """
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
         param = 'TempMinValue'
         return self.bus.get(self._serno, table, param)[0]
 
     def get_event_mode(self):
+        """Command to retrieve the event mode parameter of the probe. For more
+        informations look at :func:`set_event_mode`.
+
+        :raises : **ModuleError** - If event mode is not known.
+
+        :rtype: string
+
+        """
         table = 'ACTION_PARAMETER_TABLE'
         param = 'Event'
         modes = {v:k for k, v in self.event_modes.items()}
@@ -195,6 +268,14 @@ class Module(object):
         return mode
 
     def get_measure_mode(self):
+        """Command to retrieve the measure mode parameter of the probe. For
+        more informations look at :func:`set_measure_mode`.
+
+        :raises: **ModuleError** - If measure mode is not known.
+
+        :rtype: string
+
+        """
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
         param = 'MeasMode'
         modes = {v:k for k, v in self.measure_modes.items()}
@@ -207,6 +288,14 @@ class Module(object):
         return mode
 
     def read_eeprom(self):
+        """Command to read the EEPROM image from the probe.
+
+        :rtype: :class:`EEPRom`
+
+        :raises: **ModuleError** - If length of the constructed :class:`EEPRom`
+            does not match the length value from the probe table.
+
+        """
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
         param = 'EPRByteLen'
         length = self.bus.get(self._serno, table, param)[0]
@@ -221,37 +310,65 @@ class Module(object):
         eeprom = EEPRom()
         for page in range(0, pages):
             eeprom.set_page(self.bus.get_epr_page(self._serno, page))
-            time.sleep(0.2)
 
         if not eeprom.length == length:
-            raise ModuleError("EEPRom length don't match!")
+            raise ModuleError("EEPROM length don't match!")
+
         return eeprom
 
     def set_table(self, table, data):
-        """Special command to set the values of a whole table.
+        """Special command to set the values of a hole table.
 
-        **Not implemented yet!**
+        .. warning:: **Not yet implemented!**
 
         You can use the parameters GetData, DataSize and TableSize to gain
         information about the spezific table.
+
+        :param table: Name of the table to write.
+        :type  table: string
+
+        :param data: Table data to write.
+        :type  data: json
+
+        :rtype: bool
         """
         # pylint: disable=W0613,R0201
         raise ModuleError("Not yet implemented!")
 
     def set_serno(self, serno):
-        """Set the serialnumber of the module."""
+        """Command to change the serial number of the probe.
+
+        :param serno: Serial number so use.
+        :type  serno: int
+
+        :rtype: bool
+
+        """
         table = 'SYSTEM_PARAMETER_TABLE'
         param = 'SerialNum'
 
         if not self._unlocked:
             self.unlock()
 
-        old_serno = self._serno
-        self._serno = serno
-        self._unlocked = False
-        return self.bus.set(old_serno, table, param, [serno])
+        if self.bus.set(self._serno, table, param, [serno]):
+            self._serno = serno
+            self._unlocked = False
+
+        return True
 
     def set_analog_moist(self, mvolt=500):
+        """Command so set the analog output of the moisture channel to a fixed
+        value. This command can be used for calibration purposes.
+
+        :param mvolt: Output current in millivolts (0-1000).
+        :type  mbolt: int
+
+        :rtype: bool
+
+        :raises ModuleError: If `mvolt` parameter is out of range.
+        :raises ModuleError: If EventMode can not be set to AnalogOut.
+
+        """
         if not mvolt in range(0, 1001):
             raise ModuleError("Value out of range!")
 
@@ -262,12 +379,24 @@ class Module(object):
         max_value = self.get_moist_max_value()
         value = (max_value - min_value) / 1000.0 * mvolt + min_value
 
-        if not self.set_event_mode("AnalogOut"): 
+        if not self.set_event_mode("AnalogOut"):
             raise ModuleError("Could not set event mode!")
 
         return self.bus.set(self._serno, table, param, [value])
 
     def set_analog_temp(self, mvolt=500):
+        """Command so set the analog output of the temperatur channel to a
+        fixed value. This command can be used for calibration purposes.
+
+        :param mvolt: Output current in millivolts (0-1000).
+        :type  mbolt: int
+
+        :rtype: bool
+
+        :raises ModuleError: If `mvolt` parameter is out of range.
+        :raises ModuleError: If EventMode can not be set to AnalogOut.
+
+        """
         if not mvolt in range(0, 1001):
             raise ModuleError('Value out of range!')
 
@@ -284,12 +413,24 @@ class Module(object):
         return self.bus.set(self._serno, table, param, [value])
 
     def set_event_mode(self, mode="NormalMeasure"):
-        """Command to set the Event Mode of the probe.
+        """Command to set the the EventMode of the probe. This parameter
+        can be set to six different values:
 
-        EventMode is used to control the slave to fulfil
-        the different events.They are NormalMeasure, TDRScan,
-        AnalogOut, ASIC_TC (Temperature Compensation),
-        Self Test and MatTempSensor.
+        .. note::
+            0. *NormalMeasure:* Normal measurement Mode.
+            1. *TDRScan:* TDRScan Mode.
+            2. *AnalogOut:* Used for setting the analog out to a fixed value.
+            3. *ASIC_TC:* Mode to perform a ASIC temperature compensation.
+            4. *Self Test:* Mode to perform varios self tests.
+            5. *MatTempSensor:* Mode to do a material temperatur compensation.
+
+        :param mode: The EventMode to use.
+        :type  mode: string
+
+        :rtype: bool
+
+        :raises: **ModuleError** - If mode is not known.
+
         """
         table = 'ACTION_PARAMETER_TABLE'
         param = 'Event'
@@ -305,6 +446,39 @@ class Module(object):
         return self.bus.set(self._serno, table, param, [value])
 
     def set_measure_mode(self, mode='ModeA'):
+        """Command to set the measure mode of the probe. There a 3 different
+        measure modes.
+
+        .. note::
+            **ModeA**
+                On Request, the probe checks the parameter StartMeasure in
+                Measure Parameter Table. If the parameter is 0, the probe does
+                nothing. If the parameter is 1, the probe does the measurement
+                and then sets the parameter to 0 again. Setting the parameter
+                to 1 must be carried out through RS485 or IMPBus by an external
+                command.
+
+            **ModeB**
+                Single, the probe measures once after it is powered on. This
+                mode is normally used in the case that the probe is connected
+                to a data logger which samples the analog output after being
+                powered on.
+
+            **ModeC**
+                Cyclic, the probe measures cyclically. That means, the probe
+                measures once and sleeps the time SleepTimeInModeC, then it
+                wakes up automatically and repeats the process. This mode is
+                normally aused in casees when the probe is always powered and
+                measures periodically.
+
+        :param mode: Mode to use.
+        :type  mode: string
+
+        :rtype: bool
+
+        :raises: **ModuleError** - If mode is unknown.
+
+        """
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
         param = 'MeasMode'
 
