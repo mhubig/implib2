@@ -76,6 +76,7 @@ class Module(object):
         self.bus = bus
         self._unlocked = False
         self._serno = serno
+
         self.event_modes = {
             "NormalMeasure":    0x00,
             "TRDScan":          0x01,
@@ -84,8 +85,19 @@ class Module(object):
             "SelfTest":         0x04,
             "MatTempSensor":    0x05}
 
+        self.measure_modes = {
+            "ModeA":            0x00,
+            "ModeB":            0x01,
+            "ModeC":            0x02}
+
     def unlock(self):
-        """Command to unlock the write protected rows on the """
+        """Command to unlock the write protected rows in the probes tables.
+        The unlock key is the `CRC + 0x8000` of serial number of the probe.
+        Be aware that the key changes as the serial number is changed.
+
+        :rtype: bool
+
+        """
         # Calculate the SupportPW: calc_crc(serno) + 0x8000
         passwd = struct.pack('<I', self._serno)
         passwd = struct.unpack('<B', self.crc.calc_crc(passwd))[0] + 0x8000
@@ -101,7 +113,7 @@ class Module(object):
     def get_table(self, table):
         """Spezial Command to get a whole table.
 
-        **Not implemented yet!**
+        **Not yet implemented!**
 
         Basicly you get a whole table, witch means the data-part of the
         recieved package consists of the concatinated table values. If
@@ -114,26 +126,43 @@ class Module(object):
 
         You can use the parameters GetData, DataSize and TableSize to gain
         information about the spezific table.
+
         """
         # pylint: disable=W0613,R0201
         raise ModuleError("Not yet implemented!")
 
     def get_serno(self):
+        """Command to retrieve the serial number of the probe.
+
+        :rtype: int
+        """
         table = 'SYSTEM_PARAMETER_TABLE'
         param = 'SerialNum'
         return self.bus.get(self._serno, table, param)[0]
 
     def get_hw_version(self):
+        """Command to retrieve the hardware version number of the probe.
+
+        :rtype: float
+        """
         table = 'SYSTEM_PARAMETER_TABLE'
         param = 'HWVersion'
         return '{0:.2f}'.format(self.bus.get(self._serno, table, param)[0])
 
     def get_fw_version(self):
+        """Command to retrieve the firmware version number of the probe.
+
+        :rtype: float
+        """
         table = 'SYSTEM_PARAMETER_TABLE'
         param = 'FWVersion'
         return '{0:.6f}'.format(self.bus.get(self._serno, table, param)[0])
 
     def get_moist_max_value(self):
+        """Command to retrieve the firmware version number of the probe.
+
+        :rtype: float
+        """
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
         param = 'MoistMaxValue'
         return self.bus.get(self._serno, table, param)[0]
@@ -168,7 +197,14 @@ class Module(object):
     def get_measure_mode(self):
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
         param = 'MeasMode'
-        return self.bus.get(self._serno, table, param)
+        modes = {v:k for k, v in self.measure_modes.items()}
+
+        try:
+            mode = modes[self.bus.get(self._serno, table, param)[0]]
+        except KeyError:
+            raise ModuleError("Unknown measure mode!")
+
+        return mode
 
     def read_eeprom(self):
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
@@ -248,7 +284,7 @@ class Module(object):
         return self.bus.set(self._serno, table, param, [value])
 
     def set_event_mode(self, mode="NormalMeasure"):
-        """" Command to set the Event Mode of the probe.
+        """Command to set the Event Mode of the probe.
 
         EventMode is used to control the slave to fulfil
         the different events.They are NormalMeasure, TDRScan,
@@ -259,7 +295,7 @@ class Module(object):
         param = 'Event'
 
         if not mode in self.event_modes:
-            raise ModuleError("Invalid EventMode!")
+            raise ModuleError("Invalid event mode!")
 
         value = self.event_modes[mode]
 
@@ -268,14 +304,19 @@ class Module(object):
 
         return self.bus.set(self._serno, table, param, [value])
 
-    def set_measure_mode(self, mode=0):
-        if not self.get_event_mode() == "NormalMeasure":
-            self.set_event_mode("NormalMeasure")
-
+    def set_measure_mode(self, mode='ModeA'):
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
         param = 'MeasMode'
 
-        return self.bus.set(self._serno, table, param, [mode])
+        if not mode in self.measure_modes:
+            raise ModuleError("Invalid measure mode!")
+
+        value = self.measure_modes[mode]
+
+        if not self.get_event_mode() == "NormalMeasure":
+            self.set_event_mode("NormalMeasure")
+
+        return self.bus.set(self._serno, table, param, [value])
 
     def set_default_measure_mode(self, mode=2):
         if not self.get_event_mode() == "NormalMeasure":
@@ -306,7 +347,7 @@ class Module(object):
         return True
 
     def turn_asic_on(self):
-        """" Command to start the selftest of the probe.
+        """Command to start the selftest of the probe.
 
         SelfTest is used for primary for internal test by IMKO.
         In this context, it will be used to 'ON' the ASIC.
@@ -321,7 +362,7 @@ class Module(object):
         return self.bus.set(self._serno, table, param, value)
 
     def turn_asic_off(self):
-        """" Command to start the selftest of the probe.
+        """Command to start the selftest of the probe.
 
         SelfTest is used for primary for internal test by IMKO.
         In this context, it will be used to 'OFF' the ASIC.
@@ -344,7 +385,7 @@ class Module(object):
         if not self.get_measure_mode() == 0:
             assert self.set_measure_mode(0)
 
-        # set NormalMeasure
+        # Set Event mode to 'NormalMeasure'
         if not self.get_event_mode() == "NormalMeasure":
             assert self.set_event_mode("NormalMeasure")
 
