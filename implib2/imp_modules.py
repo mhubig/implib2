@@ -318,15 +318,6 @@ class Module(object):
 
         return self.bus.set(self._serno, table, param, [value])
 
-    def set_default_measure_mode(self, mode=2):
-        if not self.get_event_mode() == "NormalMeasure":
-            self.set_event_mode("NormalMeasure")
-
-        table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
-        param = 'DefaultMeasMode'
-
-        return self.bus.set(self._serno, table, param, [mode])
-
     def set_average_mode(self, mode=0):
         table = 'APPLICATION_PARAMETER_TABLE'
         param = 'AverageMode'
