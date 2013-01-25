@@ -3,15 +3,15 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-IMPLib2 documentation!
-======================
+IMPBUS-2 Library
+================
 
 This library implements the IMPBus2 protocol which is used by the `IMKO GmbH`_
 to access the TRIME PIKO and TRIME SONO moisture measurements probes. It is
 tested for Python 2.7 running on Linux, Windows and MacOSX.
 
-Lizence:
---------
+Lizence
+-------
 
 Copyright (C) 2011-2013, Markus Hubig <mhubig@imko.de>
 
@@ -31,8 +31,8 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 
-Requirements:
--------------
+Requirements
+------------
 
 Before you can use the IMPLib2 software you have to make sure that
 you have at least the following software installed.
@@ -40,8 +40,8 @@ you have at least the following software installed.
 - Python 2.7 (http://python.org)
 - PySerial 2.6 (http://pyserial.sourceforge.net)
 
-Installation:
--------------
+Installation
+------------
 
 Just install the stable branch with pip using git::
 
@@ -53,8 +53,8 @@ Of if you brave enough::
 
 Depending on your system you may have to prefix these commands with ``sudo``!
 
-Quick Start Manual:
--------------------
+Quick Start Manual
+------------------
 
 This small quick start manual is intended to give you a basic example of how to
 use this library. In order to start playing with it you have to connect at
@@ -142,4 +142,4 @@ Indices and tables
 .. Place the link targets here:
 .. _IMKO GmbH: http://imko.de
 .. _Trime Pico: http://imko.de/de/produkte/bodenfeuchte/bodenfeuchtesonden/trimepico64
-.. _SM-USB: 
+.. _SM-USB: http://imko.de
