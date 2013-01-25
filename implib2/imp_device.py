@@ -24,6 +24,8 @@ import time
 import serial
 from struct import unpack
 
+from binascii import b2a_hex as b2a
+
 class DeviceError(Exception):
     pass
 
@@ -34,7 +36,8 @@ class Device(object):
         self.open_device()
 
     def _timeout(self, length):
-        baudrate = self.ser.baudrate / 100
+        if length == 0: return 0
+        baudrate = self.ser.baudrate
         return 600.0 / baudrate * length
 
     def open_device(self, baudrate=9600):
