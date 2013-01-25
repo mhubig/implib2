@@ -34,7 +34,7 @@
     "MoistAnalogAdjust": {"No":   9, "Type":   0, "Status": "WR", "Length": 1},
     "TempAnalogAdjust":  {"No":  10, "Type":   0, "Status": "WR", "Length": 1},
     "TMsMode":           {"No":  11, "Type":   2, "Status": "WR", "Length": 2},
-    "EPRByteLen":        {"No":  12, "Type":   2, "Status": "OR", "Length": 2},
+    "EPRByteLen":        {"No":  12, "Type":   2, "Status": "OR", "Length": 2}
   },
 
   "DEVICE_CALIBRATION_PARAMETER_TABLE": {

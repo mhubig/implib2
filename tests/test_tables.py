@@ -51,7 +51,7 @@ class TestTables(object):
 
     @raises(TablesError)
     def test_lookup_unknown_param(self):
-        self.t.lookup('APPLICATION_PARAMETER_TABLE', 'UNKNOWN')
+        self.t.lookup('DEVICE_CALIBRATION_PARAMETER_TABLE', 'UNKNOWN')
 
     def _lookup_value(self, table, param):
         row = self.j[table][param]

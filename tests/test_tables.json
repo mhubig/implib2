@@ -34,8 +34,7 @@
     "MoistAnalogAdjust": {"No":   9, "Type":   0, "Status": "WR", "Length": 1},
     "TempAnalogAdjust":  {"No":  10, "Type":   0, "Status": "WR", "Length": 1},
     "TMsMode":           {"No":  11, "Type":   2, "Status": "WR", "Length": 2},
-    "EPRByteLen":        {"No":  12, "Type":   2, "Status": "OR", "Length": 2},
-    "DefaultMeasMode":   {"No":  19, "Type":   0, "Status": "WR", "Length": 1}
+    "EPRByteLen":        {"No":  12, "Type":   2, "Status": "OR", "Length": 2}
   },
 
   "DEVICE_CALIBRATION_PARAMETER_TABLE": {
@@ -366,11 +365,5 @@
     "Point098":  {"No":  99, "Type": 134, "Status": "WR", "Length": 8},
     "Point099":  {"No": 100, "Type": 134, "Status": "WR", "Length": 8},
     "Point100":  {"No": 101, "Type": 134, "Status": "WR", "Length": 8}
-  },
-
-  "APPLICATION_PARAMETER_TABLE": {
-    "Table":       {"Get": 40, "Set": 41},
-    "AverageMode": {"No":   1, "Type":   0, "Status": "WR", "Length": 1}
   }
-
 }
