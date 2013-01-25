@@ -365,11 +365,5 @@
     "Point098":  {"No":  99, "Type": 134, "Status": "WR", "Length": 8},
     "Point099":  {"No": 100, "Type": 134, "Status": "WR", "Length": 8},
     "Point100":  {"No": 101, "Type": 134, "Status": "WR", "Length": 8}
-  },
-
-  "APPLICATION_PARAMETER_TABLE": {
-    "Table":       {"Get": 40, "Set": 41},
-    "AverageMode": {"No":   1, "Type":   0, "Status": "WR", "Length": 1}
   }
-
 }

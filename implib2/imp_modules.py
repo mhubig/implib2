@@ -492,11 +492,6 @@ class Module(object):
 
         return self.bus.set(self._serno, table, param, [value])
 
-    def set_average_mode(self, mode=0):
-        table = 'APPLICATION_PARAMETER_TABLE'
-        param = 'AverageMode'
-        return self.bus.set(self._serno, table, param, [mode])
-
     def write_eeprom(self, eprfile):
         eeprom = EEPRom()
         eeprom.read(eprfile)
