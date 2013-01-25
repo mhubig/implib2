@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to IMPLib2's documentation!
-===================================
+IMPLib2 documentation!
+======================
 
 This library implements the IMPBus2 protocol which is used by the `IMKO GmbH`_
 to access the TRIME PIKO and TRIME SONO moisture measurements probes. It is
