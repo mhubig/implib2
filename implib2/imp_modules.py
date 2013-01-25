@@ -463,6 +463,36 @@ class Module(object):
         param = 'AnalogOutputMode'
         return self.bus.get(self._serno, table, param)[0]
 
+    def _set_analog_output_mode(self, mode=0):
+        """Command to set the analog output mode.
+
+        This setting option, twogether with :func:`get_moist_min_value` and
+        :func:`get_analog_output_mode` can be used to determine the mean of
+        the analog moisture/temperatur output signal. For more information
+        look at :func:`set_analog_output_mode`.
+
+        .. note::
+            | AnalogOutputMode 0: => 0.0V - 1.0V
+            | AnalogOutputMode 1: => 0.2V - 1.0V
+
+        Analog output mode 1 is mainly intended to be used with a
+        U/I-Converter.
+
+        :param:
+
+        :rtype: int
+
+        """
+        table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
+        param = 'AnalogOutputMode'
+
+        if not mode in (0, 1):
+            raise ModuleError("Wrong AnalogOutputMode!")
+
+        value = mode
+
+        return self.bus.set(self._serno, table, param, [value])
+
     def _get_moist_max_value(self):
         """Command to retrieve the maximum moisture setting.
 

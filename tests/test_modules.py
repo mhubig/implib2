@@ -256,6 +256,33 @@ class TestModule(object):
         self.mod.unlock.assert_called_once_with()
         self.bus.set.assert_called_once_with(self.serno, table, param, [value])
 
+    def test__get_analog_output_mode(self):
+        table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
+        param = 'AnalogOutputMode'
+        mode  = 0
+
+        self.bus.get.return_value = (mode,)
+
+        eq_(self.mod._get_analog_output_mode(), mode)
+        self.bus.get.assert_called_once_with(self.serno, table, param)
+
+    def test__set_analog_output_mode(self):
+        table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
+        param = 'AnalogOutputMode'
+        value = 0
+
+        self.bus.set.return_value = True
+
+        eq_(self.mod._set_analog_output_mode(value), True)
+        self.bus.set.assert_called_once_with(self.serno, table, param, [value])
+
+    @raises(ModuleError)
+    def test__set_analog_output_mode_WithWrongMode(self):
+        table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
+        param = 'AnalogOutputMode'
+        value = 3
+        self.mod._set_analog_output_mode(value)
+
     @raises(ModuleError)
     def test_set_analog_moist_ValueToLow(self):
         self.mod._set_analog_moist(-1)
