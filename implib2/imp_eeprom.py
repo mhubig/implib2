@@ -27,6 +27,10 @@ class EEPRomError(Exception):
     pass
 
 class EEPRom(object):
+    """This Class represents a simple data structure to hold an EEPRom
+    image. It can be used with :func:`Module.read_eeprom` and
+    :func:`Module.write_eeprom` to update the EEPROM image of the probe.
+    """
     def __init__(self):
         self._filename = None
         self._header = dict()
@@ -44,6 +48,14 @@ class EEPRom(object):
         self._data = StringIO()
 
     def read(self, filename):
+        """This command is to read an EEPROM image from an EPR file.
+
+        :param filename: The filename of the EPR image.
+        :type  filename: str
+
+        :rtype: bool
+
+        """
         self._reload()
         self._filename = _normalize(filename)
         regex = re.compile('^; (.*?) = (.*?)$')
@@ -68,6 +80,14 @@ class EEPRom(object):
         return True
 
     def write(self, filename):
+        """This command is to save the EEPROM image to an EPR file.
+
+        :param filename: The filename to store the EPR image.
+        :type  filename: str
+
+        :rtype: bool
+
+        """
         self._filename = _normalize(filename)
         stuff = '; ' + '\n; '.join(self._stuff)
         header = '; ' + '\n; '.join([ '%s = %s' % (x, self._header[x])
@@ -83,16 +103,33 @@ class EEPRom(object):
         return True
 
     def get_page(self, page):
+        """This command returns the requested EEPROM image page.
+
+        :param page: Number of page to get.
+        :type  page: int
+
+        :rtype: byte
+
+        """
         self._data.seek(page * 252)
         return self._data.read(252)
 
     def set_page(self, page):
+        """This command **appends** the given page to the EEPROM image.
+
+        :param page: The page to append.
+        :type  page: byte
+
+        :rtype: bool
+        """
         self._data.seek(0, 2)
         self._data.write(page)
         return True
 
     @property
     def pages(self):
+        """Pages proberty, returns the number of pages stored.
+        """
         pages = self.length / 252
         if self.length % 252:
             pages += 1
@@ -100,6 +137,8 @@ class EEPRom(object):
 
     @property
     def length(self):
+        """Length proberty, returns the length of the image in bytes.
+        """
         self._data.seek(0, 2)
         return self._data.tell()
 
