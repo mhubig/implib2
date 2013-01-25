@@ -75,7 +75,7 @@ class TestBus(object):
         eq_(self.bus.wakeup(), True)
         eq_(self.manager.mock_calls, expected_calls)
 
-    def test_synchronise_bus(self):
+    def test_sync(self):
         address  = 16777215
         table    = 'SYSTEM_PARAMETER_TABLE'
         param    = 'Baudrate'
@@ -110,15 +110,15 @@ class TestBus(object):
         self.cmd.set_parameter.return_value = package
         self.dev.write_pkg.return_value = True
 
-        self.bus.synchronise_bus(baudrate=baudrate)
+        self.bus.sync(baudrate=baudrate)
         eq_(self.bus.bus_synced, True)
         eq_(self.manager.mock_calls, expected_calls)
 
     @raises(BusError)
-    def test_synchronise_bus_WithWrongBaudrate(self):
-        self.bus.synchronise_bus(baudrate=6666)
+    def test_sync_WithWrongBaudrate(self):
+        self.bus.sync(baudrate=6666)
 
-    def test_scan_bus_AndFindEverything(self):
+    def test_scan_AndFindEverything(self):
         minserial = 0b0001 #  1
         maxserial = 0b1010 # 10
 
@@ -167,7 +167,7 @@ class TestBus(object):
 
         results = (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, )
 
-        eq_(self.bus.scan_bus(minserial, maxserial), results)
+        eq_(self.bus.scan(minserial, maxserial), results)
         eq_(self.bus.probe_range.call_args_list, range_list)
         eq_(self.bus.probe_module_short.call_args_list, modules_list)
 
@@ -178,10 +178,10 @@ class TestBus(object):
         self.bus.probe_range = MagicMock()
         self.bus.probe_range.return_value = False
 
-        eq_(self.bus.scan_bus(minserial, maxserial), ())
+        eq_(self.bus.scan(minserial, maxserial), ())
         self.bus.probe_range.assert_called_once_with(0b1000)
 
-    def _scan_bus(self, minserial, maxserial, probe):
+    def _scan(self, minserial, maxserial, probe):
 
         def check_range(bcast):
             serno = probe
@@ -199,7 +199,7 @@ class TestBus(object):
         self.bus.probe_module_short = MagicMock()
         self.bus.probe_module_short.side_effect = check_serno
 
-        eq_(self.bus.scan_bus(minserial, maxserial), (probe,))
+        eq_(self.bus.scan(minserial, maxserial), (probe,))
 
     def test_scan_bus_FindOne(self):
         minserial = 33000
@@ -207,7 +207,7 @@ class TestBus(object):
         probes = range(33000, 34001)
 
         for serno in probes:
-            yield self._scan_bus, minserial, maxserial, serno
+            yield self._scan, minserial, maxserial, serno
 
     def test_find_single_module(self):
         serno      = 31002
