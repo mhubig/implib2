@@ -396,7 +396,7 @@ class Module(object):
         if not self.get_event_mode() == "NormalMeasure":
             assert self.set_event_mode("NormalMeasure")
 
-        if self.check_measure():
+        if self.measure_running():
             raise ModuleError("Measurement cycle already in progress!")
 
         return self.bus.set(self._serno, table, param, [value])
