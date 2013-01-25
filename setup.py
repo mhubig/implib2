@@ -40,7 +40,7 @@ CLASSIFIERS = filter(None, map(str.strip,
 
 setup(
         name = 'IMPLib2',
-        version = 'release-0.8.0',
+        version = 'release-0.8.1',
         packages = find_packages(exclude=["tests"]),
 
         # Include the *.yaml files
@@ -50,7 +50,7 @@ setup(
 
         # Install or upgrade the dependencies
         install_requires = [
-            'PySerial>=2.6',
+            'PySerial>=2.5',
         ],
 
         # metadata for upload to PyPI
@@ -59,7 +59,7 @@ setup(
         url = 'https://bitbucket.org/imko/implib2',
         description = ("Python implementation of the IMPBUS-2 data "
             "transmission protocol."),
-        long_description=read('README.md'),
+        long_description=read('README.rst'),
         license = "LGPL",
         keywords = "serial impbus imko",
         classifiers = CLASSIFIERS,
