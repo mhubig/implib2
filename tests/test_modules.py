@@ -140,9 +140,16 @@ class TestModule(object):
     def test_get_measure_mode(self):
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
         param = 'MeasMode'
-        self.bus.get.return_value = (0x0,)
+        self.bus.get.return_value = (0x00,)
         self.mod.get_measure_mode()
         self.bus.get.assert_called_once_with(self.serno, table, param)
+
+    @raises(ModuleError)
+    def test_get_measure_mode_UnknownMode(self):
+        table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
+        param = 'MeasMode'
+        self.bus.get.return_value = (0x03,)
+        self.mod.get_measure_mode()
 
     def test_unlock(self):
         table = 'ACTION_PARAMETER_TABLE'
@@ -278,10 +285,7 @@ class TestModule(object):
 
     @raises(ModuleError)
     def test__set_analog_output_mode_WithWrongMode(self):
-        table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
-        param = 'AnalogOutputMode'
-        value = 3
-        self.mod._set_analog_output_mode(value)
+        self.mod._set_analog_output_mode(3)
 
     @raises(ModuleError)
     def test_set_analog_moist_ValueToLow(self):
@@ -443,6 +447,10 @@ class TestModule(object):
 
         self.mod.set_event_mode.assert_called_once_with("NormalMeasure")
         self.bus.set.assert_called_once_with(self.serno, table, param, [value])
+
+    @raises(ModuleError)
+    def test_set_measure_mode_UnknownMode(self):
+        self.mod.set_measure_mode('ModeD')
 
     def test_write_eeprom_ModuleAlreadyUnlocked(self):
         head = (0, os.urandom(252))
@@ -611,10 +619,6 @@ class TestModule(object):
 
     @raises(ModuleError)
     def test_start_measure_ButMeasurementIsAlreadyStarted(self):
-        table = 'ACTION_PARAMETER_TABLE'
-        param = 'StartMeasure'
-        value = 1
-
         self.mod.get_measure_mode = MagicMock()
         self.mod.get_measure_mode.return_value = 0x0
 
@@ -666,13 +670,14 @@ class TestModule(object):
         self.mod.measure_running = MagicMock()
         self.mod.measure_running.side_effect = (True, True, False)
 
-        self.mod.get_value = MagicMock()
-        self.mod.get_value.return_value = moist
+        self.mod.get_measure = MagicMock()
+        self.mod.get_measure.return_value = moist
 
         eq_(self.mod.get_moisture(), moist)
-        self.mod.get_value.assert_called_once_with(quantity='Moist')
-        eq_(self.mod.measure_running.call_args_list, [call(), call(), call()])
+
         self.mod.start_measure.assert_called_once_with()
+        eq_(self.mod.measure_running.call_args_list, [call(), call(), call()])
+        self.mod.get_measure.assert_called_once_with(quantity='Moist')
 
     def test_get_transit_time_tdr_EventModeAlreadyNormalMeasure(self):
         transit_time = 123
