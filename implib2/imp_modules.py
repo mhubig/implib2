@@ -435,7 +435,7 @@ class Module(object):
         assert self.start_measure()
         while self.measure_running():
             time.sleep(0.500)
-        return self.get_value(quantity='Moist')
+        return self.get_measure(quantity='Moist')
 
     ###########################
     ## END of the Public API ##
