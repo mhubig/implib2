@@ -146,8 +146,6 @@ class TestModule(object):
 
     @raises(ModuleError)
     def test_get_measure_mode_UnknownMode(self):
-        table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
-        param = 'MeasMode'
         self.bus.get.return_value = (0x03,)
         self.mod.get_measure_mode()
 
