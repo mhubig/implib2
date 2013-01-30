@@ -544,7 +544,7 @@ class TestModule(object):
         value = 1
 
         self.mod.get_measure_mode = MagicMock()
-        self.mod.get_measure_mode.return_value = 0x0
+        self.mod.get_measure_mode.return_value = 'ModeA'
 
         self.mod.get_event_mode = MagicMock()
         self.mod.get_event_mode.return_value = "NormalMeasure"
@@ -561,13 +561,13 @@ class TestModule(object):
         self.mod.measure_running.assert_called_once_with()
         self.bus.set.assert_called_once_with(self.serno, table, param, [value])
 
-    def test_start_measure_MeasureModeNotNull(self):
+    def test_start_measure_MeasureModeNotA(self):
         table = 'ACTION_PARAMETER_TABLE'
         param = 'StartMeasure'
         value = 1
 
         self.mod.get_measure_mode = MagicMock()
-        self.mod.get_measure_mode.return_value = 0x1
+        self.mod.get_measure_mode.return_value = 'ModeB'
 
         self.mod.set_measure_mode = MagicMock()
         self.mod.set_measure_mode.return_value = True
@@ -583,7 +583,7 @@ class TestModule(object):
         eq_(self.mod.start_measure(), True)
 
         self.mod.get_measure_mode.assert_called_once_with()
-        self.mod.set_measure_mode.assert_called_once_with(0)
+        self.mod.set_measure_mode.assert_called_once_with('ModeA')
         self.mod.get_event_mode.assert_called_once_with()
         self.mod.measure_running.assert_called_once_with()
         self.bus.set.assert_called_once_with(self.serno, table, param, [value])
@@ -594,7 +594,7 @@ class TestModule(object):
         value = 1
 
         self.mod.get_measure_mode = MagicMock()
-        self.mod.get_measure_mode.return_value = 0x0
+        self.mod.get_measure_mode.return_value = 'ModeA'
 
         self.mod.get_event_mode = MagicMock()
         self.mod.get_event_mode.return_value = "NotNormalMeasure"
@@ -618,7 +618,7 @@ class TestModule(object):
     @raises(ModuleError)
     def test_start_measure_ButMeasurementIsAlreadyStarted(self):
         self.mod.get_measure_mode = MagicMock()
-        self.mod.get_measure_mode.return_value = 0x0
+        self.mod.get_measure_mode.return_value = 'ModeA'
 
         self.mod.get_event_mode = MagicMock()
         self.mod.get_event_mode.return_value = "NotNormalMeasure"

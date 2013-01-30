@@ -389,8 +389,8 @@ class Module(object):
         value = 1
 
         # Refer to Protocol Handbook page 18.
-        if not self.get_measure_mode() == 0:
-            assert self.set_measure_mode(0)
+        if not self.get_measure_mode() == 'ModeA':
+            assert self.set_measure_mode('ModeA')
 
         # Set Event mode to 'NormalMeasure'
         if not self.get_event_mode() == "NormalMeasure":
