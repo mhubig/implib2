@@ -38,11 +38,11 @@ class TestModule(object):
     def test_get_table(self):
         self.mod.get_table('ACTION_PARAMETER_TABLE')
 
-    def test_get_serial(self):
+    def test_get_serno(self):
         table = 'SYSTEM_PARAMETER_TABLE'
         param = 'SerialNum'
         self.bus.get.return_value = (self.serno,)
-        eq_(self.mod.get_serial(), self.serno)
+        eq_(self.mod.get_serno(), self.serno)
         self.bus.get.assert_called_once_with(self.serno, table, param)
 
     def test_get_hw_version(self):
@@ -63,28 +63,28 @@ class TestModule(object):
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
         param = 'MoistMaxValue'
         self.bus.get.return_value = (50,)
-        eq_(self.mod.get_moist_max_value(), 50)
+        eq_(self.mod._get_moist_max_value(), 50)
         self.bus.get.assert_called_once_with(self.serno, table, param)
 
     def test_get_moist_min_value(self):
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
         param = 'MoistMinValue'
         self.bus.get.return_value = (0,)
-        eq_(self.mod.get_moist_min_value(), 0)
+        eq_(self.mod._get_moist_min_value(), 0)
         self.bus.get.assert_called_once_with(self.serno, table, param)
 
     def test_get_temp_max_value(self):
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
         param = 'TempMaxValue'
         self.bus.get.return_value = (60,)
-        eq_(self.mod.get_temp_max_value(), 60)
+        eq_(self.mod._get_temp_max_value(), 60)
         self.bus.get.assert_called_once_with(self.serno, table, param)
 
     def test_get_temp_min_value(self):
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
         param = 'TempMinValue'
         self.bus.get.return_value = (0,)
-        eq_(self.mod.get_temp_min_value(), 0)
+        eq_(self.mod._get_temp_min_value(), 0)
         self.bus.get.assert_called_once_with(self.serno, table, param)
 
     def test_get_event_mode_NormalMeasure(self):
@@ -140,16 +140,21 @@ class TestModule(object):
     def test_get_measure_mode(self):
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
         param = 'MeasMode'
-        self.bus.get.return_value = (0x0,)
+        self.bus.get.return_value = (0x00,)
         self.mod.get_measure_mode()
         self.bus.get.assert_called_once_with(self.serno, table, param)
+
+    @raises(ModuleError)
+    def test_get_measure_mode_UnknownMode(self):
+        self.bus.get.return_value = (0x03,)
+        self.mod.get_measure_mode()
 
     def test_unlock(self):
         table = 'ACTION_PARAMETER_TABLE'
         param = 'SupportPW'
         value = 66 + 0x8000
         self.bus.set.return_value = True
-        ok_(self.mod._unlock())
+        ok_(self.mod.unlock())
         ok_(self.mod._unlocked)
         self.bus.set.assert_called_once_with(self.serno, table, param, [value])
 
@@ -197,13 +202,13 @@ class TestModule(object):
         with patch('implib2.imp_modules.EEPRom') as mock:
             eeprom = mock()
             eeprom.length = length
-            self.mod._unlock = MagicMock()
+            self.mod.unlock = MagicMock()
             self.mod._unlocked = False
             eq_(self.mod.read_eeprom(), eeprom)
             expected = [call(x) for x in pages]
             eq_(eeprom.set_page.call_args_list, expected)
 
-        self.mod._unlock.assert_called_once_with()
+        self.mod.unlock.assert_called_once_with()
         self.bus.get.assert_called_once_with(self.serno, table, param)
 
         expected = [call(self.serno, x) for x in range(0, 32)]
@@ -237,6 +242,7 @@ class TestModule(object):
         ok_(self.mod.set_serno(value))
 
         eq_(self.mod._serno, value)
+        eq_(self.mod._unlocked, False)
         self.bus.set.assert_called_once_with(self.serno, table, param, [value])
 
     def test_set_serno_ModuleNotAlreadyUnlocked(self):
@@ -246,21 +252,46 @@ class TestModule(object):
 
         self.bus.set.return_value = True
         self.mod._unlocked = False
-        self.mod._unlock = MagicMock()
+        self.mod.unlock = MagicMock()
 
         ok_(self.mod.set_serno(value))
 
         eq_(self.mod._serno, value)
-        self.mod._unlock.assert_called_once_with()
+        eq_(self.mod._unlocked, False)
+        self.mod.unlock.assert_called_once_with()
+        self.bus.set.assert_called_once_with(self.serno, table, param, [value])
+
+    def test__get_analog_output_mode(self):
+        table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
+        param = 'AnalogOutputMode'
+        mode  = 0
+
+        self.bus.get.return_value = (mode,)
+
+        eq_(self.mod._get_analog_output_mode(), mode)
+        self.bus.get.assert_called_once_with(self.serno, table, param)
+
+    def test__set_analog_output_mode(self):
+        table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
+        param = 'AnalogOutputMode'
+        value = 0
+
+        self.bus.set.return_value = True
+
+        eq_(self.mod._set_analog_output_mode(value), True)
         self.bus.set.assert_called_once_with(self.serno, table, param, [value])
 
     @raises(ModuleError)
+    def test__set_analog_output_mode_WithWrongMode(self):
+        self.mod._set_analog_output_mode(3)
+
+    @raises(ModuleError)
     def test_set_analog_moist_ValueToLow(self):
-        self.mod.set_analog_moist(-1)
+        self.mod._set_analog_moist(-1)
 
     @raises(ModuleError)
     def test_set_analog_moist_ValueToHigh(self):
-        self.mod.set_analog_moist(1001)
+        self.mod._set_analog_moist(1001)
 
     @raises(ModuleError)
     def test_set_analog_moist_CouldNotSetEventMode(self):
@@ -268,16 +299,16 @@ class TestModule(object):
         max_value = 25
         mvolt = 550
 
-        self.mod.get_moist_min_value = MagicMock()
-        self.mod.get_moist_min_value.return_value = min_value
+        self.mod._get_moist_min_value = MagicMock()
+        self.mod._get_moist_min_value.return_value = min_value
 
-        self.mod.get_moist_max_value = MagicMock()
-        self.mod.get_moist_max_value.return_value = max_value
+        self.mod._get_moist_max_value = MagicMock()
+        self.mod._get_moist_max_value.return_value = max_value
 
         self.mod.set_event_mode = MagicMock()
         self.mod.set_event_mode.return_value = False
 
-        self.mod.set_analog_moist(mvolt)
+        self.mod._set_analog_moist(mvolt)
 
     def test_set_analog_moist(self):
         table = 'MEASURE_PARAMETER_TABLE'
@@ -287,28 +318,28 @@ class TestModule(object):
         mvolt = 550
         value = (max_value - min_value) / 1000.0 * mvolt + min_value
 
-        self.mod.get_moist_min_value = MagicMock()
-        self.mod.get_moist_min_value.return_value = min_value
+        self.mod._get_moist_min_value = MagicMock()
+        self.mod._get_moist_min_value.return_value = min_value
 
-        self.mod.get_moist_max_value = MagicMock()
-        self.mod.get_moist_max_value.return_value = max_value
+        self.mod._get_moist_max_value = MagicMock()
+        self.mod._get_moist_max_value.return_value = max_value
 
         self.mod.set_event_mode = MagicMock()
         self.mod.set_event_mode.return_value = True
 
-        self.mod.set_analog_moist(mvolt)
-        self.mod.get_moist_min_value.assert_called_once_with()
-        self.mod.get_moist_max_value.assert_called_once_with()
+        self.mod._set_analog_moist(mvolt)
+        self.mod._get_moist_min_value.assert_called_once_with()
+        self.mod._get_moist_max_value.assert_called_once_with()
         self.mod.set_event_mode.assert_called_once_with("AnalogOut")
         self.bus.set.assert_called_once_with(self.serno, table, param, [value])
 
     @raises(ModuleError)
     def test_set_analog_temp_ValueToLow(self):
-        self.mod.set_analog_temp(-1)
+        self.mod._set_analog_temp(-1)
 
     @raises(ModuleError)
     def test_set_analog_temp_ValueToHigh(self):
-        self.mod.set_analog_temp(1001)
+        self.mod._set_analog_temp(1001)
 
     @raises(ModuleError)
     def test_set_analog_temp_CouldNotSetEventMode(self):
@@ -316,16 +347,16 @@ class TestModule(object):
         max_value =  70
         mvolt = 550
 
-        self.mod.get_temp_min_value = MagicMock()
-        self.mod.get_temp_min_value.return_value = min_value
+        self.mod._get_temp_min_value = MagicMock()
+        self.mod._get_temp_min_value.return_value = min_value
 
-        self.mod.get_temp_max_value = MagicMock()
-        self.mod.get_temp_max_value.return_value = max_value
+        self.mod._get_temp_max_value = MagicMock()
+        self.mod._get_temp_max_value.return_value = max_value
 
         self.mod.set_event_mode = MagicMock()
         self.mod.set_event_mode.return_value = False
 
-        self.mod.set_analog_temp(mvolt)
+        self.mod._set_analog_temp(mvolt)
 
     def test_set_analog_temp(self):
         table = 'MEASURE_PARAMETER_TABLE'
@@ -335,18 +366,18 @@ class TestModule(object):
         mvolt = 550
         value = (max_value - min_value) / 1000.0 * mvolt + min_value
 
-        self.mod.get_temp_min_value = MagicMock()
-        self.mod.get_temp_min_value.return_value = min_value
+        self.mod._get_temp_min_value = MagicMock()
+        self.mod._get_temp_min_value.return_value = min_value
 
-        self.mod.get_temp_max_value = MagicMock()
-        self.mod.get_temp_max_value.return_value = max_value
+        self.mod._get_temp_max_value = MagicMock()
+        self.mod._get_temp_max_value.return_value = max_value
 
         self.mod.set_event_mode = MagicMock()
         self.mod.set_event_mode.return_value = True
 
-        self.mod.set_analog_temp(mvolt)
-        self.mod.get_temp_min_value.assert_called_once_with()
-        self.mod.get_temp_max_value.assert_called_once_with()
+        self.mod._set_analog_temp(mvolt)
+        self.mod._get_temp_min_value.assert_called_once_with()
+        self.mod._get_temp_max_value.assert_called_once_with()
         self.mod.set_event_mode.assert_called_once_with("AnalogOut")
         self.bus.set.assert_called_once_with(self.serno, table, param, [value])
 
@@ -377,10 +408,10 @@ class TestModule(object):
         mode = "NormalMeasure"
 
         self.mod._unlocked = False
-        self.mod._unlock = MagicMock()
+        self.mod.unlock = MagicMock()
 
         ok_(self.mod.set_event_mode(mode))
-        self.mod._unlock.assert_called_once_with()
+        self.mod.unlock.assert_called_once_with()
         self.bus.set.assert_called_once_with(self.serno, table, param, [value])
 
     @raises(ModuleError)
@@ -393,110 +424,83 @@ class TestModule(object):
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
         param = 'MeasMode'
         value = 0
+        mode  = 'ModeA'
 
         self.mod.get_event_mode = MagicMock()
         self.mod.get_event_mode.return_value = "NormalMeasure"
-        ok_(self.mod.set_measure_mode(value))
+        ok_(self.mod.set_measure_mode(mode))
         self.bus.set.assert_called_once_with(self.serno, table, param, [value])
 
     def test_set_measure_mode_NotAlreadyInNormalMeasureMode(self):
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
         param = 'MeasMode'
         value = 0
+        mode  = 'ModeA'
 
         self.mod.get_event_mode = MagicMock()
         self.mod.get_event_mode.return_value = "NotNormalMeasure"
         self.mod.set_event_mode = MagicMock()
 
-        ok_(self.mod.set_measure_mode(value))
+        ok_(self.mod.set_measure_mode(mode))
 
         self.mod.set_event_mode.assert_called_once_with("NormalMeasure")
         self.bus.set.assert_called_once_with(self.serno, table, param, [value])
 
-    def test_set_default_measure_mode_AlreadyInNormalMeasureMode(self):
-        table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
-        param = 'DefaultMeasMode'
-        value = 0
-
-        self.mod.get_event_mode = MagicMock()
-        self.mod.get_event_mode.return_value = "NormalMeasure"
-
-        ok_(self.mod.set_default_measure_mode(value))
-        self.bus.set.assert_called_once_with(self.serno, table, param, [value])
-
-    def test_set_default_measure_mode_NotAlreadyInNormalMeasureMode(self):
-        table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
-        param = 'DefaultMeasMode'
-        value = 0
-
-        self.mod.get_event_mode = MagicMock()
-        self.mod.get_event_mode.return_value = "NotNormalMeasure"
-        self.mod.set_event_mode = MagicMock()
-
-        ok_(self.mod.set_default_measure_mode(value))
-        self.mod.set_event_mode.assert_called_once_with("NormalMeasure")
-        self.bus.set.assert_called_once_with(self.serno, table, param, [value])
-
-    def test_set_average_mode(self):
-        table = 'APPLICATION_PARAMETER_TABLE'
-        param = 'AverageMode'
-        value = 0
-
-        ok_(self.mod.set_average_mode(value))
-        self.bus.set.assert_called_once_with(self.serno, table, param, [value])
+    @raises(ModuleError)
+    def test_set_measure_mode_UnknownMode(self):
+        self.mod.set_measure_mode('ModeD')
 
     def test_write_eeprom_ModuleAlreadyUnlocked(self):
-        epr_file = 'test.erp'
         head = (0, os.urandom(252))
         mid  = (1, os.urandom(252))
         tail = (2, os.urandom(128))
         gen = (x for x in [head, mid, tail])
 
-        with patch('implib2.imp_modules.EEPRom') as mock:
-            eeprom = mock()
-            eeprom.__iter__.return_value = gen
-            self.bus.set_eeprom_page.return_value = True
-            self.mod._unlocked = True
-            ok_(self.mod.write_eeprom(epr_file))
-            eeprom.read.assert_called_once_with(epr_file)
+        eeprom = MagicMock()
+        eeprom.__iter__.return_value = gen
+
+        self.bus.set_eeprom_page.return_value = True
+        self.mod._unlocked = True
+
+        ok_(self.mod.write_eeprom(eeprom))
 
         expected = [call(self.serno, x[0], x[1]) for x in [head, mid, tail]]
         eq_(self.bus.set_eeprom_page.call_args_list, expected)
 
     def test_write_eeprom_ModuleNotAlreadyUnlocked(self):
-        epr_file = 'test.erp'
         head = (0, os.urandom(252))
         mid  = (1, os.urandom(252))
         tail = (2, os.urandom(128))
         gen = (x for x in [head, mid, tail])
 
-        with patch('implib2.imp_modules.EEPRom') as mock:
-            eeprom = mock()
-            eeprom.__iter__.return_value = gen
-            self.bus.set_eeprom_page.return_value = True
-            self.mod._unlocked = False
-            self.mod._unlock = MagicMock()
-            ok_(self.mod.write_eeprom(epr_file))
+        eeprom = MagicMock()
+        eeprom.__iter__.return_value = gen
 
-        self.mod._unlock.assert_called_once_with()
+        self.bus.set_eeprom_page.return_value = True
+        self.mod._unlocked = False
+        self.mod.unlock = MagicMock()
+
+        ok_(self.mod.write_eeprom(eeprom))
+
+        self.mod.unlock.assert_called_once_with()
         expected = [call(self.serno, x[0], x[1]) for x in [head, mid, tail]]
         eq_(self.bus.set_eeprom_page.call_args_list, expected)
 
     @raises(ModuleError)
     def test_write_eeprom_EEPRomWritingFailed(self):
-        epr_file = 'test.erp'
         head = (0, os.urandom(252))
         mid  = (1, os.urandom(252))
         tail = (2, os.urandom(128))
         gen = (x for x in [head, mid, tail])
 
-        with patch('implib2.imp_modules.EEPRom') as mock:
-            eeprom = mock()
-            eeprom.__iter__.return_value = gen
-            self.bus.set_eeprom_page.side_effect = [True, True, False]
-            self.mod._unlocked = False
-            self.mod._unlock = MagicMock()
-            ok_(self.mod.write_eeprom(epr_file))
+        eeprom = MagicMock()
+        eeprom.__iter__.return_value = gen
+
+        self.bus.set_eeprom_page.side_effect = [True, True, False]
+        self.mod._unlocked = False
+        self.mod.unlock = MagicMock()
+
+        ok_(self.mod.write_eeprom(eeprom))
 
     def test_turn_asic_on(self):
         table    = 'ACTION_PARAMETER_TABLE'
@@ -506,7 +510,7 @@ class TestModule(object):
         self.mod.set_event_mode = MagicMock()
         self.mod.set_event_mode.return_value = True
 
-        ok_(self.mod.turn_asic_on())
+        ok_(self.mod._turn_asic_on())
         self.mod.set_event_mode.assert_called_once_with(param)
         self.bus.set.assert_called_once_with(self.serno, table, param, value)
 
@@ -514,7 +518,7 @@ class TestModule(object):
     def test_turn_asic_on_SetEventModeFailed(self):
         self.mod.set_event_mode = MagicMock()
         self.mod.set_event_mode.return_value = False
-        self.mod.turn_asic_on()
+        self.mod._turn_asic_on()
 
     def test_turn_asic_off(self):
         table    = 'ACTION_PARAMETER_TABLE'
@@ -524,7 +528,7 @@ class TestModule(object):
         self.mod.set_event_mode = MagicMock()
         self.mod.set_event_mode.return_value = True
 
-        ok_(self.mod.turn_asic_off())
+        ok_(self.mod._turn_asic_off())
         self.mod.set_event_mode.assert_called_once_with(param)
         self.bus.set.assert_called_once_with(self.serno, table, param, value)
 
@@ -532,40 +536,38 @@ class TestModule(object):
     def test_turn_asic_off_SetEventModeFailed(self):
         self.mod.set_event_mode = MagicMock()
         self.mod.set_event_mode.return_value = False
-        self.mod.turn_asic_off()
+        self.mod._turn_asic_off()
 
-    def test_get_measurement(self):
+    def test_start_measure(self):
         table = 'ACTION_PARAMETER_TABLE'
         param = 'StartMeasure'
         value = 1
 
         self.mod.get_measure_mode = MagicMock()
-        self.mod.get_measure_mode.return_value = 0x0
+        self.mod.get_measure_mode.return_value = 'ModeA'
 
         self.mod.get_event_mode = MagicMock()
         self.mod.get_event_mode.return_value = "NormalMeasure"
 
-        self.bus.set.return_value = True
-        self.bus.get.side_effect = [(1,), (1,), (1,), (0,), (12.43,)]
+        self.mod.measure_running = MagicMock()
+        self.mod.measure_running.return_value = False
 
-        eq_(self.mod.get_measurement(), 12.43)
+        self.bus.set.return_value = True
+
+        eq_(self.mod.start_measure(), True)
 
         self.mod.get_measure_mode.assert_called_once_with()
         self.mod.get_event_mode.assert_called_once_with()
+        self.mod.measure_running.assert_called_once_with()
         self.bus.set.assert_called_once_with(self.serno, table, param, [value])
 
-        # pylint: disable=W0612
-        expected = [call(self.serno, table, param) for x in range(0, 4)]
-        expected.append(call(self.serno, 'MEASURE_PARAMETER_TABLE', 'Moist'))
-        eq_(self.bus.get.call_args_list, expected)
-
-    def test_get_measurement_MeasureModeNotNull(self):
+    def test_start_measure_MeasureModeNotA(self):
         table = 'ACTION_PARAMETER_TABLE'
         param = 'StartMeasure'
         value = 1
 
         self.mod.get_measure_mode = MagicMock()
-        self.mod.get_measure_mode.return_value = 0x1
+        self.mod.get_measure_mode.return_value = 'ModeB'
 
         self.mod.set_measure_mode = MagicMock()
         self.mod.set_measure_mode.return_value = True
@@ -573,28 +575,26 @@ class TestModule(object):
         self.mod.get_event_mode = MagicMock()
         self.mod.get_event_mode.return_value = "NormalMeasure"
 
-        self.bus.set.return_value = True
-        self.bus.get.side_effect = [(1,), (1,), (1,), (0,), (12.43,)]
+        self.mod.measure_running = MagicMock()
+        self.mod.measure_running.return_value = False
 
-        eq_(self.mod.get_measurement(), 12.43)
+        self.bus.set.return_value = True
+
+        eq_(self.mod.start_measure(), True)
 
         self.mod.get_measure_mode.assert_called_once_with()
-        self.mod.set_measure_mode.assert_called_once_with(0)
+        self.mod.set_measure_mode.assert_called_once_with('ModeA')
         self.mod.get_event_mode.assert_called_once_with()
+        self.mod.measure_running.assert_called_once_with()
         self.bus.set.assert_called_once_with(self.serno, table, param, [value])
 
-        # pylint: disable=W0612
-        expected = [call(self.serno, table, param) for x in range(0, 4)]
-        expected.append(call(self.serno, 'MEASURE_PARAMETER_TABLE', 'Moist'))
-        eq_(self.bus.get.call_args_list, expected)
-
-    def test_get_measurement_EventModeNotNormalMeasure(self):
+    def test_start_measure_EventModeNotNormalMeasure(self):
         table = 'ACTION_PARAMETER_TABLE'
         param = 'StartMeasure'
         value = 1
 
         self.mod.get_measure_mode = MagicMock()
-        self.mod.get_measure_mode.return_value = 0x0
+        self.mod.get_measure_mode.return_value = 'ModeA'
 
         self.mod.get_event_mode = MagicMock()
         self.mod.get_event_mode.return_value = "NotNormalMeasure"
@@ -602,26 +602,80 @@ class TestModule(object):
         self.mod.set_event_mode = MagicMock()
         self.mod.set_event_mode.return_value = True
 
-        self.bus.set.return_value = True
-        self.bus.get.side_effect = [(1,), (1,), (1,), (0,), (12.43,)]
+        self.mod.measure_running = MagicMock()
+        self.mod.measure_running.return_value = False
 
-        eq_(self.mod.get_measurement(), 12.43)
+        self.bus.set.return_value = True
+
+        eq_(self.mod.start_measure(), True)
 
         self.mod.get_measure_mode.assert_called_once_with()
         self.mod.get_event_mode.assert_called_once_with()
         self.mod.set_event_mode.assert_called_once_with("NormalMeasure")
+        self.mod.measure_running.assert_called_once_with()
         self.bus.set.assert_called_once_with(self.serno, table, param, [value])
 
-        # pylint: disable=W0612
-        expected = [call(self.serno, table, param) for x in range(0, 4)]
-        expected.append(call(self.serno, 'MEASURE_PARAMETER_TABLE', 'Moist'))
-        eq_(self.bus.get.call_args_list, expected)
+    @raises(ModuleError)
+    def test_start_measure_ButMeasurementIsAlreadyStarted(self):
+        self.mod.get_measure_mode = MagicMock()
+        self.mod.get_measure_mode.return_value = 'ModeA'
+
+        self.mod.get_event_mode = MagicMock()
+        self.mod.get_event_mode.return_value = "NotNormalMeasure"
+
+        self.mod.set_event_mode = MagicMock()
+        self.mod.set_event_mode.return_value = True
+
+        self.mod.measure_running = MagicMock()
+        self.mod.measure_running.return_value = True
+
+        self.mod.start_measure()
+
+    def test_measure_running_YES(self):
+        table = 'ACTION_PARAMETER_TABLE'
+        param = 'StartMeasure'
+
+        self.bus.get.return_value = (1,)
+
+        eq_(self.mod.measure_running(), True)
+        self.bus.get.assert_called_once_with(self.serno, table, param)
+
+    def test_measure_running_Nop(self):
+        table = 'ACTION_PARAMETER_TABLE'
+        param = 'StartMeasure'
+
+        self.bus.get.return_value = (0,)
+
+        eq_(self.mod.measure_running(), False)
+        self.bus.get.assert_called_once_with(self.serno, table, param)
+
+    def test_get_measure(self):
+        table = 'MEASURE_PARAMETER_TABLE'
+        param = 'Moist'
+        moist = 17.77
+
+        self.bus.get.return_value = (moist,)
+
+        eq_(self.mod.get_measure(quantity=param), moist)
+        self.bus.get.assert_called_once_with(self.serno, table, param)
 
     def test_get_moisture(self):
         moist = 12.35
-        self.mod.get_measurement = MagicMock()
-        self.mod.get_measurement.return_value = moist
+
+        self.mod.start_measure = MagicMock()
+        self.mod.start_measure.return_value = True
+
+        self.mod.measure_running = MagicMock()
+        self.mod.measure_running.side_effect = (True, True, False)
+
+        self.mod.get_measure = MagicMock()
+        self.mod.get_measure.return_value = moist
+
         eq_(self.mod.get_moisture(), moist)
+
+        self.mod.start_measure.assert_called_once_with()
+        eq_(self.mod.measure_running.call_args_list, [call(), call(), call()])
+        self.mod.get_measure.assert_called_once_with(quantity='Moist')
 
     def test_get_transit_time_tdr_EventModeAlreadyNormalMeasure(self):
         transit_time = 123
@@ -647,7 +701,7 @@ class TestModule(object):
         value = 2
         set_calls.append(call(self.serno, table, param, [value]))
 
-        eq_(self.mod.get_transit_time_tdr(), (transit_time, tdr_value))
+        eq_(self.mod._get_transit_time_tdr(), (transit_time, tdr_value))
 
         get_calls = [
             call(self.serno, 'ACTION_PARAMETER_TABLE', 'StartMeasure'),
@@ -687,7 +741,7 @@ class TestModule(object):
         value = 2
         set_calls.append(call(self.serno, table, param, [value]))
 
-        eq_(self.mod.get_transit_time_tdr(), (transit_time, tdr_value))
+        eq_(self.mod._get_transit_time_tdr(), (transit_time, tdr_value))
 
         get_calls = [
             call(self.serno, 'ACTION_PARAMETER_TABLE', 'StartMeasure'),

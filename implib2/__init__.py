@@ -19,10 +19,13 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
-__version__ = 'release-0.7.1'
+__version__ = 'release-0.8.2'
 
-from implib2.imp_bus import Bus, BusError
-from implib2.imp_modules import Module, ModuleError
+from .imp_bus import Bus, BusError
+from .imp_modules import Module, ModuleError
+from .imp_eeprom import EEPRom, EEPRomError
 
-__all__ = ["Bus", "BusError", "Module", "ModuleError"]
+__all__ = [ "Bus", "BusError",
+            "Module", "ModuleError",
+            "EEPRom", "EEPRomError"]
 

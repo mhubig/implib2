@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Copyright (C) 2011-2012, Markus Hubig <mhubig@imko.de>
 #
@@ -24,7 +24,7 @@ function usage () {
 
 function commit_hint () {
     msg1="Now please commit with something like:"
-    msg2="git commit -a -s -m \"Bumped version number to release-$1\!\""
+    msg2="git commit -a -s -m \"Bumped version number to release-$1.\""
     echo $msg1 $msg2
 }
 

@@ -3,15 +3,22 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to IMPLib2's documentation!
-===================================
+IMPBUS-2 Library
+================
 
-Contents:
+This library implements the IMPBus2 protocol which is used by the `IMKO GmbH`_
+to access the TRIME PIKO and TRIME SONO moisture measurements probes. It is
+tested for Python 2.7 running on Linux, Windows and MacOSX.
+
+.. include:: ../README.rst
+
+The API Documentation
+---------------------
 
 .. toctree::
-   :maxdepth: 2
+    :maxdepth: 2
 
-
+    implib2.rst
 
 Indices and tables
 ==================
@@ -20,3 +27,7 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
+.. Place the link targets here:
+.. _IMKO GmbH: http://imko.de
+.. _Trime Pico: http://imko.de/de/produkte/bodenfeuchte/bodenfeuchtesonden/trimepico64
+.. _SM-USB: http://imko.de
