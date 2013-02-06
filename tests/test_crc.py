@@ -21,7 +21,6 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 
 from binascii import a2b_hex as a2b
-
 from implib2.imp_crc import MaximCRC
 
 class TestMaximCRC(object):
