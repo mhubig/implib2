@@ -92,7 +92,7 @@ With this information we can easily build a little script which performs an
 measurement on all connected probes ones an hour::
 
     #!/usr/bin/env python
-    # -*-
+    # -*- coding: UTF-8 -*-
 
     import time
     from implib2 import Bus, Module

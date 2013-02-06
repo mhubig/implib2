@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 """
-Copyright (C) 2011-2012, Markus Hubig <mhubig@imko.de>
+Copyright (C) 2011-2013, Markus Hubig <mhubig@imko.de>
 
 This file is part of IMPLib2 a small Python library implementing
 the IMPBUS-2 data transmission protocol.
@@ -65,7 +65,7 @@ class Responce(object):
 
         return struct.unpack(fmt.format(length), data)
 
-    def set_parameter(self, packet, serno, table):
+    def set_parameter(self, packet, table, serno):
         responce = self.pkg.unpack(packet)
         command  = responce['header']['cmd']
         cmd = self.tbl.lookup(table, 'Table')

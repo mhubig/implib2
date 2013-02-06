@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 """
-Copyright (C) 2011-2012, Markus Hubig <mhubig@imko.de>
+Copyright (C) 2011-2013, Markus Hubig <mhubig@imko.de>
 
 This file is part of IMPLib2 a small Python library implementing
 the IMPBUS-2 data transmission protocol.
@@ -21,40 +21,43 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 
 import json
-from nose.tools import eq_, raises
+import pytest
 from implib2.imp_errors import Errors, ErrorsError
 
-class TestErrors(object):
-    # pylint: disable=C0103,W0212
+# pylint: disable=C0103
+def pytest_generate_tests(metafunc):
+    if 'errno' in metafunc.fixturenames:
+        with open('tests/test_errors.json') as js:
+            j = json.load(js)
+        metafunc.parametrize("errno", [errno for errno in j])
 
-    def __init__(self):
+# pylint: disable=C0103,W0212,E1101,W0201
+class TestErrors(object):
+
+    def setup(self):
         with open('tests/test_errors.json') as js:
             self.j = json.load(js)
         self.e = Errors()
 
     def test_load_json(self):
-        eq_(self.e._errors, self.j)
+        assert self.e._errors == self.j
 
-    @raises(IOError)
+    #pylint: disable=R0201,
     def test_load_json_no_file(self):
-        # pylint: disable=R0201
-        Errors('dont_exists.json')
+        with pytest.raises(IOError):
+            Errors('dont_exists.json')
 
-    @raises(ValueError)
     def test_load_json_falty_file(self):
-        # pylint: disable=R0201
-        Errors('imp_errors.py')
+        with pytest.raises(ValueError):
+            Errors('imp_errors.py')
 
-    @raises(ErrorsError)
     def test_lookup_unknown_errno(self):
-        self.e.lookup(666)
+        with pytest.raises(ErrorsError):
+            self.e.lookup(666)
 
-    def _lookup_error(self, errno):
+    def test_lookup_error(self, errno):
         err = self.j[str(errno)]
         msg = self.e.lookup(errno)
-        eq_(err, msg)
 
-    def test_lookup_error(self):
-        for errno in self.j:
-            yield self._lookup_error, int(errno)
+        assert err == msg
 

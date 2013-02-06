@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 """
-Copyright (C) 2011-2012, Markus Hubig <mhubig@imko.de>
+Copyright (C) 2011-2013, Markus Hubig <mhubig@imko.de>
 
 This file is part of IMPLib2 a small Python library implementing
 the IMPBUS-2 data transmission protocol.
@@ -20,7 +20,7 @@ You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 
-from nose.tools import eq_, raises
+import pytest
 from binascii import a2b_hex as a2b
 
 from implib2.imp_tables import Tables
@@ -28,55 +28,55 @@ from implib2.imp_packages import Package
 from implib2.imp_datatypes import DataTypes
 from implib2.imp_commands import Command, CommandError
 
+# pylint: disable=C0103,W0201,E1101
 class TestCommand(object):
-    # pylint: disable=C0103
 
-    def setUp(self):
+    def setup(self):
         self.cmd = Command(Tables(), Package(), DataTypes())
 
     def test_get_long_ack(self):
         pkg = self.cmd.get_long_ack(31001)
-        eq_(pkg, a2b('fd02001979007b'))
+        assert pkg == a2b('fd02001979007b')
 
     def test_get_short_ack(self):
         pkg = self.cmd.get_short_ack(31001)
-        eq_(pkg, a2b('fd0400197900e7'))
+        assert pkg == a2b('fd0400197900e7')
 
     def test_get_range_ack(self):
         pkg = self.cmd.get_range_ack(0b111100000000000000000000)
-        eq_(pkg, a2b('fd06000000f0d0'))
+        assert pkg == a2b('fd06000000f0d0')
 
     def test_get_negative_ack(self):
         pkg = self.cmd.get_negative_ack()
-        eq_(pkg, a2b('fd0800ffffff60'))
+        assert pkg == a2b('fd0800ffffff60')
 
     def test_get_parameter(self):
         pkg = self.cmd.get_parameter(31002,
                 'SYSTEM_PARAMETER_TABLE',
                 'SerialNum')
-        eq_(pkg, a2b('fd0a031a7900290100c4'))
+        assert pkg == a2b('fd0a031a7900290100c4')
 
     def test_set_parameter(self):
         pkg = self.cmd.set_parameter(31002,
                 'PROBE_CONFIGURATION_PARAMETER_TABLE',
                 'DeviceSerialNum', [31003])
-        eq_(pkg, a2b('fd11071a79002b0c001b790000b0'))
+        assert pkg == a2b('fd11071a79002b0c001b790000b0')
 
     def test_do_tdr_scan(self):
         pkg = self.cmd.do_tdr_scan(30001, 1, 126, 2, 64)
-        eq_(pkg, a2b('fd1e06317500d3017e024000a4'))
+        assert pkg == a2b('fd1e06317500d3017e024000a4')
 
     def test_get_epr_page(self):
         pkg = self.cmd.get_epr_page(30001, 0)
-        eq_(pkg, a2b('fd3c0331750029ff0081'))
+        assert pkg == a2b('fd3c0331750029ff0081')
 
     def test_set_epr_page(self):
         page = [0, 0, 0, 0, 0, 0, 0, 0, 35, 255, 255, 0]
         pkg = self.cmd.set_epr_page(30001, 7, page)
-        eq_(pkg, a2b('fd3d0f317500f6ff07000000000000000023ffff007b'))
+        assert pkg == a2b('fd3d0f317500f6ff07000000000000000023ffff007b')
 
-    @raises(CommandError)
     def test_set_epr_page_to_big(self):
         page = range(0, 251)
-        self.cmd.set_epr_page(30001, 7, page)
+        with pytest.raises(CommandError):
+            self.cmd.set_epr_page(30001, 7, page)
 
