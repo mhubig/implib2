@@ -26,7 +26,7 @@ from binascii import a2b_hex as a2b
 from implib2.imp_crc import MaximCRC
 from implib2.imp_packages import Package, PackageError
 
-# pylint: disable=C0103
+# pylint: disable=C0103,E1101,W0201
 class TestPackage(object):
 
     def setup(self):

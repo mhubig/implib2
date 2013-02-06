@@ -29,8 +29,9 @@ from implib2.imp_device import Device, DeviceError # pylint: disable=W0611
 from implib2.imp_commands import Command           # pylint: disable=W0611
 from implib2.imp_responces import Responce         # pylint: disable=W0611
 
+# pylint: disable=C0103,R0902,W0201,E1101
 class TestBus(object):
-    # pylint: disable=C0103,R0902
+
     def setup(self):
         self.patcher1 = patch('implib2.imp_bus.Device')
         self.patcher2 = patch('implib2.imp_bus.Command')

@@ -24,6 +24,7 @@ import json
 import pytest
 from implib2.imp_tables import Tables, TablesError
 
+# pylint: disable=C0103
 def pytest_generate_tests(metafunc):
     if 'table' in metafunc.fixturenames:
         with open('tests/test_tables.json') as js:
@@ -36,7 +37,7 @@ def pytest_generate_tests(metafunc):
 
         metafunc.parametrize(("table", "param"), tests)
 
-# pylint: disable=C0103,W0212
+# pylint: disable=C0103,W0212,E1101,W0201
 class TestTables(object):
 
     def setup(self):

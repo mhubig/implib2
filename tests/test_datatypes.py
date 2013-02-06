@@ -20,11 +20,12 @@ You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 
-from pytest import raises
+import pytest
 from implib2.imp_datatypes import DataTypes
 
+# pylint: disable=C0103,W0201,E1101
 class TestDataTypes(object):
-    # pylint: disable=C0103
+
     def setup(self):
         self._dict = {
                 0x00: '<{0}B', #  8-bit unsigned char
@@ -50,6 +51,6 @@ class TestDataTypes(object):
             assert self._dict[d_nr] == self.dts.lookup(d_nr)
 
     def test_lookup_NonExistentKey(self):
-        with raises(KeyError):
+        with pytest.raises(KeyError):
             self.dts.lookup(0x08)
 

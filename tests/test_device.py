@@ -25,8 +25,9 @@ from mock import patch, call
 from binascii import a2b_hex as a2b
 from implib2.imp_device import Device, DeviceError
 
+# pylint: disable=C0103,E1101,W0201
 class TestPackage(object):
-    # pylint: disable=C0103
+
     def setup(self):
         with patch('serial.Serial') as mock:
             self.ser = mock()

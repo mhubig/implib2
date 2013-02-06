@@ -25,7 +25,7 @@ import pytest
 from mock import patch, call, MagicMock
 from implib2.imp_modules import Module, ModuleError
 
-# pylint: disable=C0103,W0212,R0904
+# pylint: disable=C0103,W0212,R0904,E1101,W0201
 class TestModule(object):
     def setup(self):
         self.serno = 31002
@@ -141,9 +141,8 @@ class TestModule(object):
         self.bus.get.assert_called_once_with(self.serno, table, param)
 
     def test_get_event_mode_UNKNOWN(self):
-        table = 'ACTION_PARAMETER_TABLE'
-        param = 'Event'
         self.bus.get.return_value = (0x06,)
+
         with pytest.raises(ModuleError):
             self.mod.get_event_mode()
 
