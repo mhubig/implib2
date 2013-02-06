@@ -21,67 +21,63 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 
 import json
-from nose.tools import ok_, eq_, raises
+import pytest
 from implib2.imp_tables import Tables, TablesError
 
-class TestTables(object):
-    # pylint: disable=C0103,W0212
+def pytest_generate_tests(metafunc):
+    if 'table' in metafunc.fixturenames:
+        with open('tests/test_tables.json') as js:
+            j = json.load(js)
 
-    def __init__(self):
+        tests = []
+        for table in j:
+            for param in j[table]:
+                tests.append((table, param))
+
+        metafunc.parametrize(("table", "param"), tests)
+
+# pylint: disable=C0103,W0212
+class TestTables(object):
+
+    def setup(self):
         with open('tests/test_tables.json') as js:
             self.j = json.load(js)
         self.t = Tables()
 
     def test_load_json(self):
-        eq_(self.t._tables, self.j)
+        assert self.t._tables, self.j
 
-    @raises(IOError)
     def test_load_json_no_file(self):
         # pylint: disable=R0201
-        Tables('dont_exists.json')
+        with pytest.raises(IOError):
+            Tables('dont_exists.json')
 
-    @raises(ValueError)
     def test_load_json_falty_file(self):
         # pylint: disable=R0201
-        Tables('imp_tables.py')
+        with pytest.raises(ValueError):
+            Tables('imp_tables.py')
 
-    @raises(TablesError)
     def test_lookup_unknown_table(self):
-        self.t.lookup('UNKNOWN', 'UNKNOWN')
+        with pytest.raises(TablesError):
+            self.t.lookup('UNKNOWN', 'UNKNOWN')
 
-    @raises(TablesError)
     def test_lookup_unknown_param(self):
-        self.t.lookup('DEVICE_CALIBRATION_PARAMETER_TABLE', 'UNKNOWN')
+        with pytest.raises(TablesError):
+            self.t.lookup('DEVICE_CALIBRATION_PARAMETER_TABLE', 'UNKNOWN')
 
-    def _lookup_value(self, table, param):
+    def test_lookup_value(self, table, param):
         row = self.j[table][param]
         value = self.t.lookup(table, param)
         if param == 'Table':
-            eq_(len(row), len(value))
+            assert len(row), len(value)
         else:
-            eq_(len(row) + 2, len(value))
+            assert len(row) + 2, len(value)
 
-    def test_lookup_value(self):
-        for table in self.j:
-            for param in self.j[table]:
-                yield self._lookup_value, table, param
-
-    def _lookup_value_has_get(self, table, param):
+    def test_lookup_value_has_get(self, table, param):
         row = self.t.lookup(table, param)
-        ok_(row.has_key('Get'))
+        assert row.has_key('Get')
 
-    def test_has_get(self):
-        for table in self.j:
-            for param in self.j[table]:
-                yield self._lookup_value_has_get, table, param
-
-    def _lookup_value_has_set(self, table, param):
+    def test_lookup_value_has_set(self, table, param):
         row = self.t.lookup(table, param)
-        ok_(row.has_key('Set'))
-
-    def test_has_set(self):
-        for table in self.j:
-            for param in self.j[table]:
-                yield self._lookup_value_has_set, table, param
-
+        assert row.has_key('Set')
 
