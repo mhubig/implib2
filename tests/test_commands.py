@@ -20,7 +20,7 @@ You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 
-from pytest import raises
+import pytest
 from binascii import a2b_hex as a2b
 
 from implib2.imp_tables import Tables
@@ -28,8 +28,8 @@ from implib2.imp_packages import Package
 from implib2.imp_datatypes import DataTypes
 from implib2.imp_commands import Command, CommandError
 
+# pylint: disable=C0103,W0201,E1101
 class TestCommand(object):
-    # pylint: disable=C0103
 
     def setup(self):
         self.cmd = Command(Tables(), Package(), DataTypes())
@@ -77,6 +77,6 @@ class TestCommand(object):
 
     def test_set_epr_page_to_big(self):
         page = range(0, 251)
-        with raises(CommandError):
+        with pytest.raises(CommandError):
             self.cmd.set_epr_page(30001, 7, page)
 

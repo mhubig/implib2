@@ -23,7 +23,7 @@ import json
 import pytest
 from implib2.imp_helper import _normalize, _load_json, _flp2
 
-tests = {1: 0b0000000000000000000000001, #  2**0
+TESTS = {1: 0b0000000000000000000000001, #  2**0
          2: 0b0000000000000000000000010, #  2**1
          3: 0b0000000000000000000000010, #  2**1
          4: 0b0000000000000000000000100, #  2**2
@@ -82,7 +82,8 @@ def test_load_json():
         jsdict = json.load(js_file)
     assert _load_json('imp_tables.json') == jsdict
 
-@pytest.mark.parametrize("test", tests.items())
+# pylint: disable=E1101
+@pytest.mark.parametrize("test", TESTS.items())
 def test_flp2(test):
     number, floor = test
     assert _flp2(number) == floor

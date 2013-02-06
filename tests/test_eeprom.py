@@ -25,8 +25,8 @@ import pytest
 from mock import patch, mock_open, call
 from implib2.imp_eeprom import EEPRom
 
+# pylint: disable=C0103,W0212,E1101,W0201
 class TestEEPRom(object):
-    # pylint: disable=C0103,W0212
 
     def setup(self):
         self.epr = EEPRom()
