@@ -20,7 +20,7 @@ You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 
-from pytest import raises
+import pytest
 from mock import patch, call, MagicMock
 from binascii import a2b_hex as a2b
 
@@ -28,15 +28,6 @@ from implib2.imp_bus import Bus, BusError
 from implib2.imp_device import Device, DeviceError # pylint: disable=W0611
 from implib2.imp_commands import Command           # pylint: disable=W0611
 from implib2.imp_responces import Responce         # pylint: disable=W0611
-
-def pytest_generate_tests(metafunc):
-    minserial = 33000
-    maxserial = 34000
-    probes = range(33000, 34001)
-
-    if "probe" in metafunc.fixturenames:
-            metafunc.parametrize(("minserial", "maxserial", "probe"),
-                    [(minserial, maxserial, probe) for probe in probes])
 
 class TestBus(object):
     # pylint: disable=C0103,R0902
@@ -124,7 +115,7 @@ class TestBus(object):
         assert self.manager.mock_calls == expected_calls
 
     def test_sync_WithWrongBaudrate(self):
-        with raises(BusError):
+        with pytest.raises(BusError):
             self.bus.sync(baudrate=6666)
 
     def test_scan_AndFindEverything(self):
@@ -190,7 +181,10 @@ class TestBus(object):
         assert self.bus.scan(minserial, maxserial) is tuple()
         self.bus.probe_range.assert_called_once_with(0b1000)
 
-    def test_scan_AndFindOne(self, minserial, maxserial, probe):
+    @pytest.mark.parametrize("probe", range(33000, 34001))
+    def test_scan_AndFindOne(self, probe):
+        minserial = 33000
+        maxserial = 34000
 
         def check_range(bcast):
             serno = probe
