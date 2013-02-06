@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 """
-Copyright (C) 2011, Markus Hubig <mhubig@imko.de>
+Copyright (C) 2011-2013, Markus Hubig <mhubig@imko.de>
 
 This file is part of IMPLib2 a small Python library implementing
 the IMPBUS-2 data transmission protocol.
@@ -20,22 +20,20 @@ You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 
-from nose.tools import ok_, eq_
 from binascii import a2b_hex as a2b
-
 from implib2.imp_crc import MaximCRC
 
 class TestMaximCRC(object):
     # pylint: disable=C0103
 
-    def setUp(self):
+    def setup(self):
         self.crc = MaximCRC()
 
     def test_calc_crc(self):
         crc = a2b('f3')
-        eq_(self.crc.calc_crc(a2b('FD15ED09')), crc)
+        assert self.crc.calc_crc(a2b('FD15ED09')) == crc
 
     def test_check_crc(self):
         data = a2b('FD15ED09f3')
-        ok_(self.crc.check_crc(data))
+        assert self.crc.check_crc(data)
 

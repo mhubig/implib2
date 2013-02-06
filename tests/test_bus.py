@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 """
-Copyright (C) 2011-2012, Markus Hubig <mhubig@imko.de>
+Copyright (C) 2011-2013, Markus Hubig <mhubig@imko.de>
 
 This file is part of IMPLib2 a small Python library implementing
 the IMPBUS-2 data transmission protocol.
@@ -20,8 +20,8 @@ You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 
+import pytest
 from mock import patch, call, MagicMock
-from nose.tools import eq_, raises
 from binascii import a2b_hex as a2b
 
 from implib2.imp_bus import Bus, BusError
@@ -31,7 +31,7 @@ from implib2.imp_responces import Responce         # pylint: disable=W0611
 
 class TestBus(object):
     # pylint: disable=C0103,R0902
-    def setUp(self):
+    def setup(self):
         self.patcher1 = patch('implib2.imp_bus.Device')
         self.patcher2 = patch('implib2.imp_bus.Command')
         self.patcher3 = patch('implib2.imp_bus.Responce')
@@ -51,7 +51,7 @@ class TestBus(object):
 
         self.bus = Bus()
 
-    def tearDown(self):
+    def teardown(self):
         self.patcher1.stop()
         self.patcher2.stop()
         self.patcher3.stop()
@@ -72,8 +72,8 @@ class TestBus(object):
         self.cmd.set_parameter.return_value = package
         self.dev.write_pkg.return_value = True
 
-        eq_(self.bus.wakeup(), True)
-        eq_(self.manager.mock_calls, expected_calls)
+        assert self.bus.wakeup()
+        assert self.manager.mock_calls == expected_calls
 
     def test_sync(self):
         address  = 16777215
@@ -111,12 +111,12 @@ class TestBus(object):
         self.dev.write_pkg.return_value = True
 
         self.bus.sync(baudrate=baudrate)
-        eq_(self.bus.bus_synced, True)
-        eq_(self.manager.mock_calls, expected_calls)
+        assert self.bus.bus_synced
+        assert self.manager.mock_calls == expected_calls
 
-    @raises(BusError)
     def test_sync_WithWrongBaudrate(self):
-        self.bus.sync(baudrate=6666)
+        with pytest.raises(BusError):
+            self.bus.sync(baudrate=6666)
 
     def test_scan_AndFindEverything(self):
         minserial = 0b0001 #  1
@@ -167,9 +167,9 @@ class TestBus(object):
 
         results = (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, )
 
-        eq_(self.bus.scan(minserial, maxserial), results)
-        eq_(self.bus.probe_range.call_args_list, range_list)
-        eq_(self.bus.probe_module_short.call_args_list, modules_list)
+        assert self.bus.scan(minserial, maxserial) == results
+        assert self.bus.probe_range.call_args_list == range_list
+        assert self.bus.probe_module_short.call_args_list == modules_list
 
     def test_scan_bus_ButNothingFound(self):
         minserial = 0b0001 #  1
@@ -178,10 +178,13 @@ class TestBus(object):
         self.bus.probe_range = MagicMock()
         self.bus.probe_range.return_value = False
 
-        eq_(self.bus.scan(minserial, maxserial), ())
+        assert self.bus.scan(minserial, maxserial) is tuple()
         self.bus.probe_range.assert_called_once_with(0b1000)
 
-    def _scan(self, minserial, maxserial, probe):
+    @pytest.mark.parametrize("probe", range(33000, 34001))
+    def test_scan_AndFindOne(self, probe):
+        minserial = 33000
+        maxserial = 34000
 
         def check_range(bcast):
             serno = probe
@@ -199,15 +202,7 @@ class TestBus(object):
         self.bus.probe_module_short = MagicMock()
         self.bus.probe_module_short.side_effect = check_serno
 
-        eq_(self.bus.scan(minserial, maxserial), (probe,))
-
-    def test_scan_bus_FindOne(self):
-        minserial = 33000
-        maxserial = 34000
-        probes = range(33000, 34001)
-
-        for serno in probes:
-            yield self._scan, minserial, maxserial, serno
+        assert self.bus.scan(minserial, maxserial) == (probe,)
 
     def test_find_single_module(self):
         serno      = 31002
@@ -225,8 +220,8 @@ class TestBus(object):
         self.dev.read_pkg.return_value = bytes_recv
         self.res.get_negative_ack.return_value = serno
 
-        eq_(self.bus.find_single_module(), serno)
-        eq_(self.manager.mock_calls, expected_calls)
+        assert self.bus.find_single_module() == serno
+        assert self.manager.mock_calls == expected_calls
 
     def test_find_single_module_FindNothing(self):
         package    = a2b('fd0800ffffff60')
@@ -242,8 +237,8 @@ class TestBus(object):
         self.dev.write_pkg.return_value = True
         self.dev.read_pkg.side_effect = bytes_recv
 
-        eq_(self.bus.find_single_module(), False)
-        eq_(self.manager.mock_calls, expected_calls)
+        assert self.bus.find_single_module() is False
+        assert self.manager.mock_calls == expected_calls
 
     def test_probe_module_long(self):
         serno      = 31002
@@ -262,8 +257,8 @@ class TestBus(object):
         self.dev.read_pkg.return_value = bytes_recv
         self.res.get_long_ack.return_value = True
 
-        eq_(self.bus.probe_module_long(serno), True)
-        eq_(self.manager.mock_calls, expected_calls)
+        assert self.bus.probe_module_long(serno)
+        assert self.manager.mock_calls == expected_calls
 
     def test_probe_module_long_ButGetDeviceError(self):
         serno      = 31002
@@ -280,8 +275,8 @@ class TestBus(object):
         self.dev.write_pkg.return_value = True
         self.dev.read_pkg.side_effect = bytes_recv
 
-        eq_(self.bus.probe_module_long(serno), False)
-        eq_(self.manager.mock_calls, expected_calls)
+        assert self.bus.probe_module_long(serno) is False
+        assert self.manager.mock_calls == expected_calls
 
     def test_probe_module_short(self):
         serno      = 31002
@@ -300,8 +295,8 @@ class TestBus(object):
         self.dev.read_bytes.return_value = bytes_recv
         self.res.get_short_ack.return_value = True
 
-        eq_(self.bus.probe_module_short(serno), True)
-        eq_(self.manager.mock_calls, expected_calls)
+        assert self.bus.probe_module_short(serno)
+        assert self.manager.mock_calls == expected_calls
 
     def test_probe_module_short_ButGetDeviceError(self):
         serno      = 31002
@@ -318,8 +313,8 @@ class TestBus(object):
         self.dev.write_pkg.return_value = True
         self.dev.read_bytes.side_effect = bytes_recv
 
-        eq_(self.bus.probe_module_short(serno), False)
-        eq_(self.manager.mock_calls, expected_calls)
+        assert self.bus.probe_module_short(serno) is False
+        assert self.manager.mock_calls == expected_calls
 
     def test_probe_range(self):
         broadcast  = 0b111100000000000000000000
@@ -338,8 +333,8 @@ class TestBus(object):
         self.dev.read.return_value = bytes_recv
         self.res.get_range_ack.return_value = True
 
-        eq_(self.bus.probe_range(broadcast), True)
-        eq_(self.manager.mock_calls, expected_calls)
+        assert self.bus.probe_range(broadcast)
+        assert self.manager.mock_calls == expected_calls
 
     def test_probe_range_AndFindNothing(self):
         broadcast  = 0b111100000000000000000000
@@ -358,8 +353,8 @@ class TestBus(object):
         self.dev.read.return_value = bytes_recv
         self.res.get_range_ack.return_value = False
 
-        eq_(self.bus.probe_range(broadcast), False)
-        eq_(self.manager.mock_calls, expected_calls)
+        assert self.bus.probe_range(broadcast) is False
+        assert self.manager.mock_calls == expected_calls
 
     def test_get(self):
         serno      = 31002
@@ -380,8 +375,8 @@ class TestBus(object):
         self.dev.read_pkg.return_value = bytes_recv
         self.res.get_parameter.return_value = (31002,)
 
-        eq_(self.bus.get(serno, table, param), (serno,))
-        eq_(self.manager.mock_calls, expected_calls)
+        assert self.bus.get(serno, table, param) == (serno,)
+        assert self.manager.mock_calls == expected_calls
 
     def test_set(self):
         serno      = 31002
@@ -404,8 +399,8 @@ class TestBus(object):
         self.dev.read_pkg.return_value = bytes_recv
         self.res.set_parameter.return_value = True
 
-        eq_(self.bus.set(serno, table, param, value), True)
-        eq_(self.manager.mock_calls, expected_calls)
+        assert self.bus.set(serno, table, param, value)
+        assert self.manager.mock_calls == expected_calls
 
     def test_get_eeprom_page(self):
         serno      = 30001
@@ -426,8 +421,8 @@ class TestBus(object):
         self.dev.read_pkg.return_value = bytes_recv
         self.res.get_epr_page.return_value = page
 
-        eq_(self.bus.get_eeprom_page(serno, page_nr), page)
-        eq_(self.manager.mock_calls, expected_calls)
+        assert self.bus.get_eeprom_page(serno, page_nr) == page
+        assert self.manager.mock_calls == expected_calls
 
     def test_set_eeprom_page(self):
         serno      = 30001
@@ -448,6 +443,6 @@ class TestBus(object):
         self.dev.read_pkg.return_value = bytes_recv
         self.res.set_epr_page.return_value = True
 
-        eq_(self.bus.set_eeprom_page(serno, page_nr, page), True)
-        eq_(self.manager.mock_calls, expected_calls)
+        assert self.bus.set_eeprom_page(serno, page_nr, page)
+        assert self.manager.mock_calls == expected_calls
 
