@@ -4,10 +4,9 @@
 .tox/
 .coverage
 coverage.xml
-nosetests.xml
+unittests.xml
 pylint_*
 build/
 dist/
 IMPLib2.egg-info/
 docs/_build/
-tests/.coverage
