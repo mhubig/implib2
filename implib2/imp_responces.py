@@ -65,7 +65,7 @@ class Responce(object):
 
         return struct.unpack(fmt.format(length), data)
 
-    def set_parameter(self, packet, serno, table):
+    def set_parameter(self, packet, table, serno):
         responce = self.pkg.unpack(packet)
         command  = responce['header']['cmd']
         cmd = self.tbl.lookup(table, 'Table')
