@@ -61,8 +61,9 @@ class TestPackage(object):
     def test_write_pkg_ButNotAllBytes(self):
         packet = a2b('ffffff')
         self.ser.write.return_value = 2
-        with pytest.raises(DeviceError):
+        with pytest.raises(DeviceError) as e:
             self.dev.write_pkg(packet)
+        assert e.value.message == "Couldn't write all bytes!"
 
     def test_read_pkg_OnlyHeader(self):
         pkg = a2b('fd0200bb81002d')
@@ -78,8 +79,9 @@ class TestPackage(object):
     def test_read_pkg_OnlyHeaderWithTimeout(self):
         self.ser.inWaiting.return_value = 0
         self.dev.TIMEOUT = 0.1
-        with pytest.raises(DeviceError):
+        with pytest.raises(DeviceError) as e:
             self.dev.read_pkg()
+        assert e.value.message == 'Timeout reading header!'
 
     def test_read_pkg_HeaderAndData(self):
         header = a2b('000a05bb8100aa')
@@ -107,8 +109,9 @@ class TestPackage(object):
         read_bytes = [pkg[x] for x in range(0, len(pkg))]
         self.ser.read.side_effect = read_bytes
         self.dev.TIMEOUT = 0.1
-        with pytest.raises(DeviceError):
+        with pytest.raises(DeviceError) as e:
             self.dev.read_pkg()
+        assert e.value.message == 'Timeout reading data!'
 
     def test_read_bytes(self):
         pkg = a2b('ffff')
@@ -123,8 +126,9 @@ class TestPackage(object):
     def test_read_bytes_WithTimeout(self):
         self.ser.inWaiting.return_value = 0
         self.dev.TIMEOUT = 0.1
-        with pytest.raises(DeviceError):
+        with pytest.raises(DeviceError) as e:
             self.dev.read_bytes(1)
+        assert e.value.message == 'Timeout reading bytes!'
 
     def test_read(self):
         pkg = a2b('ff')

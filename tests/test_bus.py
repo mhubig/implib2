@@ -116,8 +116,9 @@ class TestBus(object):
         assert self.manager.mock_calls == expected_calls
 
     def test_sync_WithWrongBaudrate(self):
-        with pytest.raises(BusError):
+        with pytest.raises(BusError) as e:
             self.bus.sync(baudrate=6666)
+        assert e.value.message == "Unknown baudrate!"
 
     def test_scan_AndFindEverything(self):
         minserial = 0b0001 #  1
@@ -238,7 +239,7 @@ class TestBus(object):
         self.dev.write_pkg.return_value = True
         self.dev.read_pkg.side_effect = bytes_recv
 
-        assert self.bus.find_single_module() is False
+        assert not self.bus.find_single_module()
         assert self.manager.mock_calls == expected_calls
 
     def test_probe_module_long(self):
@@ -276,7 +277,7 @@ class TestBus(object):
         self.dev.write_pkg.return_value = True
         self.dev.read_pkg.side_effect = bytes_recv
 
-        assert self.bus.probe_module_long(serno) is False
+        assert not self.bus.probe_module_long(serno)
         assert self.manager.mock_calls == expected_calls
 
     def test_probe_module_short(self):
@@ -314,7 +315,7 @@ class TestBus(object):
         self.dev.write_pkg.return_value = True
         self.dev.read_bytes.side_effect = bytes_recv
 
-        assert self.bus.probe_module_short(serno) is False
+        assert not self.bus.probe_module_short(serno)
         assert self.manager.mock_calls == expected_calls
 
     def test_probe_range(self):
@@ -354,7 +355,7 @@ class TestBus(object):
         self.dev.read.return_value = bytes_recv
         self.res.get_range_ack.return_value = False
 
-        assert self.bus.probe_range(broadcast) is False
+        assert not self.bus.probe_range(broadcast)
         assert self.manager.mock_calls == expected_calls
 
     def test_get(self):

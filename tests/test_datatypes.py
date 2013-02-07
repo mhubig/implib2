@@ -44,7 +44,7 @@ class TestDataTypes(object):
 
     def test_in_NonExistentKey(self):
         answer = 0x08 in self.dts
-        assert answer is False
+        assert not answer
 
     def test_lookup(self):
         for d_nr in self._dict:

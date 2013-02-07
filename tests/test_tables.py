@@ -59,12 +59,15 @@ class TestTables(object):
             Tables('imp_tables.py')
 
     def test_lookup_unknown_table(self):
-        with pytest.raises(TablesError):
-            self.t.lookup('UNKNOWN', 'UNKNOWN')
+        with pytest.raises(TablesError) as e:
+            self.t.lookup('UNKNOWN_TABLE', 'UNKNOWN_PARAM')
+        assert e.value.message == "Unknown param or table: UNKNOWN_TABLE!"
 
     def test_lookup_unknown_param(self):
-        with pytest.raises(TablesError):
-            self.t.lookup('DEVICE_CALIBRATION_PARAMETER_TABLE', 'UNKNOWN')
+        with pytest.raises(TablesError) as e:
+            self.t.lookup('DEVICE_CALIBRATION_PARAMETER_TABLE',
+                    'UNKNOWN_PARAM')
+        assert e.value.message == "Unknown param or table: UNKNOWN_PARAM!"
 
     def test_lookup_value(self, table, param):
         row = self.j[table][param]
