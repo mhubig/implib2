@@ -620,7 +620,7 @@ class Module(object):
         value    = [1, 1, 63, 0]
 
         if not self.set_event_mode("SelfTest"):
-            raise ModuleError("Coul'd not set event mode!")
+            raise ModuleError("Could not set event mode!")
 
         return self.bus.set(self._serno, table, param, value)
 
@@ -635,7 +635,7 @@ class Module(object):
         value = [1, 0, 255, 0]
 
         if not self.set_event_mode("SelfTest"):
-            raise ModuleError("Coul'd not set event mode!")
+            raise ModuleError("Could not set event mode!")
 
         return self.bus.set(self._serno, table, param, value)
 
