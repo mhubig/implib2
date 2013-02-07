@@ -1,4 +1,4 @@
-Lizence
+License
 -------
 
 Copyright (C) 2011-2013, Markus Hubig <mhubig@imko.de>
