@@ -36,6 +36,7 @@ class Tables(object):
             cmd = self._tables[table][param]
             cmd[u'Set'] = self._tables[table]["Table"]["Set"]
             cmd[u'Get'] = self._tables[table]["Table"]["Get"]
-            return cmd
-        except KeyError:
-            raise TablesError(table, param)
+        except KeyError as e:
+            raise TablesError("Unknown param or table: {}!".format(e.message))
+
+        return cmd
