@@ -25,8 +25,8 @@ from .imp_helper import _load_json
 class TablesError(Exception):
     pass
 
+# pylint: disable=R0903,C0103
 class Tables(object):
-    # pylint: disable=R0903
 
     def __init__(self, filename='imp_tables.json'):
         self._tables = _load_json(filename)
