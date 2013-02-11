@@ -57,13 +57,32 @@ class Responce(object):
         return struct.unpack('<I', responce['data'])[0]
 
     def get_parameter(self, packet, table, param):
-        data  = self.pkg.unpack(packet)['data']
-        cmd = self.tbl.lookup(table, param)
+        data = self.pkg.unpack(packet)['data']
 
-        fmt = self.dts.lookup(cmd['Type'] % 0x80)
-        length = len(data)/struct.calcsize(fmt.format(1))
+        fmt = '<' # little-endian
 
-        return struct.unpack(fmt.format(length), data)
+        if param == 'GetData':
+            table = self.tbl.lookup(table)
+            fmt_list = []
+            for param in table:
+                try:
+                    no    = table[param]['No']
+                    dtype = table[param]['Type']
+                    lenth = table[param]['Length']
+                    fmt_list.append(tuple(no, dtype, length))
+                except KeyError:
+                    pass
+
+            for param in sorted(fmt_list, key=lambda item: item[0]):
+                f = dts.lookup(table[param]['Type'] % 0x80)
+                fmt += f.format(table[param]['Length'])
+
+        else:
+            table = self.tbl.lookup(table, param)
+            f = self.dts.lookup(table['Type'] % 0x80)
+            fmt += f.format(table['Length'])
+        
+        return struct.unpack(fmt, data)
 
     def set_parameter(self, packet, table, serno):
         responce = self.pkg.unpack(packet)
