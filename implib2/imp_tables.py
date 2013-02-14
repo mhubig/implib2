@@ -19,89 +19,76 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
-
 import struct
 from .imp_helper import _load_json
 
 
-class TablesError(Exception):
+class ParamTableFactoryError(Exception):
     pass
 
 
-class TableError(Exception):
-    pass
-
-
-# pylint: disable=R0903,C0103
-class Tables(object):
+class ParamTableFactory(object):
 
     def __init__(self, filename='imp_tables.json'):
         self._tables = _load_json(filename)
+        self._invalid = ["ConfigID", "TableSize",
+            "DataSize", "GetParam", "GetData"]
 
-    def get(self, table, param=False):
-        
+    def get(self, table, param=None):        
+        name = table
+
         try:
             group = self._tables[table]
-            tbl_content = group['Table']
+            table = group["Table"]
             set_command = group["Set"]
             get_command = group["Get"]
         except KeyError as e:
-            raise TablesError("Unknown table: {}!".format(e.message))
+            raise ParamTableFactoryError(
+                "Unknown table: {}!".format(e.message))
 
         try:
-            if param: tbl_content = tbl_content[param]
-        except KeyError as e:
-            raise TablesError("Unknown param: {}!".format(e.message))
+            params = []
+            if param:
+                params.append(Param(param, table[param]["No"],
+                    table[param]["Type"], table[param]["Status"],
+                    table[param]["Length"]))
+            else:
+                for param in table:
+                    if param in self._invalid:
+                        continue
+                    params.append(Param(param, table[param]["No"],
+                        table[param]["Type"], table[param]["Status"],
+                        table[param]["Length"]))
 
-        return Table(tbl_content, get_command, set_command)
+        except KeyError as e:
+            raise ParamTableFactoryError(
+                "Unknown param: {}!".format(e.message))
+
+        return Table(name, get_command, set_command, params)
 
 
 class Table(object):
 
-    def __init__(self, tbl_content, get_command, set_command):
-        self._tbl = tbl_content
+    def __init__(self, name, get_command, set_command, params):
+        self._name = name
         self._get = get_command
         self._set = set_command
-        self._dtypes = {
-            0x00: '{0}B', #  8-bit unsigned char
-            0x01: '{0}b', #  8-bit signed char
-            0x02: '{0}H', # 16-bit unsigned short
-            0x03: '{0}h', # 16-bit signed short
-            0x04: '{0}I', # 32-bit unsigned integer
-            0x05: '{0}i', # 32-bit signed integer
-            0x06: '{0}f', # 32-bit float
-            0x07: '{0}d'} # 64-bit double
+        self._params = sorted(params, key= lambda param: param.cmd)
 
-    def _get_command_number(self):
-        if 'GetData' in self._tbl:
-            cmd = self._tbl['GetData']['No']
-        else:
-            cmd = self._tbl['No']
-        return cmd
+    def __repr__(self):
+        return "Table('{0}', {1}, {2}, {3})".format(
+            self._name, self._get, self._set, self._params)
 
-    def _get_format_string(self):
-        result = '<' # little-endian
-        if 'GetData' in self._tbl:
-            
-            # First make something sortable!
-            table = [(self._tbl[param]['No'],
-                      self._tbl[param]['Type'],
-                      self._tbl[param]['Length']) for param in self._tbl]
-            
-            # Second iterate over this thing, sorted by 'No'
-            for param in sorted(table, key=lambda param: param[0]):
-                if param[0] > 250:
-                    continue
-                format = self._dtypes[param[1] % 0x80]
-                length = param[2] / struct.calcsize('<' + format.format(1))
-                result += format.format(length)
-        else:
-            param = (self._tbl["No"], self._tbl["Type"], self._tbl["Length"])
-            format = self._dtypes[param[1] % 0x80]
-            length = param[2] / struct.calcsize('<' + format.format(1))
-            result += format.format(length)
-        
-        return result
+    def __str__(self):
+        return self.name
+
+    def __iter__(self):
+        for param in self._params:
+            yield param
+
+    @property
+    def name(self):
+        return self._name
 
     @property
     def get(self):
@@ -113,8 +100,61 @@ class Table(object):
 
     @property
     def cmd(self):
-        return self._get_command_number()
+        if not len(self._params) == 1:
+            return 255
+        return self._params[0].cmd
+
+class Param(object):
+
+    def __init__(self, name, cmd, fmt, rw, length):
+        self._name = name
+        self._cmd  = cmd
+        self._fmt  = fmt
+        self._rw   = rw
+        self._len  = length
+        self._dtypes = {
+            0x00: '{0}B', #  8-bit unsigned char
+            0x01: '{0}b', #  8-bit signed char
+            0x02: '{0}H', # 16-bit unsigned short
+            0x03: '{0}h', # 16-bit signed short
+            0x04: '{0}I', # 32-bit unsigned integer
+            0x05: '{0}i', # 32-bit signed integer
+            0x06: '{0}f', # 32-bit float
+            0x07: '{0}d', # 64-bit double
+            0x80: '{0}s', #  8-bit unsigned char array
+            0x81: '{0}b', #  8-bit signed char array
+            0x82: '{0}H', # 16-bit unsigned short array
+            0x83: '{0}h', # 16-bit signed short array
+            0x84: '{0}I', # 32-bit unsigned integer array
+            0x85: '{0}i', # 32-bit signed integer array
+            0x86: '{0}f', # 32-bit float array
+            0x87: '{0}d'} # 64-bit double array
+    
+    def __repr__(self):
+        return "Param('{0}', {1}, {2}, '{3}', {4})".format(
+            self._name, self._cmd, self._fmt, self._rw, self._len)
+
+    def __str__(self):
+        return self.name
+    
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def cmd(self):
+        return self._cmd
 
     @property
     def fmt(self):
-        return self._get_format_string()
+        format = self._dtypes[self._fmt]
+        length = self._len / struct.calcsize('<' + format.format(1))
+        return '<' + format.format(length)
+
+    @property
+    def len(self):
+        return self._len
+
+    @property
+    def rw(self):
+        return self._rw == 'WR'

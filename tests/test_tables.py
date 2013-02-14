@@ -146,7 +146,7 @@ class TestTable(object):
             expected += format.format(length)
         
         assert isinstance(param_table.fmt, str)
-        assert param_table.fmt == expected + '1'
+        assert param_table.fmt == expected
 
     def test_SYSTEM_PARAMETER_TableFmt(self):
         param_table = self.t.get('SYSTEM_PARAMETER')

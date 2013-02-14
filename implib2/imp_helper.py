@@ -78,4 +78,3 @@ def _imprange(low, high):
     fill = mark | (mark - 1)
     mask = fill ^ 0xFFFFFF
     return low & mask, mark
-

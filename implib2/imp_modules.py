@@ -182,7 +182,7 @@ class Module(object):
 
         return mode
 
-    def set_measure_mode(self, mode='ModeA'):
+    def set_measure_mode(self, mode='A'):
         """Command to set the measure mode of the probe. There a 3 different
         measure modes.
 

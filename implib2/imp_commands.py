@@ -19,17 +19,17 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
-
 import struct
+from cStringIO import StringIO
+
 
 class CommandError(Exception):
     pass
 
+
 class Command(object):
-    def __init__(self, tables, package, datatypes):
-        self.tbl = tables
+    def __init__(self, package):
         self.pkg = package
-        self.dts = datatypes
 
     def get_long_ack(self, serno):
         return self.pkg.pack(serno=serno, cmd=0x02)
@@ -43,28 +43,25 @@ class Command(object):
     def get_negative_ack(self):
         return self.pkg.pack(serno=16777215, cmd=0x08)
 
-    def get_parameter(self, serno, table, param):
-        cmd = self.tbl.lookup(table, param)
-        param_no = struct.pack('<B', cmd['No'])
-        param_ad = struct.pack('<B', 0)
-        data = param_no + param_ad
+    def get_parameter(self, serno, table):
+        data = StringIO()
+        data.write(struct.pack('<B', table.cmd))
+        data.write(struct.pack('<B', 0))
 
-        package = self.pkg.pack(serno=serno, cmd=cmd['Get'], data=data)
-        return package
+        return self.pkg.pack(serno=serno, cmd=table.get, data=data.getvalue())
 
-    def set_parameter(self, serno, table, param, values, ad_param=0):
-        # pylint: disable=R0913
-        cmd = self.tbl.lookup(table, param)
-        fmt = self.dts.lookup(cmd['Type'] % 0x80)
+    def set_parameter(self, serno, table, values, ad_param=0):
+        data = StringIO()
+        data.write(struct.pack('<B', table.cmd))
+        data.write(struct.pack('<B', ad_param))
+        
+        for param in table:
+            try:
+                data.write(struct.pack(param.fmt, values[param.name]))
+            except KeyError:
+                CommandError("Param {} needed, but not given!".format(param)
 
-        param_no = struct.pack('<B', cmd['No'])
-        param_ad = struct.pack('<B', ad_param)
-        # pylint: disable=W0142
-        param = struct.pack(fmt.format(len(values)), *values)
-        data = param_no + param_ad + param
-
-        package = self.pkg.pack(serno=serno, cmd=cmd['Set'], data=data)
-        return package
+        return self.pkg.pack(serno=serno, cmd=table.set, data=data.getvalue())
 
     def do_tdr_scan(self, serno, scan_start, scan_end, scan_span, scan_count):
         # pylint: disable=R0913
@@ -74,16 +71,14 @@ class Command(object):
         scan_count = struct.pack('<H', scan_count)
         data = scan_start + scan_end + scan_span + scan_count
 
-        package = self.pkg.pack(serno=serno, cmd=0x1e, data=data)
-        return package
+        return self.pkg.pack(serno=serno, cmd=0x1e, data=data)
 
     def get_epr_page(self, serno, page_nr):
         param_no = struct.pack('<B', 255)
         param_ad = struct.pack('<B', page_nr)
         data = param_no + param_ad
 
-        package = self.pkg.pack(serno=serno, cmd=0x3c, data=data)
-        return package
+        return self.pkg.pack(serno=serno, cmd=0x3c, data=data)
 
     def set_epr_page(self, serno, page_nr, page):
         if len(page) > 250:
@@ -98,6 +93,4 @@ class Command(object):
 
         data = param_no + param_ad + param
 
-        package = self.pkg.pack(serno=serno, cmd=0x3d, data=data)
-        return package
-
+        return self.pkg.pack(serno=serno, cmd=0x3d, data=data)

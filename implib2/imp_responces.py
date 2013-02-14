@@ -19,17 +19,17 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
-
 import struct
+from cStringIO import StringIO
+
 
 class ResponceError(Exception):
     pass
 
+
 class Responce(object):
-    def __init__(self, tables, package, datatypes):
-        self.tbl = tables
+    def __init__(self, package):
         self.pkg = package
-        self.dts = datatypes
 
     def get_long_ack(self, packet, serno):
         responce = self.pkg.unpack(packet)
@@ -56,40 +56,30 @@ class Responce(object):
         responce = self.pkg.unpack(packet)
         return struct.unpack('<I', responce['data'])[0]
 
-    def get_parameter(self, packet, table, param):
-        data = self.pkg.unpack(packet)['data']
+    def get_parameter(self, serno, table, bytes_recv):
+        responce = self.pkg.unpack(bytes_recv)
 
-        fmt = '<' # little-endian
+        if not responce['header']['cmd'] == table.get:
+            raise ResponceError("Wrong get command in responce!")
+        if not serno == responce['header']['serno']:
+            raise ResponceError("Wrong serial number in responce!")
 
-        if param == 'GetData':
-            table = self.tbl.lookup(table)
-            fmt_list = []
-            for param in table:
-                try:
-                    no    = table[param]['No']
-                    dtype = table[param]['Type']
-                    lenth = table[param]['Length']
-                    fmt_list.append(tuple(no, dtype, length))
-                except KeyError:
-                    pass
+        data = StringIO(responce['data'])
+        result = {}
 
-            for param in sorted(fmt_list, key=lambda item: item[0]):
-                f = dts.lookup(table[param]['Type'] % 0x80)
-                fmt += f.format(table[param]['Length'])
+        for param in table:
+            format = param.fmt
+            length = param.len
+            name = param.name
+            result[name] = struct.unpack(format, data.read(length))
 
-        else:
-            table = self.tbl.lookup(table, param)
-            f = self.dts.lookup(table['Type'] % 0x80)
-            fmt += f.format(table['Length'])
-        
-        return struct.unpack(fmt, data)
+        return result
 
-    def set_parameter(self, packet, table, serno):
-        responce = self.pkg.unpack(packet)
-        command  = responce['header']['cmd']
-        cmd = self.tbl.lookup(table, 'Table')
+    def set_parameter(self, serno, table, bytes_recv):
+        responce = self.pkg.unpack(bytes_recv)
+        command = responce['header']['cmd']
 
-        if not command == cmd['Set']:
+        if not command == table.set:
             raise ResponceError("Wrong set command in responce!")
         if not serno == responce['header']['serno']:
             raise ResponceError("Wrong serial number in responce!")
@@ -125,4 +115,3 @@ class Responce(object):
         if not responce['header']['cmd'] == 61:
             raise ResponceError("Responce command doesn't match!")
         return True
-
