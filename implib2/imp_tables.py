@@ -73,7 +73,7 @@ class Table(object):
         self._name = name
         self._get = get_command
         self._set = set_command
-        self._params = sorted(params, key= lambda param: param.cmd)
+        self._params = sorted(params, key=lambda param: param.cmd)
 
     def __repr__(self):
         return "Table('{0}', {1}, {2}, {3})".format(

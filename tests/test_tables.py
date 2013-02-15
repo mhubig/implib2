@@ -23,9 +23,8 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 import json
 import pytest
 import struct
-from implib2.imp_tables import Tables, TablesError
-from implib2.imp_tables import Table, TableError
-
+from implib2.imp_tables import ParamTableFactoryError
+from implib2.imp_tables import ParamTableFactory, Table, Param
 
 # pylint: disable=C0103
 def pytest_generate_tests(metafunc):
@@ -48,41 +47,126 @@ def pytest_generate_tests(metafunc):
             metafunc.parametrize("table", [table for table in j])
 
 
-class TestTables(object):
+class TestParamTableFactory(object):
 
     def setup(self):
         with open('tests/test_tables.json') as js:
             self.j = json.load(js)
-        self.t = Tables()
+        self.t = ParamTableFactory()
+        self._invalid = ["ConfigID", "TableSize",
+            "DataSize", "GetParam", "GetData"]
 
-    def test_Tables(self):
-        assert type(self.t) ==  Tables
+    def test_ParamTableFactory(self):
+        assert type(self.t) == ParamTableFactory
 
     def test_GetUnknownTable(self):
-        with pytest.raises(TablesError) as e:
+        with pytest.raises(ParamTableFactoryError) as e:
             self.t.get('UNKNOWN_TABLE')
         assert e.value.message == "Unknown table: UNKNOWN_TABLE!"
 
     def test_GetTable(self, table):
-        table_a = Table(self.j[table]["Table"], 0, 0)
+        json_table = self.j[table]
+
+        param_list = []
+        for param in json_table["Table"]:
+            if param in self._invalid:
+                continue
+            json_param = self.j[table]["Table"][param]
+            param_list.append(Param(param,
+                json_param["No"],
+                json_param["Type"],
+                json_param["Status"],
+                json_param["Length"]))
+
+        param_list.sort(key=lambda p: p.cmd)
+        
+        table_a = Table(table, json_table['Get'],
+            json_table['Set'],param_list)
         table_b = self.t.get(table)
-        assert table_a._tbl == table_b._tbl
+
+        assert table_a.name == table_b.name
+        assert table_a.get == table_b.get
+        assert table_a.set == table_b.set
+        assert table_a.cmd == table_b.cmd
+        assert repr(table_a) == repr(table_b)
+
+        assert table_b.name == table
+        assert table_b.get == json_table["Get"]
+        assert table_b.set == json_table["Set"]
+        assert table_b.cmd == 255
 
     def test_GetTableUnknownParameter(self):
-        with pytest.raises(TablesError) as e:
+        with pytest.raises(ParamTableFactoryError) as e:
             param_table = self.t.get('SYSTEM_PARAMETER', 'UNKNOWN_PARAM')
         assert e.value.message == "Unknown param: UNKNOWN_PARAM!"
 
     def test_GetTableParam(self, table, param):
-        param_table = self.t.get(table, param)
-        assert param_table._tbl == self.j[table]['Table'][param]
+        json_table = self.j[table]
+        json_param = self.j[table]["Table"][param]
+
+        param_list = [Param(param,
+            json_param["No"],
+            json_param["Type"],
+            json_param["Status"],
+            json_param["Length"])]
+
+        table_a = Table(table, json_table['Get'],
+            json_table['Set'], param_list)
+        table_b = self.t.get(table, param)
+
+        assert table_a.name == table_b.name
+        assert table_a.get == table_b.get
+        assert table_a.set == table_b.set
+        assert table_a.cmd == table_b.cmd
+        assert repr(table_a) == repr(table_b)
+
+        assert table_b.name == table
+        assert table_b.get == json_table["Get"]
+        assert table_b.set == json_table["Set"]
+        assert table_b.cmd == json_param["No"]
 
 
 class TestTable(object):
 
     def setup(self):
-        self.t = Tables()
-        self.d = {
+        self.table = Table('TestTable', 1, 2,
+            [Param('Testparam', 1, 0x80, 'OR', 3)])
+
+    def test_TableName(self):
+        assert self.table.name == 'TestTable'
+
+    def test_TableGet(self):
+        assert self.table.get == 1
+
+    def test_TableSet(self):
+        assert self.table.set == 2
+
+    def test_TableCmd(self):
+        assert self.table.cmd == 1
+
+    def test_TableStr(self):
+        assert str(self.table) == 'TestTable'
+
+    def test_TableRepr(self):
+        s = "Table('TestTable', 1, 2, [Param('Testparam', 1, 128, 'OR', 3)])"
+        assert repr(self.table) == s
+
+    def test_TableIterableAndSortedByCmd(self):
+        table = Table('TestTable', 1, 2,
+            [Param('TestParam2', 2, 0x80, 'OR', 3),
+             Param('TestParam0', 3, 0x80, 'OR', 3),
+             Param('TestParam1', 1, 0x80, 'OR', 3)])
+
+        expected = ['TestParam1', 'TestParam2', 'TestParam0']
+        for no, param in enumerate(table):
+            assert param.name == expected[no]
+
+
+class TestParam(object):
+
+    def setup(self):
+        self.param = Param('TestParam', 1, 0x80, 'OR', 16)
+        self._dtypes = {
             0x00: '{0}B', #  8-bit unsigned char
             0x01: '{0}b', #  8-bit signed char
             0x02: '{0}H', # 16-bit unsigned short
@@ -90,77 +174,40 @@ class TestTable(object):
             0x04: '{0}I', # 32-bit unsigned integer
             0x05: '{0}i', # 32-bit signed integer
             0x06: '{0}f', # 32-bit float
-            0x07: '{0}d'} # 64-bit double
+            0x07: '{0}d', # 64-bit double
+            0x80: '{0}s', #  8-bit unsigned char array
+            0x81: '{0}b', #  8-bit signed char array
+            0x82: '{0}H', # 16-bit unsigned short array
+            0x83: '{0}h', # 16-bit signed short array
+            0x84: '{0}I', # 32-bit unsigned integer array
+            0x85: '{0}i', # 32-bit signed integer array
+            0x86: '{0}f', # 32-bit float array
+            0x87: '{0}d'} # 64-bit double array
 
-    def test_Table(self, table):
-        param_table = self.t.get(table)
+    def test_ParamName(self):
+        assert self.param.name == 'TestParam'
 
-    def test_TableParam(self, table, param):
-        param_table = self.t.get(table, param)
+    def test_ParamCmd(self):
+        assert self.param.cmd == 1
 
-    def test_TableGet(self, table):
-        param_table = self.t.get(table)
-        assert isinstance(param_table.get, int)
-        assert param_table.get == self.t._tables[table]["Get"]
+    @pytest.mark.parametrize('fmt',
+        [0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+         0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87])
+    def test_ParamFmt(self, fmt):
+        param = Param('TestParam', 1, fmt, 'OR', 16)
+        string = '<' + self._dtypes[fmt]
+        length = struct.calcsize(string.format(1))
+        assert param.fmt == string.format(16/length)
 
-    def test_TableParamGet(self, table, param):
-        param_table = self.t.get(table, param)
-        assert isinstance(param_table.get, int)
-        assert param_table.get == self.t._tables[table]["Get"]
+    def test_ParamLen(self):
+        assert self.param.len == 16
 
-    def test_TableSet(self, table):
-        param_table = self.t.get(table)
-        assert isinstance(param_table.set, int)
-        assert param_table.set == self.t._tables[table]["Set"]
+    def test_ParamRw(self):
+        assert not self.param.rw
 
-    def test_TableParamSet(self, table, param):
-        param_table = self.t.get(table, param)
-        assert isinstance(param_table.set, int)
-        assert param_table.set == self.t._tables[table]["Set"]
+    def test_ParamStr(self):
+        assert str(self.param) == 'TestParam'
 
-    def test_TableCmd(self, table):
-        param_table = self.t.get(table)
-        assert isinstance(param_table.cmd, int)
-        assert param_table.cmd == 255
-
-    def test_TableParamCmd(self, table, param):
-        param_table = self.t.get(table, param)
-        assert isinstance(param_table.cmd, int)
-        assert param_table.cmd == self.t._tables[table]["Table"][param]['No']
-
-    def test_TableFmt(self, table):
-        param_table = self.t.get(table)
-
-        expected = '<' # little-endian
-        # First make something sortable!
-        stable = self.t._tables[table]["Table"]
-        format_list = [(stable[param]['No'],
-                        stable[param]['Type'],
-                        stable[param]['Length']) for param in stable]
-        # Second iterate over this thing, sorted by 'No'
-        for param in sorted(format_list, key=lambda param: param[0]):
-            if param[0] > 250:
-                    continue
-            format = self.d[param[1] % 0x80]
-            length = param[2] / struct.calcsize('<' + format.format(1))
-            expected += format.format(length)
-        
-        assert isinstance(param_table.fmt, str)
-        assert param_table.fmt == expected
-
-    def test_SYSTEM_PARAMETER_TableFmt(self):
-        param_table = self.t.get('SYSTEM_PARAMETER')
-        expected = '<1I1f1f1H16B1H1B1B'
-        assert param_table.fmt == expected
-
-    def test_TableParamFmt(self, table, param):
-        param_table = self.t.get(table, param)
-
-        dtable = self.t._tables[table]["Table"][param]
-        expected = '<' # little-endian
-        format = self.d[dtable['Type'] % 0x80]
-        length = dtable['Length'] / struct.calcsize('<' + format.format(1))
-        expected += format.format(length)
-        
-        assert isinstance(param_table.fmt, str)
-        assert param_table.fmt == expected
+    def test_ParamRepr(self):
+        s = "Param('TestParam', 1, 128, 'OR', 16)"
+        assert repr(self.param) == s
