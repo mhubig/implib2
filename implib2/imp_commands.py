@@ -59,7 +59,7 @@ class Command(object):
             try:
                 data.write(struct.pack(param.fmt, values[param.name]))
             except KeyError:
-                CommandError("Param {} needed, but not given!".format(param)
+                CommandError("Param {} needed, but not given!".format(param))
 
         return self.pkg.pack(serno=serno, cmd=table.set, data=data.getvalue())
 
