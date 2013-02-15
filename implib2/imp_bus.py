@@ -337,15 +337,14 @@ class Bus(object):
         time.sleep(self.cycle_wait)
         return self.res.get_range_ack(bytes_recv)
 
-    def get(self, serno, table, param=None):
+    def get(self, serno, table, param):
         """This is the base command for getting some information from the
         probes. Instead of using this command directly, it's highly recommendet
         to use the higher level `API` commands in :class:`Module`. Nevertheless
         here is a small example of how to use this command to request the
         serial number of a probe::
 
-            >>> factory = ParamTableFactory()
-            >>> table = factory.get('SYSTEM_PARAMETER')
+            >>> table = 'SYSTEM_PARAMETER'
             >>> param = 'SerialNum'
             >>> serno = 33912
             >>> bus.get(serno, table, param)
@@ -370,7 +369,21 @@ class Bus(object):
         time.sleep(self.cycle_wait)
         return self.res.get_parameter(serno, table, bytes_recv)
 
-    def set(self, serno, table, param=None, value=[], ad_param=0):
+    def get_table(self, serno, table):
+        """This command aets a whole table at once.
+
+        :param serno: Serial number of the probe to address.
+        :type  serno: int
+
+        :param table: Table to get.
+        :type  table: str
+
+        :rtype: bool
+
+        """
+        return self.get(serno, table, None)
+
+    def set(self, serno, table, param, value, ad_param=0):
         """This is the base command for sending and storing some information in
         the tables of the probes. It's the counterpart of the :func:`get`
         command. Instead of using this command directly, it's highly
@@ -378,24 +391,23 @@ class Bus(object):
         Nevertheless here is a small example of how to use this command to
         set the serial number of a probe::
 
-            >>> factory = ParamTableFactory()
-            >>> table = factory.get('SYSTEM_PARAMETER')
+            >>> table = 'SYSTEM_PARAMETER'
             >>> param = 'SerialNum'
             >>> serno = 33912
-            >>> values = {"SerialNum": 33913}
+            >>> values = [33913]
             >>> bus.set(serno, table, param, value)
 
         :param serno: Serial number of the probe to address.
         :type  serno: int
 
-        :param table: System table to store the infomation.
+        :param table: Table to store the infomation.
         :type  table: string
 
-        :param param: Parameter od row containing the requested infomation.
+        :param param: Parameter to set.
         :type  param: string
 
         :param value: Values to store.
-        :type  value: iterable
+        :type  value: dict
 
         :rtype: :const:`bool`
 
@@ -408,6 +420,23 @@ class Bus(object):
         bytes_recv = self.dev.read_pkg()
         time.sleep(self.cycle_wait)
         return self.res.set_parameter(serno, table, bytes_recv)
+
+    def set_table(self, serno, table, params):
+        """This command sets a whole table at once.
+
+        :param serno: Serial number of the probe to address.
+        :type  serno: int
+
+        :param table: Table to set.
+        :type  table: str
+
+        :param params: Dictionary containing all the table params.
+        :type  params: dict
+
+        :rtype: bool
+
+        """
+        return self.set(serno, table, None, params)
 
     def get_eeprom_page(self, serno, page_nr):
         """This is the base command for reading a single page of EEPRom data
