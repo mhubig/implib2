@@ -28,6 +28,8 @@ from implib2.imp_bus import Bus, BusError
 from implib2.imp_device import Device, DeviceError # pylint: disable=W0611
 from implib2.imp_commands import Command           # pylint: disable=W0611
 from implib2.imp_responces import Responce         # pylint: disable=W0611
+from implib2.imp_tables import ParamTableFactory   # pylint: disable=W0611
+
 
 # pylint: disable=C0103,R0902,W0201,E1101
 class TestBus(object):
@@ -36,41 +38,51 @@ class TestBus(object):
         self.patcher1 = patch('implib2.imp_bus.Device')
         self.patcher2 = patch('implib2.imp_bus.Command')
         self.patcher3 = patch('implib2.imp_bus.Responce')
+        self.patcher4 = patch('implib2.imp_bus.ParamTableFactory')
 
         mock_dev = self.patcher1.start()
         mock_cmd = self.patcher2.start()
         mock_res = self.patcher3.start()
+        mock_tbl = self.patcher4.start()
 
         self.dev = mock_dev()
         self.cmd = mock_cmd()
         self.res = mock_res()
+        self.tbl = mock_tbl()
 
         self.manager = MagicMock()
         self.manager.attach_mock(self.dev, 'dev')
         self.manager.attach_mock(self.cmd, 'cmd')
         self.manager.attach_mock(self.res, 'res')
+        self.manager.attach_mock(self.tbl, 'tbl')
 
+        self.ptf = ParamTableFactory()
         self.bus = Bus()
 
     def teardown(self):
         self.patcher1.stop()
         self.patcher2.stop()
         self.patcher3.stop()
+        self.patcher4.stop()
 
     def test_wakeup(self):
         address  = 16777215
-        table    = 'ACTION_PARAMETER_TABLE'
+        table    = 'ACTION_PARAMETER'
         param    = 'EnterSleep'
         value    = 0
         ad_param = 0
-        package  = a2b('fd1504fffffffe05000035')
+
+        tbl = self.ptf.get(table, param)
+        pkg = a2b('fd1504fffffffe05000035')
 
         expected_calls = [
-            call.cmd.set_parameter(address, table, param, [value], ad_param),
-            call.dev.write_pkg(package),
+            call.tbl.get(table, param),
+            call.cmd.set_parameter(address, tbl, [value]),
+            call.dev.write_pkg(pkg),
         ]
 
-        self.cmd.set_parameter.return_value = package
+        self.tbl.get.return_value = tbl
+        self.cmd.set_parameter.return_value = pkg
         self.dev.write_pkg.return_value = True
 
         assert self.bus.wakeup()
@@ -78,37 +90,41 @@ class TestBus(object):
 
     def test_sync(self):
         address  = 16777215
-        table    = 'SYSTEM_PARAMETER_TABLE'
+        table    = 'SYSTEM_PARAMETER'
         param    = 'Baudrate'
         baudrate = 9600
         value    = baudrate/100
         ad_param = 0
-        package  = a2b('fd0b05ffffffaf0400600054')
+        
+        tbl = self.ptf.get(table, param)
+        pkg = a2b('fd0b05ffffffaf0400600054')
 
         expected_calls = [
-            call.cmd.set_parameter(address, table, param, [value], ad_param),
+            call.tbl.get(table, param),
+            call.cmd.set_parameter(address, tbl, [value]),
             call.dev.close_device(),
 
             call.dev.open_device(baudrate=1200),
-            call.dev.write_pkg(package),
+            call.dev.write_pkg(pkg),
             call.dev.close_device(),
 
             call.dev.open_device(baudrate=2400),
-            call.dev.write_pkg(package),
+            call.dev.write_pkg(pkg),
             call.dev.close_device(),
 
             call.dev.open_device(baudrate=4800),
-            call.dev.write_pkg(package),
+            call.dev.write_pkg(pkg),
             call.dev.close_device(),
 
             call.dev.open_device(baudrate=9600),
-            call.dev.write_pkg(package),
+            call.dev.write_pkg(pkg),
             call.dev.close_device(),
 
             call.dev.open_device(baudrate=baudrate)
         ]
 
-        self.cmd.set_parameter.return_value = package
+        self.tbl.get.return_value = tbl
+        self.cmd.set_parameter.return_value = pkg
         self.dev.write_pkg.return_value = True
 
         self.bus.sync(baudrate=baudrate)
@@ -359,46 +375,53 @@ class TestBus(object):
         assert self.manager.mock_calls == expected_calls
 
     def test_get(self):
-        serno      = 31002
-        table      = 'SYSTEM_PARAMETER_TABLE'
-        param      = 'SerialNum'
-        package    = a2b('fd0a031a7900290100c4')
-        bytes_recv = a2b('000a051a7900181a79000042')
+        serno = 31002
+        table = 'SYSTEM_PARAMETER'
+        param = 'SerialNum'
+
+        tbl = self.ptf.get(table, param)
+        pkg = a2b('fd0a031a7900290100c4')
+        rcv = a2b('000a051a7900181a79000042')
 
         expected_calls = [
-            call.cmd.get_parameter(serno, table, param),
-            call.dev.write_pkg(package),
+            call.tbl.get(table, param),
+            call.cmd.get_parameter(serno, tbl),
+            call.dev.write_pkg(pkg),
             call.dev.read_pkg(),
-            call.res.get_parameter(bytes_recv, table, param)
+            call.res.get_parameter(serno, tbl, rcv)
         ]
 
-        self.cmd.get_parameter.return_value = package
+        self.tbl.get.return_value = tbl
+        self.cmd.get_parameter.return_value = pkg
         self.dev.write_pkg.return_value = True
-        self.dev.read_pkg.return_value = bytes_recv
-        self.res.get_parameter.return_value = (31002,)
+        self.dev.read_pkg.return_value = rcv
+        self.res.get_parameter.return_value = {param: serno}
 
-        assert self.bus.get(serno, table, param) == (serno,)
+        assert self.bus.get(serno, table, param) == {param: serno}
         assert self.manager.mock_calls == expected_calls
 
     def test_set(self):
-        serno      = 31002
-        table      = 'PROBE_CONFIGURATION_PARAMETER_TABLE'
-        param      = 'DeviceSerialNum'
-        value      = [31003]
-        ad_param   = 0
-        package    = a2b('fd11071a79002b0c001b790000b0')
-        bytes_recv = a2b('0011001a790095')
+        serno = 31002
+        table = 'PROBE_CONFIGURATION_PARAMETER'
+        param = 'DeviceSerialNum'
+        value = [31003]
+
+        tbl = self.ptf.get(table, param)
+        pkg = a2b('fd11071a79002b0c001b790000b0')
+        rcv = a2b('0011001a790095')
 
         expected_calls = [
-            call.cmd.set_parameter(serno, table, param, value, ad_param),
-            call.dev.write_pkg(package),
+            call.tbl.get(table, param),
+            call.cmd.set_parameter(serno, tbl, value, 0),
+            call.dev.write_pkg(pkg),
             call.dev.read_pkg(),
-            call.res.set_parameter(bytes_recv, serno, table)
+            call.res.set_parameter(serno, tbl, rcv)
         ]
 
-        self.cmd.set_parameter.return_value = package
+        self.tbl.get.return_value = tbl
+        self.cmd.set_parameter.return_value = pkg
         self.dev.write_pkg.return_value = True
-        self.dev.read_pkg.return_value = bytes_recv
+        self.dev.read_pkg.return_value = rcv
         self.res.set_parameter.return_value = True
 
         assert self.bus.set(serno, table, param, value)
@@ -447,4 +470,3 @@ class TestBus(object):
 
         assert self.bus.set_eeprom_page(serno, page_nr, page)
         assert self.manager.mock_calls == expected_calls
-

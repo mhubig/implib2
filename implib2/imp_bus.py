@@ -93,15 +93,11 @@ class Bus(object):
         :rtype: :const:`True`
 
         """
-        address  = 16777215 # 0xFFFFFF
-        table    = 'ACTION_PARAMETER_TABLE'
-        param    = 'EnterSleep'
-        value    = 0
-        ad_param = 0
+        serno = 16777215 # 0xFFFFFF
+        table = self.tbl.get('ACTION_PARAMETER', 'EnterSleep')
+        value = 0
 
-        package = self.cmd.set_parameter(address, table,
-                param, [value], ad_param)
-
+        package = self.cmd.set_parameter(serno, table, [value])
         self.dev.write_pkg(package)
         time.sleep(0.300)
 
@@ -125,17 +121,14 @@ class Bus(object):
         :rtype: :const:`True`
 
         """
-        address  = 16777215
-        table    = 'SYSTEM_PARAMETER_TABLE'
-        param    = 'Baudrate'
-        value    = baudrate/100
-        ad_param = 0
+        serno = 16777215 # 0xFFFFFF
+        table = self.tbl.get('SYSTEM_PARAMETER', 'Baudrate')
+        value = baudrate/100
 
         if not value in (12, 24, 48, 96):
             raise BusError("Unknown baudrate!")
 
-        package = self.cmd.set_parameter(address, table,
-                param, [value], ad_param)
+        package = self.cmd.set_parameter(serno, table, [value])
 
         # first close the device
         self.dev.close_device()
