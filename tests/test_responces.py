@@ -22,16 +22,17 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 
 import pytest
 from binascii import a2b_hex as a2b
-from implib2.imp_tables import Tables
+
 from implib2.imp_packages import Package
-from implib2.imp_datatypes import DataTypes
+from implib2.imp_tables import ParamTableFactory
 from implib2.imp_responces import Responce, ResponceError
 
 # pylint: disable=C0103,E1101,W0201
 class TestResponce(object):
 
     def setup(self):
-        self.res = Responce(Tables(), Package(), DataTypes())
+        self.tbl = ParamTableFactory()
+        self.res = Responce(Package())
 
     def test_get_long_ack(self):
         pkg = a2b('0002001a7900a7')
@@ -66,31 +67,71 @@ class TestResponce(object):
         assert self.res.get_negative_ack(pkg) == 31002
 
     def test_get_parameter(self):
-        pkg   = a2b('000a051a7900181a79000042')
+        table = 'SYSTEM_PARAMETER'
         param = 'SerialNum'
-        table = 'SYSTEM_PARAMETER_TABLE'
-        assert self.res.get_parameter(pkg, table, param) == (31002,)
+        serno = 31002
+
+        pkg = a2b('000a051a7900181a79000042')
+        tbl = self.tbl.get(table, param) 
+        
+        assert self.res.get_parameter(serno, tbl, pkg) == {param: 31002}
+
+    def test_get_parameter_WrongTable(self):
+        table = 'PROBE_CONFIGURATION_PARAMETER'
+        param = 'DeviceSerialNum'
+        serno = 31002
+
+        pkg = a2b('000a051a7900181a79000042')
+        tbl = self.tbl.get(table, param)
+        
+        with pytest.raises(ResponceError) as e:
+            self.res.get_parameter(serno, tbl, pkg)
+        assert e.value.message == "Wrong get command in responce!"
+
+    def test_get_parameter_WrongSerno(self):
+        table = 'SYSTEM_PARAMETER'
+        param = 'SerialNum'
+        serno = 31003
+
+        pkg = a2b('000a051a7900181a79000042')
+        tbl = self.tbl.get(table, param)
+        
+        with pytest.raises(ResponceError) as e:
+            self.res.get_parameter(serno, tbl, pkg)
+        assert e.value.message == "Wrong serial number in responce!"
 
     def test_set_parameter(self):
-        pkg   = a2b('0011001a790095')
+        table = 'PROBE_CONFIGURATION_PARAMETER'
+        param = 'DeviceSerialNum'
         serno = 31002
-        table = 'PROBE_CONFIGURATION_PARAMETER_TABLE'
-        assert self.res.set_parameter(pkg, table, serno)
+
+        pkg = a2b('0011001a790095')
+        tbl = self.tbl.get(table, param)
+        
+        assert self.res.set_parameter(serno, tbl, pkg)
 
     def test_set_parameter_WrongTable(self):
-        pkg = a2b('0011001a790095')
+        table = 'SYSTEM_PARAMETER'
+        param = 'SerialNum'
         serno = 31002
-        table = 'SYSTEM_PARAMETER_TABLE'
+
+        pkg = a2b('0011001a790095')
+        tbl = self.tbl.get(table, param)
+        
         with pytest.raises(ResponceError) as e:
-            self.res.set_parameter(pkg, table, serno)
+            self.res.set_parameter(serno, tbl, pkg)
         assert e.value.message == "Wrong set command in responce!"
 
     def test_set_parameter_WrongSerno(self):
-        pkg = a2b('0011001a790095')
+        table = 'PROBE_CONFIGURATION_PARAMETER'
+        param = 'DeviceSerialNum'
         serno = 31003
-        table = 'PROBE_CONFIGURATION_PARAMETER_TABLE'
+
+        pkg = a2b('0011001a790095')
+        tbl = self.tbl.get(table, param)
+        
         with pytest.raises(ResponceError) as e:
-            self.res.set_parameter(pkg, table, serno)
+            self.res.set_parameter(serno, tbl, pkg)
         assert e.value.message == "Wrong serial number in responce!"
 
     def test_do_tdr_scan(self):

@@ -28,6 +28,7 @@ class ResponceError(Exception):
 
 
 class Responce(object):
+
     def __init__(self, package):
         self.pkg = package
 
@@ -71,7 +72,7 @@ class Responce(object):
             format = param.fmt
             length = param.len
             name = param.name
-            result[name] = struct.unpack(format, data.read(length))
+            result[name] = struct.unpack(format, data.read(length))[0]
 
         return result
 
