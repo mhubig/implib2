@@ -23,16 +23,17 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 import pytest
 from binascii import a2b_hex as a2b
 
-from implib2.imp_tables import Tables
 from implib2.imp_packages import Package
-from implib2.imp_datatypes import DataTypes
+from implib2.imp_tables import ParamTableFactory
 from implib2.imp_commands import Command, CommandError
+
 
 # pylint: disable=C0103,W0201,E1101
 class TestCommand(object):
 
     def setup(self):
-        self.cmd = Command(Tables(), Package(), DataTypes())
+        self.tbl = ParamTableFactory()
+        self.cmd = Command(Package())
 
     def test_get_long_ack(self):
         pkg = self.cmd.get_long_ack(31001)
@@ -51,15 +52,14 @@ class TestCommand(object):
         assert pkg == a2b('fd0800ffffff60')
 
     def test_get_parameter(self):
-        pkg = self.cmd.get_parameter(31002,
-                'SYSTEM_PARAMETER_TABLE',
-                'SerialNum')
+        tbl = self.tbl.get('SYSTEM_PARAMETER', 'SerialNum')
+        pkg = self.cmd.get_parameter(31002, tbl)
         assert pkg == a2b('fd0a031a7900290100c4')
 
     def test_set_parameter(self):
-        pkg = self.cmd.set_parameter(31002,
-                'PROBE_CONFIGURATION_PARAMETER_TABLE',
-                'DeviceSerialNum', [31003])
+        tbl = self.tbl.get('PROBE_CONFIGURATION_PARAMETER',
+            'DeviceSerialNum')
+        pkg = self.cmd.set_parameter(31002, tbl, {'DeviceSerialNum': 31003})
         assert pkg == a2b('fd11071a79002b0c001b790000b0')
 
     def test_do_tdr_scan(self):
@@ -80,4 +80,3 @@ class TestCommand(object):
         with pytest.raises(CommandError) as e:
             self.cmd.set_epr_page(30001, 7, page)
         assert e.value.message == "Page to big, exeeds 250 Bytes!"
-
