@@ -378,6 +378,7 @@ class TestBus(object):
         serno = 31002
         table = 'SYSTEM_PARAMETER'
         param = 'SerialNum'
+        value = {'SerialNum': 31002}
 
         tbl = self.ptf.get(table, param)
         pkg = a2b('fd0a031a7900290100c4')
@@ -395,16 +396,51 @@ class TestBus(object):
         self.cmd.get_parameter.return_value = pkg
         self.dev.write_pkg.return_value = True
         self.dev.read_pkg.return_value = rcv
-        self.res.get_parameter.return_value = {param: serno}
+        self.res.get_parameter.return_value = value
 
-        assert self.bus.get(serno, table, param) == {param: serno}
+        assert self.bus.get(serno, table, param) == value
+        assert self.manager.mock_calls == expected_calls
+
+    def test_get_table(self):
+        serno = 31002
+        table = 'SYSTEM_PARAMETER'
+        param = None
+        value = {"SerialNum":  31002,
+                 "HWVersion":   1.12,
+                 "FWVersion":   1.14,
+                 "Baudrate":    96,
+                 "ModuleName":  "Trime",
+                 "ModuleCode":  100,
+                 "ModuleInfo1": 0,
+                 "ModuleInfo2": 1}
+
+        tbl = self.ptf.get(table, param)
+        pkg = a2b('fd0a031a790029ff0081')
+        rcv = a2b('000a231a790061' + '1a790000295c8f3f85eb913f6' +
+                  '0005472696d6500000000000000000000006400000171')
+
+        expected_calls = [
+            call.tbl.get(table, param),
+            call.cmd.get_parameter(serno, tbl),
+            call.dev.write_pkg(pkg),
+            call.dev.read_pkg(),
+            call.res.get_parameter(serno, tbl, rcv)
+        ]
+
+        self.tbl.get.return_value = tbl
+        self.cmd.get_parameter.return_value = pkg
+        self.dev.write_pkg.return_value = True
+        self.dev.read_pkg.return_value = rcv
+        self.res.get_parameter.return_value = value
+
+        assert self.bus.get_table(serno, table) == value
         assert self.manager.mock_calls == expected_calls
 
     def test_set(self):
         serno = 31002
         table = 'PROBE_CONFIGURATION_PARAMETER'
         param = 'DeviceSerialNum'
-        value = [31003]
+        value = {param: 31003}
 
         tbl = self.ptf.get(table, param)
         pkg = a2b('fd11071a79002b0c001b790000b0')
@@ -425,6 +461,41 @@ class TestBus(object):
         self.res.set_parameter.return_value = True
 
         assert self.bus.set(serno, table, param, value)
+        assert self.manager.mock_calls == expected_calls
+
+    def test_set_table(self):
+        serno = 31002
+        table = 'SYSTEM_PARAMETER'
+        param = None
+        value = {"SerialNum":  31002,
+                 "HWVersion":   1.12,
+                 "FWVersion":   1.14,
+                 "Baudrate":    96,
+                 "ModuleName":  "Trime",
+                 "ModuleCode":  100,
+                 "ModuleInfo1": 0,
+                 "ModuleInfo2": 1}
+
+        tbl = self.ptf.get(table, param)
+        pkg = a2b('fd0b251a79009d' + 'ff00' + '1a790000295c8f3f85eb9' +
+                  '13f60005472696d6500000000000000000000006400000181' )
+        rcv = a2b('000b001a790054')
+
+        expected_calls = [
+            call.tbl.get(table, param),
+            call.cmd.set_parameter(serno, tbl, value, 0),
+            call.dev.write_pkg(pkg),
+            call.dev.read_pkg(),
+            call.res.set_parameter(serno, tbl, rcv)
+        ]
+
+        self.tbl.get.return_value = tbl
+        self.cmd.set_parameter.return_value = pkg
+        self.dev.write_pkg.return_value = True
+        self.dev.read_pkg.return_value = rcv
+        self.res.set_parameter.return_value = True
+
+        assert self.bus.set_table(serno, table, value)
         assert self.manager.mock_calls == expected_calls
 
     def test_get_eeprom_page(self):
