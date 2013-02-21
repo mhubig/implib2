@@ -22,15 +22,16 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 import time
 
 from .imp_device import Device, DeviceError
-from .imp_datatypes import DataTypes
+from .imp_tables import ParamTableFactory
 from .imp_packages import Package
 from .imp_commands import Command
 from .imp_responces import Responce
-from .imp_tables import ParamTableFactory
 from .imp_helper import _imprange
+
 
 class BusError(Exception):
     pass
+
 
 class Bus(object):
     """The Bus object represents the IMPBus2 master device. It is used to
@@ -341,6 +342,7 @@ class Bus(object):
             >>> param = 'SerialNum'
             >>> serno = 33912
             >>> bus.get(serno, table, param)
+            >>> {'SerialNum': 33912}
 
         :param serno: Serial number of the probe to request.
         :type  serno: int
@@ -356,10 +358,12 @@ class Bus(object):
         """
         table = self.tbl.get(table, param)
         package = self.cmd.get_parameter(serno, table)
+
         self.dev.write_pkg(package)
         time.sleep(self.trans_wait)
         bytes_recv = self.dev.read_pkg()
         time.sleep(self.cycle_wait)
+
         return self.res.get_parameter(serno, table, bytes_recv)
 
     def get_table(self, serno, table):
@@ -384,11 +388,12 @@ class Bus(object):
         Nevertheless here is a small example of how to use this command to
         set the serial number of a probe::
 
+            >>> serno = 33912
             >>> table = 'SYSTEM_PARAMETER'
             >>> param = 'SerialNum'
-            >>> serno = 33912
-            >>> values = [33913]
+            >>> value = 33913
             >>> bus.set(serno, table, param, value)
+            True
 
         :param serno: Serial number of the probe to address.
         :type  serno: int
@@ -399,23 +404,42 @@ class Bus(object):
         :param param: Parameter to set.
         :type  param: string
 
-        :param value: Values to store.
-        :type  value: dict
+        :param value: Value of parameter
+        :type  value: int, float, str, list
 
         :rtype: :const:`bool`
 
         """
-        # pylint: disable=R0913
         table = self.tbl.get(table, param)
-        package = self.cmd.set_parameter(serno, table, value, ad_param)
+        package = self.cmd.set_parameter(serno, table, param, value, ad_param)
+
         self.dev.write_pkg(package)
         time.sleep(self.trans_wait)
         bytes_recv = self.dev.read_pkg()
         time.sleep(self.cycle_wait)
+
         return self.res.set_parameter(serno, table, bytes_recv)
 
-    def set_table(self, serno, table, params):
-        """This command sets a whole table at once.
+    def set_table(self, serno, table, vdict):
+        """ This command writes a whole table at once. It's the counterpart of
+        the :func:`get_table` command. Instead of using this command directly,
+        it's highly recommendet to use the higher level `API` commands in
+        :class:`Module`. Nevertheless here is a small example of how to use
+        this command to set the 'SYSTEM_PARAMETER' Table of a probe::
+
+            >>> serno = 33912
+            >>> table = 'SYSTEM_PARAMETER'
+            >>> vdict = {
+            ...     'Baudrate': 96,
+            ...     'FWVersion': 1.140303,
+            ...     'HWVersion': 1.14,
+            ...     'ModuleCode': 100,
+            ...     'ModuleInfo1': 0,
+            ...     'ModuleInfo2': 1,
+            ...     'ModuleName': 'Trime Pico',
+            ...     'SerialNum': 33913}
+            >>> bus.set_table(serno, table, vdict)
+            True
 
         :param serno: Serial number of the probe to address.
         :type  serno: int
@@ -426,10 +450,23 @@ class Bus(object):
         :param params: Dictionary containing all the table params.
         :type  params: dict
 
+        :rasies: **AssertionError** - If a parameter is missing.
         :rtype: bool
 
         """
-        return self.set(serno, table, None, params)
+        table = self.tbl.get(table)
+
+        for param in table:
+            assert param.name in vdict, '{} not in vdict!'.format(param.name)
+
+        package = self.cmd.set_table(serno, table, vdict)
+
+        self.dev.write_pkg(package)
+        time.sleep(self.trans_wait)
+        bytes_recv = self.dev.read_pkg()
+        time.sleep(self.cycle_wait)
+
+        return self.res.set_table(serno, table, bytes_recv)
 
     def get_eeprom_page(self, serno, page_nr):
         """This is the base command for reading a single page of EEPRom data
@@ -445,10 +482,12 @@ class Bus(object):
 
         """
         package = self.cmd.get_epr_page(serno, page_nr)
+
         self.dev.write_pkg(package)
         time.sleep(self.trans_wait)
         bytes_recv = self.dev.read_pkg()
         time.sleep(self.cycle_wait)
+
         return self.res.get_epr_page(bytes_recv)
 
     def set_eeprom_page(self, serno, page_nr, page):
@@ -468,9 +507,10 @@ class Bus(object):
 
         """
         package = self.cmd.set_epr_page(serno, page_nr, page)
+
         self.dev.write_pkg(package)
         time.sleep(self.trans_wait)
         bytes_recv = self.dev.read_pkg()
         time.sleep(self.cycle_wait)
-        return self.res.set_epr_page(bytes_recv)
 
+        return self.res.set_epr_page(bytes_recv)

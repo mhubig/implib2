@@ -95,7 +95,7 @@ class TestBus(object):
         baudrate = 9600
         value    = baudrate/100
         ad_param = 0
-        
+
         tbl = self.ptf.get(table, param)
         pkg = a2b('fd0b05ffffffaf0400600054')
 
@@ -448,7 +448,7 @@ class TestBus(object):
 
         expected_calls = [
             call.tbl.get(table, param),
-            call.cmd.set_parameter(serno, tbl, value, 0),
+            call.cmd.set_parameter(serno, tbl, param, value, 0),
             call.dev.write_pkg(pkg),
             call.dev.read_pkg(),
             call.res.set_parameter(serno, tbl, rcv)
@@ -466,8 +466,7 @@ class TestBus(object):
     def test_set_table(self):
         serno = 31002
         table = 'SYSTEM_PARAMETER'
-        param = None
-        value = {"SerialNum":  31002,
+        vdict = {"SerialNum":  31002,
                  "HWVersion":   1.12,
                  "FWVersion":   1.14,
                  "Baudrate":    96,
@@ -476,26 +475,54 @@ class TestBus(object):
                  "ModuleInfo1": 0,
                  "ModuleInfo2": 1}
 
-        tbl = self.ptf.get(table, param)
+        tbl = self.ptf.get(table)
         pkg = a2b('fd0b251a79009d' + 'ff00' + '1a790000295c8f3f85eb9' +
                   '13f60005472696d6500000000000000000000006400000181' )
         rcv = a2b('000b001a790054')
 
         expected_calls = [
-            call.tbl.get(table, param),
-            call.cmd.set_parameter(serno, tbl, value, 0),
+            call.tbl.get(table),
+            call.cmd.set_table(serno, tbl, vdict),
             call.dev.write_pkg(pkg),
             call.dev.read_pkg(),
-            call.res.set_parameter(serno, tbl, rcv)
+            call.res.set_table(serno, tbl, rcv)
         ]
 
         self.tbl.get.return_value = tbl
-        self.cmd.set_parameter.return_value = pkg
+        self.cmd.set_table.return_value = pkg
         self.dev.write_pkg.return_value = True
         self.dev.read_pkg.return_value = rcv
-        self.res.set_parameter.return_value = True
+        self.res.set_table.return_value = True
 
-        assert self.bus.set_table(serno, table, value)
+        assert self.bus.set_table(serno, table, vdict)
+        assert self.manager.mock_calls == expected_calls
+
+    def test_set_table_DictHasMissingParam(self):
+        serno = 31002
+        table = 'SYSTEM_PARAMETER'
+        vdict = {"SerialNum":  31002,
+                 "HWVersion":   1.12,
+                 "FWVersion":   1.14,
+                 "Baudrate":    96,
+                 "ModuleName":  "Trime",
+                 "ModuleCode":  100,
+                 "ModuleInfo1": 0}
+
+        tbl = self.ptf.get(table)
+        pkg = a2b('fd0b251a79009d' + 'ff00' + '1a790000295c8f3f85eb9' +
+                  '13f60005472696d6500000000000000000000006400000181' )
+        rcv = a2b('000b001a790054')
+
+        expected_calls = [
+            call.tbl.get(table),
+        ]
+
+        self.tbl.get.return_value = tbl
+
+        with pytest.raises(AssertionError) as e:
+            self.bus.set_table(serno, table, vdict)
+
+        assert e.value.message == 'ModuleInfo2 not in vdict!'
         assert self.manager.mock_calls == expected_calls
 
     def test_get_eeprom_page(self):
