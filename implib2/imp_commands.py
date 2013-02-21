@@ -50,16 +50,26 @@ class Command(object):
 
         return self.pkg.pack(serno=serno, cmd=table.get, data=data.getvalue())
 
-    def set_parameter(self, serno, table, values, ad_param=0):
+    def get_table(self, serno, table):
+        return self.get_parameter(serno, table)
+
+    def set_parameter(self, serno, table, param, value, ad_param=0):
         data = StringIO()
         data.write(struct.pack('<B', table.cmd))
         data.write(struct.pack('<B', ad_param))
-        
+
+        param = table.params[0]
+        data.write(struct.pack(param.fmt, value))
+
+        return self.pkg.pack(serno=serno, cmd=table.set, data=data.getvalue())
+
+    def set_table(self, serno, table, vdict, ad_param=0):
+        data = StringIO()
+        data.write(struct.pack('<B', table.cmd))
+        data.write(struct.pack('<B', ad_param))
+
         for param in table:
-            try:
-                data.write(struct.pack(param.fmt, values[param.name]))
-            except KeyError:
-                CommandError("Param {} needed, but not given!".format(param))
+            data.write(struct.pack(param.fmt, vdict[param.name]))
 
         return self.pkg.pack(serno=serno, cmd=table.set, data=data.getvalue())
 

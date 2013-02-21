@@ -21,7 +21,7 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 
 import pytest
-from binascii import a2b_hex as a2b
+from binascii import a2b_hex as a2b, b2a_hex as b2a
 
 from implib2.imp_packages import Package
 from implib2.imp_tables import ParamTableFactory
@@ -52,15 +52,51 @@ class TestCommand(object):
         assert pkg == a2b('fd0800ffffff60')
 
     def test_get_parameter(self):
-        tbl = self.tbl.get('SYSTEM_PARAMETER', 'SerialNum')
-        pkg = self.cmd.get_parameter(31002, tbl)
+        serno = 31002
+        table = 'SYSTEM_PARAMETER'
+        param = 'SerialNum'
+
+        tbl = self.tbl.get(table, param)
+        pkg = self.cmd.get_parameter(serno, tbl)
         assert pkg == a2b('fd0a031a7900290100c4')
 
+    def test_get_table(self):
+        serno = 31002
+        table = 'SYSTEM_PARAMETER'
+
+        tbl = self.tbl.get(table)
+        pkg = self.cmd.get_parameter(serno, tbl)
+        assert pkg == a2b('fd0a031a790029ff0081')
+
     def test_set_parameter(self):
-        tbl = self.tbl.get('PROBE_CONFIGURATION_PARAMETER',
-            'DeviceSerialNum')
-        pkg = self.cmd.set_parameter(31002, tbl, {'DeviceSerialNum': 31003})
+        serno = 31002
+        table = 'PROBE_CONFIGURATION_PARAMETER'
+        param = 'DeviceSerialNum'
+        ad_param = 0
+        value = 31003
+
+        tbl = self.tbl.get(table, param)
+        pkg = self.cmd.set_parameter(serno, tbl, param, value, ad_param)
         assert pkg == a2b('fd11071a79002b0c001b790000b0')
+
+    def test_set_table(self):
+        serno = 31002
+        table = 'SYSTEM_PARAMETER'
+        vdict = {'Baudrate': 96,
+                 'FWVersion': 1.140303,
+                 'HWVersion': 1.14,
+                 'ModuleCode': 100,
+                 'ModuleInfo1': 0,
+                 'ModuleInfo2': 1,
+                 'ModuleName': 'Trime Pico',
+                 'SerialNum': 33913}
+        ad_param = 0
+
+        tbl = self.tbl.get(table)
+        pkg = self.cmd.set_table(serno, tbl, vdict, ad_param)
+        assert pkg == a2b('fd0b251a79009dff007984000085eb913f' +
+                          '73f5913f60005472696d65205069636f00' +
+                          '00000000006400000147')
 
     def test_do_tdr_scan(self):
         pkg = self.cmd.do_tdr_scan(30001, 1, 126, 2, 64)
