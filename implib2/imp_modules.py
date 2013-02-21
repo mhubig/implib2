@@ -230,8 +230,8 @@ class Module(object):
             raise ModuleError(
                     "'{}' is not a valid measure mode!".format(e.message))
 
-        if not self._get_event_mode() == "NormalMeasure":
-            self._set_event_mode("NormalMeasure")
+        if not self._event_mode == "NormalMeasure":
+            self._event_mode = "NormalMeasure"
 
         assert self.bus.set(self._serno, table, param, {param: value})
 
