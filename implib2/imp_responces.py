@@ -66,6 +66,20 @@ class Responce(object):
             raise ResponceError("Wrong serial number in responce!")
 
         data = StringIO(responce['data'])
+
+        param = table.params[0]
+        return {param.name: struct.unpack(param.fmt, data.read(param.len))[0]}
+
+
+    def get_table(self, serno, table, bytes_recv):
+        responce = self.pkg.unpack(bytes_recv)
+
+        if not responce['header']['cmd'] == table.get:
+            raise ResponceError("Wrong get command in responce!")
+        if not serno == responce['header']['serno']:
+            raise ResponceError("Wrong serial number in responce!")
+
+        data = StringIO(responce['data'])
         result = {}
 
         for param in table:
@@ -86,6 +100,9 @@ class Responce(object):
             raise ResponceError("Wrong serial number in responce!")
 
         return True
+
+    def set_table(self, serno, table, bytes_recv):
+        return self.set_parameter(serno, table, bytes_recv)
 
     def do_tdr_scan(self, packet):
         data = self.pkg.unpack(packet)['data']
