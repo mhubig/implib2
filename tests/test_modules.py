@@ -22,7 +22,7 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 
 import os
 import pytest
-from mock import patch, call, MagicMock
+from mock import patch, call, MagicMock, PropertyMock
 from implib2.imp_modules import Module, ModuleError
 
 
@@ -100,6 +100,44 @@ class TestModule(object):
 
     @pytest.mark.parametrize("mode", [(0, 'A'), (1, 'B'), (2, 'C')])
     def test_measure_mode_Set(self, mode):
-        self.bus.set.return_value = True
-        self.mod.measure_mode = mode[1]
+
+        expected = [call()]
+
+        with patch('implib2.imp_modules.Module._event_mode',
+                new_callable=PropertyMock) as mock_event_mode:
+            mock_event_mode.return_value = "NormalMeasure"
+            mod = Module(self.bus, self.serno)
+            self.bus.set.return_value = True
+
+            mod.measure_mode = mode[1]
+            assert mock_event_mode.mock_calls == expected
+
+    @pytest.mark.parametrize("mode", [(0, 'A'), (1, 'B'), (2, 'C')])
+    def test_measure_mode_SetWrongEventMode(self, mode):
+
+        expected = [call(), call("NormalMeasure")]
+
+        with patch('implib2.imp_modules.Module._event_mode',
+                new_callable=PropertyMock) as mock_event_mode:
+            mock_event_mode.return_value = "SelfTest"
+            mod = Module(self.bus, self.serno)
+            self.bus.set.return_value = True
+
+            mod.measure_mode = mode[1]
+            assert mock_event_mode.mock_calls == expected
+
+
+    def test_measure_mode_SetBadMode(self):
+
+        expected = "'D' is not a valid measure mode!"
+
+        with patch('implib2.imp_modules.Module._event_mode',
+                new_callable=PropertyMock) as mock_event_mode:
+            mock_event_mode.return_value = "NormalMeasure"
+            mod = Module(self.bus, self.serno)
+            self.bus.set.return_value = True
+
+            with pytest.raises(ModuleError) as e:
+                mod.measure_mode = 'D'
+            assert e.value.message == expected
 
