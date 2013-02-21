@@ -26,13 +26,12 @@ import struct
 from implib2.imp_tables import ParamTableFactoryError
 from implib2.imp_tables import ParamTableFactory, Table, Param
 
-# pylint: disable=C0103
 def pytest_generate_tests(metafunc):
     if 'table' in metafunc.fixturenames:
-        
+
         with open('tests/test_tables.json') as js:
             j = json.load(js)
-        
+
         if 'param' in metafunc.fixturenames:
 
             tests = []
@@ -42,7 +41,7 @@ def pytest_generate_tests(metafunc):
 
             print tests
             metafunc.parametrize(("table", "param"), tests)
-        
+
         else:
             metafunc.parametrize("table", [table for table in j])
 
@@ -79,7 +78,7 @@ class TestParamTableFactory(object):
                 json_param["Length"]))
 
         param_list.sort(key=lambda p: p.cmd)
-        
+
         table_a = Table(table, json_table['Get'],
             json_table['Set'],param_list)
         table_b = self.t.get(table)
@@ -143,6 +142,9 @@ class TestTable(object):
 
     def test_TableCmd(self):
         assert self.table.cmd == 1
+
+    def test_TableItems(self):
+        assert self.table.items == 1
 
     def test_TableStr(self):
         assert str(self.table) == 'TestTable'

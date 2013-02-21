@@ -34,7 +34,7 @@ class ParamTableFactory(object):
         self._invalid = ["ConfigID", "TableSize",
             "DataSize", "GetParam", "GetData"]
 
-    def get(self, table, param=None):        
+    def get(self, table, param=None):
         name = table
 
         try:
@@ -73,17 +73,17 @@ class Table(object):
         self._name = name
         self._get = get_command
         self._set = set_command
-        self._params = sorted(params, key=lambda param: param.cmd)
+        self.params = sorted(params, key=lambda param: param.cmd)
 
     def __repr__(self):
         return "Table('{0}', {1}, {2}, {3})".format(
-            self._name, self._get, self._set, self._params)
+            self._name, self._get, self._set, self.params)
 
     def __str__(self):
         return self.name
 
     def __iter__(self):
-        for param in self._params:
+        for param in self.params:
             yield param
 
     @property
@@ -100,9 +100,13 @@ class Table(object):
 
     @property
     def cmd(self):
-        if not len(self._params) == 1:
-            return 255
-        return self._params[0].cmd
+        if self.items == 1:
+            return self.params[0].cmd
+        return 255
+
+    @property
+    def items(self):
+        return len(self.params)
 
 class Param(object):
 
@@ -129,14 +133,14 @@ class Param(object):
             0x85: '{0}i', # 32-bit signed integer array
             0x86: '{0}f', # 32-bit float array
             0x87: '{0}d'} # 64-bit double array
-    
+
     def __repr__(self):
         return "Param('{0}', {1}, {2}, '{3}', {4})".format(
             self._name, self._cmd, self._fmt, self._rw, self._len)
 
     def __str__(self):
         return self.name
-    
+
     @property
     def name(self):
         return self._name
