@@ -153,7 +153,7 @@ class Param(object):
     def fmt(self):
         format = self._dtypes[self._fmt]
         length = self._len / struct.calcsize('<' + format.format(1))
-        return '<' + format.format(length)
+        return format.format(length)
 
     @property
     def len(self):

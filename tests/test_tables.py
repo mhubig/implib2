@@ -197,7 +197,7 @@ class TestParam(object):
          0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87])
     def test_ParamFmt(self, fmt):
         param = Param('TestParam', 1, fmt, 'OR', 16)
-        string = '<' + self._dtypes[fmt]
+        string = self._dtypes[fmt]
         length = struct.calcsize(string.format(1))
         assert param.fmt == string.format(16/length)
 
