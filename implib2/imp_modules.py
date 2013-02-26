@@ -103,7 +103,7 @@ class Module(object):
         """
         table = 'SYSTEM_PARAMETER'
         param = 'SerialNum'
-        return self.bus.get(self._serno, table, param)[param]
+        return self.bus.get(self._serno, table, param)
 
     @property
     def name(self):
@@ -114,7 +114,7 @@ class Module(object):
         """
         table = 'SYSTEM_PARAMETER'
         param = 'ModuleName'
-        return self.bus.get(self._serno, table, param)[param].split('\x00')[0]
+        return self.bus.get(self._serno, table, param).split('\x00')[0]
 
     @property
     def code(self):
@@ -125,7 +125,7 @@ class Module(object):
         """
         table = 'SYSTEM_PARAMETER'
         param = 'ModuleCode'
-        return self.bus.get(self._serno, table, param)[param]
+        return self.bus.get(self._serno, table, param)
 
     @property
     def info1(self):
@@ -136,7 +136,7 @@ class Module(object):
         """
         table = 'SYSTEM_PARAMETER'
         param = 'Info1'
-        return self.bus.get(self._serno, table, param)[param]
+        return self.bus.get(self._serno, table, param)
 
     @property
     def info2(self):
@@ -147,7 +147,7 @@ class Module(object):
         """
         table = 'SYSTEM_PARAMETER'
         param = 'Info2'
-        return self.bus.get(self._serno, table, param)[param]
+        return self.bus.get(self._serno, table, param)
 
     @property
     def hw_version(self):
@@ -158,7 +158,7 @@ class Module(object):
         """
         table = 'SYSTEM_PARAMETER'
         param = 'HWVersion'
-        return round(self.bus.get(self._serno, table, param)[param], 2)
+        return round(self.bus.get(self._serno, table, param), 2)
 
     @property
     def fw_version(self):
@@ -169,7 +169,7 @@ class Module(object):
         """
         table = 'SYSTEM_PARAMETER'
         param = 'FWVersion'
-        return round(self.bus.get(self._serno, table, param)[param], 6)
+        return round(self.bus.get(self._serno, table, param), 6)
 
     ###########################
     ## Writeable Properties  ##
@@ -213,7 +213,7 @@ class Module(object):
         modes = {v:k for k, v in self.measure_modes.items()}
 
         try:
-            mode = modes[self.bus.get(self._serno, table, param)[param]]
+            mode = modes[self.bus.get(self._serno, table, param)]
         except KeyError:
             raise ModuleError("Unknown measure mode!")
 
@@ -221,19 +221,19 @@ class Module(object):
 
     @measure_mode.setter
     def measure_mode(self, mode='A'):
-        table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
+        table = 'DEVICE_CONFIGURATION_PARAMETER'
         param = 'MeasMode'
 
         try:
             value = self.measure_modes[mode]
         except KeyError as e:
-            raise ModuleError(
-                    "'{}' is not a valid measure mode!".format(e.message))
+            msg = "Not a valid measure mode: '{}'!".format(e.message)
+            raise ModuleError(msg)
 
         if not self._event_mode == "NormalMeasure":
             self._event_mode = "NormalMeasure"
 
-        assert self.bus.set(self._serno, table, param, {param: value})
+        assert self.bus.set(self._serno, table, param, value)
 
     @property
     def measure_waittime(self):
@@ -245,16 +245,16 @@ class Module(object):
         :rtype: int
 
         """
-        table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
+        table = 'DEVICE_CONFIGURATION_PARAMETER'
         param = 'WaitTimeInModeB'
-        return self.bus.get(self._serno, table, param)[0]
+        return self.bus.get(self._serno, table, param)
 
     @measure_waittime.setter
     def measure_waittime(self, time=1):
-        table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
+        table = 'DEVICE_CONFIGURATION_PARAMETER'
         param = 'WaitTimeInModeB'
         value = time
-        assert self.bus.set(self._serno, table, param, {param: value})
+        assert self.bus.set(self._serno, table, param, value)
 
     @property
     def measure_sleeptime(self):
@@ -266,16 +266,16 @@ class Module(object):
         :rtype: int
 
         """
-        table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
+        table = 'DEVICE_CONFIGURATION_PARAMETER'
         param = 'SleepTimeInModeC'
-        return self.bus.get(self._serno, table, param)[0]
+        return self.bus.get(self._serno, table, param)
 
     @measure_sleeptime.setter
     def measure_sleeptime(self, time):
-        table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
+        table = 'DEVICE_CONFIGURATION_PARAMETER'
         param = 'SleepTimeInModeC'
-        value = [time]
-        return self.bus.get(self._serno, table, param)[0]
+        value = time
+        assert self.bus.set(self._serno, table, param, value)
 
     @property
     def analog_mode(self):
@@ -314,21 +314,26 @@ class Module(object):
         :raises: **ModuleError** - If mode is unknown.
 
         """
-        table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
+        table = 'DEVICE_CONFIGURATION_PARAMETER'
         param = 'AnalogOutputMode'
-        return self.bus.get(self._serno, table, param)[0]
+
+        mode = self.bus.get(self._serno, table, param)
+
+        if not mode in (0, 1):
+            raise ModuleError("Got wrong analog mode!")
+
+        return mode
 
     @analog_mode.setter
     def analog_mode(self, mode=0):
-        table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
+        table = 'DEVICE_CONFIGURATION_PARAMETER'
         param = 'AnalogOutputMode'
+        value = mode
 
         if not mode in (0, 1):
             raise ModuleError("Wrong analog mode!")
 
-        value = mode
-
-        assert self.bus.set(self._serno, table, param, [value])
+        assert self.bus.set(self._serno, table, param, value)
 
     @property
     def moist_min(self):
@@ -345,20 +350,25 @@ class Module(object):
         :rtype: int
 
         """
-        table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
+        table = 'DEVICE_CONFIGURATION_PARAMETER'
         param = 'MoistMinValue'
-        return self.bus.get(self._serno, table, param)[0]
+        moist = self.bus.get(self._serno, table, param)
+
+        if not moist in xrange(0,101):
+            raise ModuleError("Minimum moisture value out of range")
+
+        return moist
 
     @moist_min.setter
     def moist_min(self, moist):
-        table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
+        table = 'DEVICE_CONFIGURATION_PARAMETER'
         param = 'MoistMinValue'
-
-        if not moist in range(0,100):
-            raise ModuleError("Maximum moisture value out of range")
-
         value = moist
-        assert self.bus.set(self._serno, table, param, [value])
+
+        if not moist in xrange(0,101):
+            raise ModuleError("Minimum moisture value out of range")
+
+        assert self.bus.set(self._serno, table, param, value)
 
     @property
     def moist_max(self):
@@ -374,20 +384,25 @@ class Module(object):
         :rtype: int
 
         """
-        table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
+        table = 'DEVICE_CONFIGURATION_PARAMETER'
         param = 'MoistMaxValue'
-        return self.bus.get(self._serno, table, param)[0]
+        moist = self.bus.get(self._serno, table, param)
+
+        if not moist in xrange(0,101):
+            raise ModuleError("Maximum moisture value out of range")
+
+        return moist
 
     @moist_max.setter
     def moist_max(self, moist):
-        table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
+        table = 'DEVICE_CONFIGURATION_PARAMETER'
         param = 'MoistMaxValue'
+        value = moist
 
-        if not moist in range(0,100):
+        if not moist in xrange(0,101):
             raise ModuleError("Maximum moisture value out of range")
 
-        value = moist
-        assert self.bus.set(self._serno, table, param, [value])
+        assert self.bus.set(self._serno, table, param, value)
 
     @property
     def temp_min(self):
@@ -403,20 +418,25 @@ class Module(object):
         :rtype: int
 
         """
-        table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
-        param = 'MoistMinValue'
-        return self.bus.get(self._serno, table, param)[0]
+        table = 'DEVICE_CONFIGURATION_PARAMETER'
+        param = 'TempMinValue'
+        temp = self.bus.get(self._serno, table, param)
 
-    @temp_min.setter
-    def temp_min(self, moist):
-        table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
-        param = 'MoistMinValue'
-
-        if not moist in range(-15, 50):
+        if not temp in xrange(-15, 51):
             raise ModuleError("Minimum temperatur value out of range")
 
-        value = moist
-        assert self.bus.set(self._serno, table, param, [value])
+        return temp
+
+    @temp_min.setter
+    def temp_min(self, temp):
+        table = 'DEVICE_CONFIGURATION_PARAMETER'
+        param = 'TempMinValue'
+        value = temp
+
+        if not temp in xrange(-15, 51):
+            raise ModuleError("Minimum temperatur value out of range")
+
+        assert self.bus.set(self._serno, table, param, value)
 
     @property
     def temp_max(self):
@@ -432,20 +452,25 @@ class Module(object):
         :rtype: int
 
         """
-        table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
-        param = 'MoistMaxValue'
-        return self.bus.get(self._serno, table, param)[0]
+        table = 'DEVICE_CONFIGURATION_PARAMETER'
+        param = 'TempMaxValue'
+        temp = self.bus.get(self._serno, table, param)
+
+        if not temp in xrange(-15, 51):
+            raise ModuleError("Maximum temperatur value out of range")
+
+        return temp
 
     @temp_max.setter
     def temp_max(self, moist):
-        table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
-        param = 'MoistMaxValue'
+        table = 'DEVICE_CONFIGURATION_PARAMETER'
+        param = 'TempMaxValue'
+        value = moist
 
-        if not moist in range(-15, 50):
+        if not moist in xrange(-15, 51):
             raise ModuleError("Maximum temperatur value out of range")
 
-        value = moist
-        assert self.bus.set(self._serno, table, param, [value])
+        assert self.bus.set(self._serno, table, param, value)
 
     ###########################
     ## Functional Commands   ##
@@ -460,7 +485,7 @@ class Module(object):
         :rtype: bool
 
         """
-        table = 'ACTION_PARAMETER_TABLE'
+        table = 'ACTION_PARAMETER'
         param = 'StartMeasure'
         value = 1
 
@@ -472,10 +497,10 @@ class Module(object):
             self.measure_mode = 'A'
 
         # Set Event mode to 'NormalMeasure'
-        if not self._get_event_mode() == "NormalMeasure":
-            assert self._set_event_mode("NormalMeasure")
+        if not self._event_mode == "NormalMeasure":
+            self._event_mode = "NormalMeasure"
 
-        return self.bus.set(self._serno, table, param, [value])
+        return self.bus.set(self._serno, table, param, value)
 
     def measure_running(self):
         """This command checks if a measurement cycle is in progress.
@@ -485,7 +510,7 @@ class Module(object):
         """
         table = 'ACTION_PARAMETER_TABLE'
         param = 'StartMeasure'
-        return self.bus.get(self._serno, table, param)[0] == 1
+        return self.bus.get(self._serno, table, param) == 1
 
     def measure_data(self):
         """This command get's the measurement results.
@@ -529,7 +554,7 @@ class Module(object):
         modes = {v:k for k, v in self.event_modes.items()}
 
         try:
-            mode = modes[self.bus.get(self._serno, table, param)[param] % 0x80]
+            mode = modes[self.bus.get(self._serno, table, param) % 0x80]
         except KeyError:
             raise ModuleError("Unknown event mode!")
 
@@ -548,7 +573,7 @@ class Module(object):
         if not self._unlocked:
             self.unlock()
 
-        return self.bus.set(self._serno, table, param, {param: value})
+        assert self.bus.set(self._serno, table, param, value)
 
 
 class SupportModule(Module):
@@ -562,7 +587,7 @@ class SupportModule(Module):
         """
         table = 'SYSTEM_PARAMETER_TABLE'
         param = 'SerialNum'
-        return self.bus.get(self._serno, table, param)[0]
+        return self.bus.get(self._serno, table, param)
 
     @serno.setter
     def serno(self, value):
