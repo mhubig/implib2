@@ -51,7 +51,11 @@ class Command(object):
         return self.pkg.pack(serno=serno, cmd=table.get, data=data.getvalue())
 
     def get_table(self, serno, table):
-        return self.get_parameter(serno, table)
+        data = StringIO()
+        data.write(struct.pack('<B', table.cmd))
+        data.write(struct.pack('<B', 0))
+
+        return self.pkg.pack(serno=serno, cmd=table.get, data=data.getvalue())
 
     def set_parameter(self, serno, table, param, value, ad_param=0):
         data = StringIO()
