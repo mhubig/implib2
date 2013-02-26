@@ -378,11 +378,12 @@ class TestBus(object):
         serno = 31002
         table = 'SYSTEM_PARAMETER'
         param = 'SerialNum'
-        value = {'SerialNum': 31002}
+        value = 31002
 
         tbl = self.ptf.get(table, param)
         pkg = a2b('fd0a031a7900290100c4')
         rcv = a2b('000a051a7900181a79000042')
+        val = (value,)
 
         expected_calls = [
             call.tbl.get(table, param),
@@ -392,11 +393,11 @@ class TestBus(object):
             call.res.get_parameter(serno, tbl, rcv)
         ]
 
-        self.tbl.get.return_value = tbl
+        self.tbl.get.return_value           = tbl
         self.cmd.get_parameter.return_value = pkg
-        self.dev.write_pkg.return_value = True
-        self.dev.read_pkg.return_value = rcv
-        self.res.get_parameter.return_value = value
+        self.dev.write_pkg.return_value     = True
+        self.dev.read_pkg.return_value      = rcv
+        self.res.get_parameter.return_value = val
 
         assert self.bus.get(serno, table, param) == value
         assert self.manager.mock_calls == expected_calls
@@ -404,34 +405,34 @@ class TestBus(object):
     def test_get_table(self):
         serno = 31002
         table = 'SYSTEM_PARAMETER'
-        param = None
-        value = {"SerialNum":  31002,
-                 "HWVersion":   1.12,
-                 "FWVersion":   1.14,
-                 "Baudrate":    96,
-                 "ModuleName":  "Trime",
-                 "ModuleCode":  100,
-                 "ModuleInfo1": 0,
-                 "ModuleInfo2": 1}
+        value = {u"SerialNum":  31002,
+                 u"HWVersion":   1.12,
+                 u"FWVersion":   1.14,
+                 u"Baudrate":    96,
+                 u"ModuleName":  "Trime",
+                 u"ModuleCode":  100,
+                 u"ModuleInfo1": 0,
+                 u"ModuleInfo2": 1}
 
-        tbl = self.ptf.get(table, param)
+        tbl = self.ptf.get(table)
         pkg = a2b('fd0a031a790029ff0081')
         rcv = a2b('000a231a790061' + '1a790000295c8f3f85eb913f6' +
                   '0005472696d6500000000000000000000006400000171')
+        val = [value[param.name] for param in tbl]
 
         expected_calls = [
-            call.tbl.get(table, param),
-            call.cmd.get_parameter(serno, tbl),
+            call.tbl.get(table),
+            call.cmd.get_table(serno, tbl),
             call.dev.write_pkg(pkg),
             call.dev.read_pkg(),
-            call.res.get_parameter(serno, tbl, rcv)
+            call.res.get_table(serno, tbl, rcv)
         ]
 
-        self.tbl.get.return_value = tbl
-        self.cmd.get_parameter.return_value = pkg
+        self.tbl.get.return_value       = tbl
+        self.cmd.get_table.return_value = pkg
         self.dev.write_pkg.return_value = True
-        self.dev.read_pkg.return_value = rcv
-        self.res.get_parameter.return_value = value
+        self.dev.read_pkg.return_value  = rcv
+        self.res.get_table.return_value = val
 
         assert self.bus.get_table(serno, table) == value
         assert self.manager.mock_calls == expected_calls

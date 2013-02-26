@@ -342,7 +342,7 @@ class Bus(object):
             >>> param = 'SerialNum'
             >>> serno = 33912
             >>> bus.get(serno, table, param)
-            >>> {'SerialNum': 33912}
+            >>> 33912
 
         :param serno: Serial number of the probe to request.
         :type  serno: int
@@ -364,7 +364,7 @@ class Bus(object):
         bytes_recv = self.dev.read_pkg()
         time.sleep(self.cycle_wait)
 
-        return self.res.get_parameter(serno, table, bytes_recv)
+        return self.res.get_parameter(serno, table, bytes_recv)[0]
 
     def get_table(self, serno, table):
         """This command aets a whole table at once.
@@ -378,7 +378,16 @@ class Bus(object):
         :rtype: bool
 
         """
-        return self.get(serno, table, None)
+        table = self.tbl.get(table)
+        package = self.cmd.get_table(serno, table)
+
+        self.dev.write_pkg(package)
+        time.sleep(self.trans_wait)
+        bytes_recv = self.dev.read_pkg()
+        time.sleep(self.cycle_wait)
+
+        values = self.res.get_table(serno, table, bytes_recv)
+        return {param.name: values[no] for no, param in enumerate(table)}
 
     def set(self, serno, table, param, value, ad_param=0):
         """This is the base command for sending and storing some information in
