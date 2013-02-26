@@ -58,6 +58,20 @@ class Responce(object):
         return struct.unpack('<I', responce['data'])[0]
 
     def get_parameter(self, serno, table, bytes_recv):
+        """ This command decodes the responce of a get_parameter command.
+
+        :param serno: Serial number of the responces origin.
+        :type  serno. int
+
+        :param table: Table object with needed the metadata.
+        :type  table: Table
+
+        :param bytes_recv: responce byte string
+        :type  bytes_recv: str
+
+        :rtype: list
+
+        """
         responce = self.pkg.unpack(bytes_recv)
 
         if not responce['header']['cmd'] == table.get:
@@ -65,13 +79,24 @@ class Responce(object):
         if not serno == responce['header']['serno']:
             raise ResponceError("Wrong serial number in responce!")
 
-        data = StringIO(responce['data'])
-
-        param = table.params[0]
-        return {param.name: struct.unpack(param.fmt, data.read(param.len))[0]}
-
+        format = '<' + table.params[0].fmt
+        return struct.unpack(format, responce['data'])
 
     def get_table(self, serno, table, bytes_recv):
+        """ This command decodes the responce of a get_table command.
+
+        :param serno: Serial number of the responces origin.
+        :type  serno. int
+
+        :param table: Table object with needed the metadata.
+        :type  table: Table
+
+        :param bytes_recv: responce byte string
+        :type  bytes_recv: str
+
+        :rtype: list
+
+        """
         responce = self.pkg.unpack(bytes_recv)
 
         if not responce['header']['cmd'] == table.get:
@@ -79,16 +104,11 @@ class Responce(object):
         if not serno == responce['header']['serno']:
             raise ResponceError("Wrong serial number in responce!")
 
-        data = StringIO(responce['data'])
-        result = {}
-
+        format = '<' # little-endian
         for param in table:
-            format = param.fmt
-            length = param.len
-            name = param.name
-            result[name] = struct.unpack(format, data.read(length))[0]
+            format += param.fmt
 
-        return result
+        return struct.unpack(format, responce['data'])
 
     def set_parameter(self, serno, table, bytes_recv):
         responce = self.pkg.unpack(bytes_recv)
@@ -102,7 +122,15 @@ class Responce(object):
         return True
 
     def set_table(self, serno, table, bytes_recv):
-        return self.set_parameter(serno, table, bytes_recv)
+        responce = self.pkg.unpack(bytes_recv)
+        command = responce['header']['cmd']
+
+        if not command == table.set:
+            raise ResponceError("Wrong set command in responce!")
+        if not serno == responce['header']['serno']:
+            raise ResponceError("Wrong serial number in responce!")
+
+        return True
 
     def do_tdr_scan(self, packet):
         data = self.pkg.unpack(packet)['data']

@@ -72,9 +72,9 @@ class TestResponce(object):
         serno = 31002
 
         pkg = a2b('000a051a7900181a79000042')
-        tbl = self.tbl.get(table, param) 
+        tbl = self.tbl.get(table, param)
 
-        assert self.res.get_parameter(serno, tbl, pkg) == {param: 31002}
+        assert self.res.get_parameter(serno, tbl, pkg) == (31002,)
 
     def test_get_parameter_WrongTable(self):
         table = 'PROBE_CONFIGURATION_PARAMETER'
@@ -108,15 +108,17 @@ class TestResponce(object):
         pkg = a2b('000a221a7900ee' + '1a790000295c8f3f85eb913f6' +
                   '0005472696d6500000000000000000000006400000171')
 
-        expected = {
-            u'Baudrate': 96,
-            u'FWVersion': 1.1399999856948853,
-            u'HWVersion': 1.1200000047683716,
-            u'ModuleCode': 100,
-            u'ModuleInfo1': 0,
-            u'ModuleInfo2': 1,
-            u'ModuleName': 'Trime\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
-            u'SerialNum': 31002}
+        # SerialNum:   31002
+        # HWVersion:   1.1200000047683716
+        # FWVersion:   1.1399999856948853
+        # Baudrate:    96
+        # ModuleName:  'Trime\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+        # ModuleCode:  100
+        # ModuleInfo1: 0
+        # ModuleInfo2: 1
+
+        expected = (31002, 1.1200000047683716, 1.1399999856948853, 96,
+                'Trime\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00', 100, 0, 1)
 
         assert self.res.get_table(serno, tbl, pkg) == expected
 
