@@ -21,14 +21,8 @@ The Module Class
    :members:
    :inherited-members:
 
-The new Module Class
---------------------
-.. autoclass:: implib2.imp_modules_new.Module
-   :members:
-   :inherited-members:
-
 The EEPRom Class
-----------------------
+----------------
 
 .. autoclass:: EEPRom
    :members:
