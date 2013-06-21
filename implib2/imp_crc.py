@@ -62,8 +62,7 @@ class MaximCRC(object):
         return pack('>B', register)
 
     def check_crc(self, byte_str):
-        data = byte_str[:-1]
-        crc  = byte_str[-1:]
+        data, crc = byte_str[:-1], byte_str[-1:]
         if not crc == self.calc_crc(data):
             return False
         return True
