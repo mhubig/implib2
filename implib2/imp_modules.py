@@ -171,77 +171,18 @@ class Module(object):
         param = 'FWVersion'
         return round(self.bus.get(self._serno, table, param), 6)
 
+
     ###########################
     ## Writeable Properties  ##
     ###########################
 
     @property
-    def measure_mode(self):
-        """The measure mode of the probe. There a 3 different measure modes.
-
-        .. note::
-            **Mode A**
-                On Request: The probe checks the parameter StartMeasure in
-                Measure Parameter Table. If the parameter is 0, the probe does
-                nothing. If the parameter is 1, the probe does the measurement
-                and then sets the parameter to 0 again. Setting the parameter
-                to 1 must be carried out through RS485 or IMPBus by an external
-                command.
-
-            **Mode B**
-                Single: The probe measures once after it is powered on. This
-                mode is normally used in the case that the probe is connected
-                to a data logger which samples the analog output after being
-                powered on. You can set a time (:attr:`measure_waitetime`) to
-                wait befor starting the measurement.
-
-            **Mode C**
-                Cyclic: The probe measures cyclically. That means, the probe
-                measures once and sleeps for some anount of time
-                (:attr:`measure_sleeptime`) then it wakes up automatically and
-                repeats the process. This mode is normally used in cases where
-                the probe is always powered on.
-
-        :param mode: 'A', 'B' or 'C'
-        :type  mode: string
-        :rtype: str
-        :raises: **ModuleError** - If mode is unknown.
-
-        """
-        table = 'DEVICE_CONFIGURATION_PARAMETER'
-        param = 'MeasMode'
-        modes = {v:k for k, v in self.measure_modes.items()}
-
-        try:
-            mode = modes[self.bus.get(self._serno, table, param)]
-        except KeyError:
-            raise ModuleError("Unknown measure mode!")
-
-        return mode
-
-    @measure_mode.setter
-    def measure_mode(self, mode='A'):
-        table = 'DEVICE_CONFIGURATION_PARAMETER'
-        param = 'MeasMode'
-
-        try:
-            value = self.measure_modes[mode]
-        except KeyError as e:
-            msg = "Not a valid measure mode: '{}'!".format(e.message)
-            raise ModuleError(msg)
-
-        if not self._event_mode == "NormalMeasure":
-            self._event_mode = "NormalMeasure"
-
-        assert self.bus.set(self._serno, table, param, value)
-
-    @property
-    def measure_waittime(self):
+    def waittime(self):
         """ Wait time parameter for measurement mode B. See
         :attr:`measure_mode` for additional details.
 
-        :param time: time in seconds (Default: 1)
-        :type  mode: int
+        :param time: wait time in seconds (>1)
+        :type  time: int
         :rtype: int
 
         """
@@ -249,20 +190,27 @@ class Module(object):
         param = 'WaitTimeInModeB'
         return self.bus.get(self._serno, table, param)
 
-    @measure_waittime.setter
-    def measure_waittime(self, time=1):
+    @waittime.setter
+    def waittime(self, time):
         table = 'DEVICE_CONFIGURATION_PARAMETER'
         param = 'WaitTimeInModeB'
         value = time
+
+        if not isinstance(time, int):
+            msg = "Wait time should be int!"
+            raise ModuleError(msg)
+
+        if not time > 1:
+            msg = "Wait time sould be greater than 1 sec!"
+            raise ModuleError(msg)
+
         assert self.bus.set(self._serno, table, param, value)
 
     @property
-    def measure_sleeptime(self):
+    def sleeptime(self):
         """ Sleep time parameter for measurement mode C. See
         :attr:`measure_mode` for additional details.
 
-        :param time: time in seconds (Default: 1)
-        :type  mode: int
         :rtype: int
 
         """
@@ -270,16 +218,104 @@ class Module(object):
         param = 'SleepTimeInModeC'
         return self.bus.get(self._serno, table, param)
 
-    @measure_sleeptime.setter
-    def measure_sleeptime(self, time):
+    @sleeptime.setter
+    def sleeptime(self, time):
         table = 'DEVICE_CONFIGURATION_PARAMETER'
         param = 'SleepTimeInModeC'
         value = time
+
+        if not isinstance(time, int):
+            msg = "Sleep time should be int!"
+            raise ModuleError(msg)
+
+        if not time > 5:
+            msg = "Sleep time sould be greater than 5 sec!"
+            raise ModuleError(msg)
+
         assert self.bus.set(self._serno, table, param, value)
 
     @property
+    def moist_range(self):
+        """The moisture range setting.
+
+        This property set's the lower and upper moisture border as volumetric
+        water content (θ Omega). Together with :attr:`analog_mode` this setting
+        can be used to determine the mean of the analog moisture output signal.
+
+        For more information look at :attr:`analog_mode`.
+
+        :param moist: moisture range e.g. (0, 100)
+        :type  moist: tuple
+        :rtype: tuple
+
+        """
+        table = 'DEVICE_CONFIGURATION_PARAMETER'
+        moist_min = self.bus.get(self._serno, table, 'MoistMinValue')
+        moist_max = self.bus.get(self._serno, table, 'MoistMaxValue')
+
+        return (moist_min, moist_max)
+
+    @moist_range.setter
+    def moist_range(self, moist_range):
+        table = 'DEVICE_CONFIGURATION_PARAMETER'
+        param = 'MoistMinValue'
+
+        if not all(moist_range) in xrange(0, 101):
+            raise ModuleError("Values out of range (0 - 100)!")
+
+        try:
+            moist_min, moist_max = moist_range
+        except ValueError as e:
+            raise ModuleError("Bad Range: {}".format(e.message))
+
+        if not moist_min < moist_max:
+            raise ModuleError("Min moist should be smaler than max moist!")
+
+        assert self.bus.set(self._serno, table, 'MoistMinValue', moist_min)
+        assert self.bus.set(self._serno, table, 'MoistMaxValue', moist_max)
+
+    @property
+    def temp_range(self):
+        """The temperature range setting.
+
+        This property set's the lower and upper temperature borders in
+        °C. Together with :attr:`analog_mode` this setting can be used
+        to determine the mean of the analog moisture output signal.
+
+        For more information look at :attr:`analog_mode`.
+
+        :param moist: temperature range e.g. (-15, 50)
+        :type  moist: tuple
+        :rtype: tuple
+
+        """
+        table = 'DEVICE_CONFIGURATION_PARAMETER'
+        temp_min = self.bus.get(self._serno, table, 'TempMinValue')
+        temp_max = self.bus.get(self._serno, table, 'TempMaxValue')
+
+        return (temp_min, temp_max)
+
+    @temp_range.setter
+    def temp_range(self, temp_range):
+        table = 'DEVICE_CONFIGURATION_PARAMETER'
+
+        if not all(temp_range) in xrange(-15, 51):
+            raise ModuleError("Values out of range (-15 - 50)!")
+
+        try:
+            temp_min, temp_max = temp_range
+        except ValueError as e:
+            raise ModuleError("Bad Range: {}".format(e.message))
+
+        if not temp_min < temp_max:
+            raise ModuleError("Min temp should be smaler than max temp!")
+
+        assert self.bus.set(self._serno, table, 'TempMinValue', temp_min)
+        assert self.bus.set(self._serno, table, 'TempMaxValue', temp_max)
+
+    @property
     def analog_mode(self):
-        """The analog output mode.
+        """ Setting the analog output mode.
 
         This option, together with :attr:`moist_min`, :attr:`moist_max`,
         :attr:`temp_min`, :attr:`temp_max` and :func:`analog_mode` can be
@@ -310,22 +346,20 @@ class Module(object):
 
         :param mode: 0 or 1
         :type  mode: int
+        :param moist_range: min and max moist value e.g (0, 100)
+        :type  moist_range: tuple
+        :param temp_range: min and max temp range e.g. (-20, 50)
+        :type  temp_range: tuple
         :rtype: int
         :raises: **ModuleError** - If mode is unknown.
 
         """
         table = 'DEVICE_CONFIGURATION_PARAMETER'
         param = 'AnalogOutputMode'
-
-        mode = self.bus.get(self._serno, table, param)
-
-        if not mode in (0, 1):
-            raise ModuleError("Got wrong analog mode!")
-
-        return mode
+        return self.bus.get(self._serno, table, param)
 
     @analog_mode.setter
-    def analog_mode(self, mode=0):
+    def analog_mode(self, mode, moist_range=None, temp_range=None):
         table = 'DEVICE_CONFIGURATION_PARAMETER'
         param = 'AnalogOutputMode'
         value = mode
@@ -333,142 +367,79 @@ class Module(object):
         if not mode in (0, 1):
             raise ModuleError("Wrong analog mode!")
 
-        assert self.bus.set(self._serno, table, param, value)
+        if moist_range:
+            self.moist_range = moist_range
 
-    @property
-    def moist_min(self):
-        """The minimum moisture setting.
-
-        This option set's the lower moisture border. Together with
-        :attr:`moist_max` and :attr:`analog_mode` this setting can be
-        used to determine the mean of the analog moisture output signal.
-        For more information look at :attr:`analog_mode`.
-
-        :param moist: minimum moisture value (Volumetric water content θ)
-        :type  moist: int
-
-        :rtype: int
-
-        """
-        table = 'DEVICE_CONFIGURATION_PARAMETER'
-        param = 'MoistMinValue'
-        moist = self.bus.get(self._serno, table, param)
-
-        if not moist in xrange(0,101):
-            raise ModuleError("Minimum moisture value out of range")
-
-        return moist
-
-    @moist_min.setter
-    def moist_min(self, moist):
-        table = 'DEVICE_CONFIGURATION_PARAMETER'
-        param = 'MoistMinValue'
-        value = moist
-
-        if not moist in xrange(0,101):
-            raise ModuleError("Minimum moisture value out of range")
+        if temp_range:
+            self.temp_range = temp_range
 
         assert self.bus.set(self._serno, table, param, value)
 
     @property
-    def moist_max(self):
-        """The maximum moisture setting.
+    def measure_mode(self):
+        """The measure mode of the probe. There a 3 different measure modes.
 
-        This option set's the upper moisture border. Together with
-        :attr:`moist_min` and :attr:`analog_mode` this setting can be
-        used to determine the mean of the analog moisture output signal.
-        For more information look at :attr:`analog_mode`.
+        .. note::
+            **Mode A:** `measure_mode(mode='A')`
+                On Request: The probe checks the parameter StartMeasure in
+                Measure Parameter Table. If the parameter is 0, the probe does
+                nothing. If the parameter is 1, the probe does the measurement
+                and then sets the parameter to 0 again. Setting the parameter
+                to 1 must be carried out through RS485 or IMPBus by an external
+                command.
 
-        :param moist: maximum moisture value (Volumetric water content θ)
-        :type  moist: int
-        :rtype: int
+            **Mode B:** `measure_mode(mode='B', wait_time=1)`
+                Single: The probe measures once after it is powered on. This
+                mode is normally used in the case that the probe is connected
+                to a data logger which samples the analog output after being
+                powered on. You can set a time (:attr:`measure_waitetime`) to
+                wait befor starting the measurement.
 
-        """
-        table = 'DEVICE_CONFIGURATION_PARAMETER'
-        param = 'MoistMaxValue'
-        moist = self.bus.get(self._serno, table, param)
+            **Mode C:** `measure_mode(mode='C', sleep_time=5)`
+                Cyclic: The probe measures cyclically. That means, the probe
+                measures once and sleeps for some anount of time
+                (:attr:`measure_sleeptime`) then it wakes up automatically and
+                repeats the process. This mode is normally used in cases where
+                the probe is always powered on.
 
-        if not moist in xrange(0,101):
-            raise ModuleError("Maximum moisture value out of range")
-
-        return moist
-
-    @moist_max.setter
-    def moist_max(self, moist):
-        table = 'DEVICE_CONFIGURATION_PARAMETER'
-        param = 'MoistMaxValue'
-        value = moist
-
-        if not moist in xrange(0,101):
-            raise ModuleError("Maximum moisture value out of range")
-
-        assert self.bus.set(self._serno, table, param, value)
-
-    @property
-    def temp_min(self):
-        """The minimum temperature setting.
-
-        This option set's the lower temperature border. Together with
-        :attr:`temp_max` and :attr:`analog_mode` this setting can be
-        used to determine the mean of the analog moisture output signal.
-        For more information look at :attr:`analog_mode`.
-
-        :param moist: minimum temperature value (C°)
-        :type  moist: int
-        :rtype: int
+        :param mode: 'A', 'B' or 'C'
+        :type  mode: str
+        :param time: None, or >1 or > 5
+        :type  time: int
+        :rtype: str
+        :raises: **ModuleError** - If mode is unknown.
 
         """
         table = 'DEVICE_CONFIGURATION_PARAMETER'
-        param = 'TempMinValue'
-        temp = self.bus.get(self._serno, table, param)
+        param = 'MeasMode'
+        modes = {v:k for k, v in self.measure_modes.items()}
 
-        if not temp in xrange(-15, 51):
-            raise ModuleError("Minimum temperatur value out of range")
+        try:
+            mode = modes[self.bus.get(self._serno, table, param)]
+        except KeyError:
+            raise ModuleError("Unknown measure mode!")
 
-        return temp
+        return mode
 
-    @temp_min.setter
-    def temp_min(self, temp):
+    @measure_mode.setter
+    def measure_mode(self, mode, wait_time=None, sleep_time=None):
         table = 'DEVICE_CONFIGURATION_PARAMETER'
-        param = 'TempMinValue'
-        value = temp
+        param = 'MeasMode'
 
-        if not temp in xrange(-15, 51):
-            raise ModuleError("Minimum temperatur value out of range")
+        try:
+            value = self.measure_modes[mode]
+        except KeyError:
+            msg = "'{}' is not a valid measure mode!".format(e.message)
+            raise ModuleError(msg)
 
-        assert self.bus.set(self._serno, table, param, value)
+        if sleep_time:
+            self.sleeptime = sleep_time
 
-    @property
-    def temp_max(self):
-        """The minimum moisture setting.
+        if wait_time:
+            self.waittime = wait_time
 
-        This option set's the upper temperature border. Together with
-        :attr:`temp_min` and :attr:`analog_mode` this setting can be
-        used to determine the mean of the analog moisture output signal.
-        For more information look at :attr:`analog_mode`.
-
-        :param moist: maximum temperature value (C°)
-        :type  moist: int
-        :rtype: int
-
-        """
-        table = 'DEVICE_CONFIGURATION_PARAMETER'
-        param = 'TempMaxValue'
-        temp = self.bus.get(self._serno, table, param)
-
-        if not temp in xrange(-15, 51):
-            raise ModuleError("Maximum temperatur value out of range")
-
-        return temp
-
-    @temp_max.setter
-    def temp_max(self, moist):
-        table = 'DEVICE_CONFIGURATION_PARAMETER'
-        param = 'TempMaxValue'
-        value = moist
-
-        if not moist in xrange(-15, 51):
-            raise ModuleError("Maximum temperatur value out of range")
+        if not self._event_mode == "NormalMeasure":
+            self._event_mode = "NormalMeasure"
 
         assert self.bus.set(self._serno, table, param, value)
 
@@ -477,7 +448,7 @@ class Module(object):
     ###########################
 
     def measure_start(self):
-        """ Command to start a measurement cycle. 
+        """ Command to start a measurement cycle.
 
         This command starts a measurement cycle. Or if there is
         already a measurement in progress just returns 'True'.
@@ -522,6 +493,10 @@ class Module(object):
         """
         table = 'MEASURE_PARAMETER_TABLE'
         param = 'GetData'
+
+        while self.measure_running():
+            time.sleep(1)
+
         return self.bus.get(self._serno, table, param)
 
     ###########################
