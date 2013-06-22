@@ -19,8 +19,9 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
-
+import pytest
 from binascii import a2b_hex as a2b
+
 from implib2.imp_crc import MaximCRC
 
 # pylint: disable=C0103,W0201
@@ -30,10 +31,16 @@ class TestMaximCRC(object):
         self.crc = MaximCRC()
 
     def test_calc_crc(self):
+        data = a2b('FD15ED09')
         crc = a2b('f3')
-        assert self.crc.calc_crc(a2b('FD15ED09')) == crc
+        assert self.crc.calc_crc(data) == crc
 
-    def test_check_crc(self):
-        data = a2b('FD15ED09f3')
-        assert self.crc.check_crc(data)
+    def test_check_crc_true(self):
+        data = a2b('FD15ED09')
+        crc = a2b('f3')
+        assert self.crc.check_crc(data + crc)
 
+    def test_check_crc_false(self):
+        data = a2b('FD15ED09')
+        crc = a2b('f4')
+        assert not self.crc.check_crc(data)
