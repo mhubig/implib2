@@ -24,7 +24,7 @@ from struct import pack
 
 class MaximCRC(object):
     def __init__(self):
-        self.tbl2 = [
+        self.tbl = [
                 0,  94, 188, 226,  97,  63, 221, 131, 194, 156, 126,
                32, 163, 253,  31,  65, 157, 195,  33, 127, 252, 162,
                64,  30,  95,   1, 227, 189,  62,  96, 130, 220,  35,
@@ -59,6 +59,4 @@ class MaximCRC(object):
 
     def check_crc(self, byte_str):
         data, crc = byte_str[:-1], byte_str[-1:]
-        if not crc == self.calc_crc(data):
-            return False
-        return True
+        return crc == self.calc_crc(data)
