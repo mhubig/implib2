@@ -23,44 +23,49 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 import os
 from setuptools import setup, find_packages
 
+
 # Utility function to read the README file, used for the long_description.
 # It's nice, because now 1) we have a top level README file and 2) it's
 # easier to type in the README file than to put a raw string in below ...
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
-CLASSIFIERS = filter(None, map(str.strip,
-"""
-"Development Status :: 4 - Beta",
-"Topic :: Software Development :: Libraries",
-"Intended Audience :: Developers",
-"Programming Language :: Python :: 2.7",
-"License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)"
-""".splitlines()))
+CLASSIFIERS = [
+    "Development Status :: 4 - Beta",
+    "Topic :: Software Development :: Libraries",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 2.7",
+    ("License :: OSI Approved :: GNU Lesser "
+     "General Public License v3 or later (LGPLv3+)"),
+]
 
 setup(
-        name = 'IMPLib2',
-        version = 'release-0.8.5',
-        packages = find_packages(exclude=["tests"]),
+    name='IMPLib2',
+    version='release-0.8.5',
+    packages=find_packages(exclude=["tests"]),
 
-        # Include the *.yaml files
-        package_data = {
-            'implib2': ['*.json'],
-        },
+    # Include the *.yaml files
+    package_data={
+        'implib2': ['*.json'],
+    },
 
-        # Install or upgrade the dependencies
-        install_requires = [
-            'PySerial>=2.5',
-        ],
+    # Install or upgrade the dependencies
+    install_requires=[
+        'PySerial>=2.5',
+    ],
 
-        # metadata for upload to PyPI
-        author = 'Markus Hubig',
-        author_email = 'mhubig@imko.de',
-        url = 'https://bitbucket.org/imko/implib2',
-        description = ("Python implementation of the IMPBUS-2 data "
-            "transmission protocol."),
-        long_description=read('README.md'),
-        license = "LGPL",
-        keywords = "serial impbus imko",
-        classifiers = CLASSIFIERS,
+    # metadata for upload to PyPI
+    author='Markus Hubig',
+    author_email='mhubig@imko.de',
+    url='https://bitbucket.org/imko/implib2',
+    description=("Python implementation of the IMPBUS-2 data "
+                 "transmission protocol."),
+    long_description=("This library implements the IMPBus2 protocol "
+                      "which is used by the IMKO GmbH to access the "
+                      "TRIME PIKO and TRIME SONO moisture measurements "
+                      "probes. It is tested for Python 2.7 running on "
+                      "Linux, Windows and MacOSX."),
+    license="LGPL",
+    keywords="serial impbus imko",
+    classifiers=CLASSIFIERS,
 )
