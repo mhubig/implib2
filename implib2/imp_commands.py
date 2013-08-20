@@ -22,8 +22,10 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 
 import struct
 
+
 class CommandError(Exception):
     pass
+
 
 class Command(object):
     def __init__(self, tables, package, datatypes):
@@ -69,8 +71,8 @@ class Command(object):
     def do_tdr_scan(self, serno, scan_start, scan_end, scan_span, scan_count):
         # pylint: disable=R0913
         scan_start = struct.pack('<B', scan_start)
-        scan_end   = struct.pack('<B', scan_end)
-        scan_span  = struct.pack('<B', scan_span)
+        scan_end = struct.pack('<B', scan_end)
+        scan_span = struct.pack('<B', scan_span)
         scan_count = struct.pack('<H', scan_count)
         data = scan_start + scan_end + scan_span + scan_count
 
@@ -91,7 +93,7 @@ class Command(object):
 
         param_no = struct.pack('<B', 255)
         param_ad = struct.pack('<B', page_nr)
-        param    = str()
+        param = str()
 
         for byte in page:
             param += struct.pack('<B', byte)
@@ -100,4 +102,3 @@ class Command(object):
 
         package = self.pkg.pack(serno=serno, cmd=0x3d, data=data)
         return package
-

@@ -24,8 +24,10 @@ import time
 import serial
 from struct import unpack
 
+
 class DeviceError(Exception):
     pass
+
 
 class Device(object):
     def __init__(self, port):
@@ -34,19 +36,20 @@ class Device(object):
 
     def _timeout(self, length):
         # pylint: disable=C0321
-        if not length: return 0
+        if not length:
+            return 0
         baudrate = self.ser.baudrate
         return 600.0 / baudrate * length
 
     def open_device(self, baudrate=9600):
         self.ser.baudrate = baudrate
         self.ser.bytesize = serial.EIGHTBITS
-        self.ser.parity   = serial.PARITY_ODD
+        self.ser.parity = serial.PARITY_ODD
         self.ser.stopbits = serial.STOPBITS_TWO
-        self.ser.timeout  = 0 # act nonblocking
-        self.ser.xonxoff  = 0
-        self.ser.rtscts   = 0
-        self.ser.dsrdtr   = 0
+        self.ser.timeout = 0  # act nonblocking
+        self.ser.xonxoff = 0
+        self.ser.rtscts = 0
+        self.ser.dsrdtr = 0
         self.ser.open()
         self.ser.flush()
         time.sleep(0.050)
@@ -111,4 +114,3 @@ class Device(object):
 
         self.ser.flushInput()
         return byte
-

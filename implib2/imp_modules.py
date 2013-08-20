@@ -19,13 +19,16 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
-import time, struct
 
+import time
+import struct
 from .imp_crc import MaximCRC
 from .imp_eeprom import EEPRom
 
+
 class ModuleError(Exception):
     pass
+
 
 class Module(object):
     # pylint: disable=R0904
@@ -120,7 +123,7 @@ class Module(object):
         """
         table = 'ACTION_PARAMETER_TABLE'
         param = 'Event'
-        modes = {v:k for k, v in self.event_modes.items()}
+        modes = {v: k for k, v in self.event_modes.items()}
 
         try:
             mode = modes[self.bus.get(self._serno, table, param)[0] % 0x80]
@@ -173,7 +176,7 @@ class Module(object):
         """
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
         param = 'MeasMode'
-        modes = {v:k for k, v in self.measure_modes.items()}
+        modes = {v: k for k, v in self.measure_modes.items()}
 
         try:
             mode = modes[self.bus.get(self._serno, table, param)[0]]
@@ -228,7 +231,6 @@ class Module(object):
             self.set_event_mode("NormalMeasure")
 
         return self.bus.set(self._serno, table, param, [value])
-
 
     def get_table(self, table):
         """Spezial Command to get a whole table.
@@ -401,7 +403,7 @@ class Module(object):
 
         return self.bus.set(self._serno, table, param, [value])
 
-    def measure_running(self):#
+    def measure_running(self):
         """This command checks if the measurement cycle is in progress.
 
         :rtype: bool
@@ -427,7 +429,7 @@ class Module(object):
 
     def get_moisture(self):
         """This command is a simple wrapper arrond :func:`start_measure`,
-        :func:`measure_running` and :func:`get_measure` and returns the moisture.
+        :func:`measure_running` and :func:`get_measure`.
 
         :rtype: float
 
@@ -615,12 +617,12 @@ class Module(object):
         SelfTest is used for primary for internal test by IMKO.
         In this context, it will be used to 'ON' the ASIC.
         """
-        table    = 'ACTION_PARAMETER_TABLE'
-        param    = 'SelfTest'
-        value    = [1, 1, 63, 0]
+        table = 'ACTION_PARAMETER_TABLE'
+        param = 'SelfTest'
+        value = [1, 1, 63, 0]
 
         if not self.set_event_mode("SelfTest"):
-            raise ModuleError("Coul'd not set event mode!")
+            raise ModuleError("Could not set event mode!")
 
         return self.bus.set(self._serno, table, param, value)
 
@@ -635,10 +637,9 @@ class Module(object):
         value = [1, 0, 255, 0]
 
         if not self.set_event_mode("SelfTest"):
-            raise ModuleError("Coul'd not set event mode!")
+            raise ModuleError("Could not set event mode!")
 
         return self.bus.set(self._serno, table, param, value)
-
 
     def _get_transit_time_tdr(self):
         # ** Internal usage - Trime IBT

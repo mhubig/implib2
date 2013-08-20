@@ -22,6 +22,7 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 
 from struct import pack
 
+
 class MaximCRC(object):
     def __init__(self):
         self.tbl = self._maketbl()
@@ -54,14 +55,13 @@ class MaximCRC(object):
         tbl = self.tbl
         register = 0x0
         for char in byte_str:
-            tblidx   = (register ^ ord(char)) & 0xff
+            tblidx = (register ^ ord(char)) & 0xff
             register = ((register >> 8) ^ tbl[tblidx]) & 255
         return pack('>B', register)
 
     def check_crc(self, byte_str):
         data = byte_str[:-1]
-        crc  = byte_str[-1:]
+        crc = byte_str[-1:]
         if not crc == self.calc_crc(data):
             return False
         return True
-

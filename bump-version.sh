@@ -24,17 +24,17 @@ function usage () {
 
 function commit_hint () {
     msg1="Now please commit with something like:"
-    msg2="git commit -a -s -m \"Bumped version number to release-$1.\""
+    msg2="git commit -a -s -m \"Bumped version number to $1.\""
     echo $msg1 $msg2
 }
 
 function update_version_init () {
-    sed -e "s/^__version__ = .*$/__version__ = 'release-$1'/g" \
+    sed -e "s/^__version__ = .*$/__version__ = '$1'/g" \
         implib2/__init__.py > .__init__.new
 }
 
 function update_version_setup () {
-    sed -e "s/version = .*$/version = 'release-$1',/g" \
+    sed -e "s/version=.*$/version='$1',/g" \
         setup.py > .setup.new
 }
 

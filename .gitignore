@@ -1,11 +1,14 @@
 *.pyc
 *.DS_Store
 *~
-.tox/
+
 .coverage
 coverage.xml
 unittests.xml
 pylint_*
+
+.tox/
+.cache/
 build/
 dist/
 IMPLib2.egg-info/

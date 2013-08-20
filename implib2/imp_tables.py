@@ -22,11 +22,13 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 
 from .imp_helper import _load_json
 
+
 class TablesError(Exception):
     pass
 
+
+# pylint: disable=R0903,C0103
 class Tables(object):
-    # pylint: disable=R0903
 
     def __init__(self, filename='imp_tables.json'):
         self._tables = _load_json(filename)
@@ -36,6 +38,7 @@ class Tables(object):
             cmd = self._tables[table][param]
             cmd[u'Set'] = self._tables[table]["Table"]["Set"]
             cmd[u'Get'] = self._tables[table]["Table"]["Get"]
-            return cmd
-        except KeyError:
-            raise TablesError(table, param)
+        except KeyError as e:
+            raise TablesError("Unknown param or table: {}!".format(e.message))
+
+        return cmd

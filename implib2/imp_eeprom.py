@@ -19,12 +19,15 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
-import re, struct
+import re
+import struct
 from cStringIO import StringIO
 from .imp_helper import _normalize
 
+
 class EEPRomError(Exception):
     pass
+
 
 class EEPRom(object):
     """This Class represents a simple data structure to hold an EEPRom
@@ -90,8 +93,8 @@ class EEPRom(object):
         """
         self._filename = _normalize(filename)
         stuff = '; ' + '\n; '.join(self._stuff)
-        header = '; ' + '\n; '.join([ '%s = %s' % (x, self._header[x])
-            for x in self._header])
+        header = '; ' + '\n; '.join(['%s = %s' % (x, self._header[x])
+                                    for x in self._header])
         data = self._data.getvalue()
         with open(self._filename, 'w') as epr:
             if self._stuff:
@@ -141,4 +144,3 @@ class EEPRom(object):
         """
         self._data.seek(0, 2)
         return self._data.tell()
-

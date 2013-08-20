@@ -1,18 +1,12 @@
-.. IMPLib2 documentation master file, created by
-   sphinx-quickstart on Mon Nov 19 23:07:06 2012.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+Travis-CI & Test Coverage
+=========================
 
-IMPBUS-2 Library
-================
-
-This library implements the IMPBus2 protocol which is used by the `IMKO GmbH`_
-to access the TRIME PIKO and TRIME SONO moisture measurements probes. It is
-tested for Python 2.7 running on Linux, Windows and MacOSX.
+[![Build Status](https://travis-ci.org/mhubig/implib2.png?branch=develop)](https://travis-ci.org/mhubig/implib2)
+[![Coverage Status](https://coveralls.io/repos/mhubig/implib2/badge.png?branch=develop)](https://coveralls.io/r/mhubig/implib2?branch=develop)
 
 
 Requirements
-------------
+============
 
 Before you can start using the IMPLib2 software you have to make sure, that
 you have at least the following software packages installed.
@@ -25,7 +19,7 @@ head over to the offical project pages.
 
 
 Installation
-------------
+============
 
 Install the stable branch with pip using git:
 
@@ -39,15 +33,16 @@ Depending on your system you may have to prefix these commands with ``sudo``!
 
 
 Quick Start Manual
-------------------
+==================
 
 This small quick start manual is intended to give you a basic example of how
 to use this library. In order to start playing with it you have to connect at
-least one `Trime Pico`_  moisture measurement probe to your computer. An easy
-way to connect the probe is by using the USB-IMPBus Converter `SM-USB`_.
+least one [Trime Pico](http://imko.de/en/products/soilmoisture) moisture
+measurement probe to your computer. An easy way to connect the probe is by
+using the USB-IMPBus Converter [SM-USB](http://imko.de/en/products).
 
 After successfully installing IMPLib2 and connecting, start the Python Shell
-within your terminal::
+within your terminal:
 
     $ python
     Python 2.7.3 (default, Aug  1 2012, 05:14:39)
@@ -55,12 +50,12 @@ within your terminal::
     Type "help", "copyright", "credits" or "license" for more information.
     >>>
 
-Import the IMPLib2 module::
+Import the IMPLib2 module:
 
     >>> import implib2 as imp
 
 Now initialize the IMPBus, sync and scan for connected Modules. Replace the
-USB Interface with the one your SM-USB uses::
+USB Interface with the one your SM-USB uses:
 
     >>> bus = imp.Bus('/dev/ttyUSB0')
     >>> bus.sync()
@@ -68,13 +63,13 @@ USB Interface with the one your SM-USB uses::
     (10010, 10011)
 
 As you can see we found two connected modules with the serial numbers 10010
-and 10011. Now we can instantiate the module objects::
+and 10011. Now we can instantiate the module objects:
 
     >>> mod10 = Module(bus, 10010)
     >>> mod11 = Module(bus, 10011)
 
 Using the handy module objects we can now perform various higher operations,
-like doing a measurement or requesting the serial number::
+like doing a measurement or requesting the serial number:
 
     >>> mod10.get_moisture()
     14.3
@@ -86,7 +81,7 @@ like doing a measurement or requesting the serial number::
     10011
 
 If you came so far you should be able to easily build a little script which
-performs an measurement on all connected probes ones an hour::
+performs an measurement on all connected probes ones an hour:
 
     #!/usr/bin/env python
     # -*- coding: UTF-8 -*-
@@ -112,51 +107,26 @@ performs an measurement on all connected probes ones an hour::
         time.sleep(3600)  # for one hour
 
 For more and in depth information please head over to the API-Documentation on
-`ReadTheDocs`_.
+[ReadTheDocs](https://implib2.readthedocs.org).
 
 
 License
 =======
 
-::
-
-    Copyright (C) 2011-2013, Markus Hubig <mhubig@imko.de>
-
-    This is the documentation part of IMPLib2, a small Python library
-    implementing the IMPBUS-2 data transmission protocol.
-
-    IMPLib2 is free software: you can redistribute it and/or modify
-    it under the terms of the GNU Lesser General Public License as
-    published by the Free Software Foundation, either version 3 of
-    the License, or (at your option) any later version.
-
-    IMPLib2 is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-    GNU Lesser General Public License for more details.
-
-    You should have received a copy of the GNU Lesser General Public
-    License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
-
-
-The API Documentation
----------------------
-
-.. toctree::
-    :maxdepth: 2
-
-    implib2.rst
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
-.. Place the link targets here:
-.. _IMKO GmbH: http://imko.de
-.. _Trime Pico: http://imko.de/en/products/soilmoisture
-.. _SM-USB: http://imko.de/en/products
-.. _ReadTheDocs: https://implib2.readthedocs.org
+> Copyright (C) 2011-2013, Markus Hubig <mhubig@imko.de>
+>
+> This is the documentation part of IMPLib2, a small Python library
+> implementing the IMPBUS-2 data transmission protocol.
+>
+> IMPLib2 is free software: you can redistribute it and/or modify
+> it under the terms of the GNU Lesser General Public License as
+> published by the Free Software Foundation, either version 3 of
+> the License, or (at your option) any later version.
+>
+> IMPLib2 is distributed in the hope that it will be useful,
+> but WITHOUT ANY WARRANTY; without even the implied warranty of
+> MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+> GNU Lesser General Public License for more details.
+>
+> You should have received a copy of the GNU Lesser General Public
+> License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.

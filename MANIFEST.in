@@ -1,6 +1,6 @@
 include COPYING
 include COPYING.LESSER
-include README.rst
+include README.md
 include setup.py
 include tox.ini
 graft tests

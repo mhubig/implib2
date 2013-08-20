@@ -24,12 +24,14 @@ import json
 import pytest
 from implib2.imp_errors import Errors, ErrorsError
 
+
 # pylint: disable=C0103
 def pytest_generate_tests(metafunc):
     if 'errno' in metafunc.fixturenames:
         with open('tests/test_errors.json') as js:
             j = json.load(js)
         metafunc.parametrize("errno", [errno for errno in j])
+
 
 # pylint: disable=C0103,W0212,E1101,W0201
 class TestErrors(object):
@@ -52,12 +54,12 @@ class TestErrors(object):
             Errors('imp_errors.py')
 
     def test_lookup_unknown_errno(self):
-        with pytest.raises(ErrorsError):
+        with pytest.raises(ErrorsError) as e:
             self.e.lookup(666)
+        assert e.value.message == "Unknown error number: 666"
 
     def test_lookup_error(self, errno):
         err = self.j[str(errno)]
         msg = self.e.lookup(errno)
 
         assert err == msg
-

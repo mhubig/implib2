@@ -24,6 +24,7 @@ import json
 import pytest
 from implib2.imp_tables import Tables, TablesError
 
+
 # pylint: disable=C0103
 def pytest_generate_tests(metafunc):
     if 'table' in metafunc.fixturenames:
@@ -36,6 +37,7 @@ def pytest_generate_tests(metafunc):
                 tests.append((table, param))
 
         metafunc.parametrize(("table", "param"), tests)
+
 
 # pylint: disable=C0103,W0212,E1101,W0201
 class TestTables(object):
@@ -59,12 +61,15 @@ class TestTables(object):
             Tables('imp_tables.py')
 
     def test_lookup_unknown_table(self):
-        with pytest.raises(TablesError):
-            self.t.lookup('UNKNOWN', 'UNKNOWN')
+        with pytest.raises(TablesError) as e:
+            self.t.lookup('UNKNOWN_TABLE', 'UNKNOWN_PARAM')
+        assert e.value.message == "Unknown param or table: UNKNOWN_TABLE!"
 
     def test_lookup_unknown_param(self):
-        with pytest.raises(TablesError):
-            self.t.lookup('DEVICE_CALIBRATION_PARAMETER_TABLE', 'UNKNOWN')
+        with pytest.raises(TablesError) as e:
+            self.t.lookup('DEVICE_CALIBRATION_PARAMETER_TABLE',
+                          'UNKNOWN_PARAM')
+        assert e.value.message == "Unknown param or table: UNKNOWN_PARAM!"
 
     def test_lookup_value(self, table, param):
         row = self.j[table][param]
@@ -76,9 +81,8 @@ class TestTables(object):
 
     def test_lookup_value_has_get(self, table, param):
         row = self.t.lookup(table, param)
-        assert row.has_key('Get')
+        assert 'Get' in row
 
     def test_lookup_value_has_set(self, table, param):
         row = self.t.lookup(table, param)
-        assert row.has_key('Set')
-
+        assert 'Set' in row

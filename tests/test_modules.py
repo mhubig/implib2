@@ -25,6 +25,7 @@ import pytest
 from mock import patch, call, MagicMock
 from implib2.imp_modules import Module, ModuleError
 
+
 # pylint: disable=C0103,W0212,R0904,E1101,W0201
 class TestModule(object):
     def setup(self):
@@ -33,8 +34,9 @@ class TestModule(object):
         self.mod = Module(self.bus, self.serno)
 
     def test_get_table(self):
-        with pytest.raises(ModuleError):
+        with pytest.raises(ModuleError) as e:
             self.mod.get_table('ACTION_PARAMETER_TABLE')
+        assert e.value.message == "Not yet implemented!"
 
     def test_get_serno(self):
         table = 'SYSTEM_PARAMETER_TABLE'
@@ -143,8 +145,9 @@ class TestModule(object):
     def test_get_event_mode_UNKNOWN(self):
         self.bus.get.return_value = (0x06,)
 
-        with pytest.raises(ModuleError):
+        with pytest.raises(ModuleError) as e:
             self.mod.get_event_mode()
+        assert e.value.message == "Unknown event mode!"
 
     def test_get_measure_mode(self):
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
@@ -156,8 +159,9 @@ class TestModule(object):
 
     def test_get_measure_mode_UnknownMode(self):
         self.bus.get.return_value = (0x03,)
-        with pytest.raises(ModuleError):
+        with pytest.raises(ModuleError) as e:
             self.mod.get_measure_mode()
+        assert e.value.message == "Unknown measure mode!"
 
     def test_unlock(self):
         table = 'ACTION_PARAMETER_TABLE'
@@ -173,7 +177,7 @@ class TestModule(object):
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
         param = 'EPRByteLen'
         head = os.urandom(252)
-        mid  = os.urandom(252)
+        mid = os.urandom(252)
         tail = os.urandom(128)
         length = (252 * 31 + 128)
         pages = [head]
@@ -199,7 +203,7 @@ class TestModule(object):
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
         param = 'EPRByteLen'
         head = os.urandom(252)
-        mid  = os.urandom(252)
+        mid = os.urandom(252)
         tail = os.urandom(128)
         length = (252 * 31 + 128)
         pages = [head]
@@ -232,15 +236,17 @@ class TestModule(object):
             eeprom.length = length - 1
             self.mod._unlocked = True
 
-            with pytest.raises(ModuleError):
+            with pytest.raises(ModuleError) as e:
                 self.mod.read_eeprom()
+            assert e.value.message == "EEPROM length don't match!"
 
     def test_set_table(self):
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
         data = None
 
-        with pytest.raises(ModuleError):
+        with pytest.raises(ModuleError) as e:
             self.mod.set_table(table, data)
+        assert e.value.message == "Not yet implemented!"
 
     def test_set_serno_ModuleAlreadyUnlocked(self):
         table = 'SYSTEM_PARAMETER_TABLE'
@@ -252,7 +258,7 @@ class TestModule(object):
 
         assert self.mod.set_serno(value)
         assert self.mod._serno == value
-        assert self.mod._unlocked is False
+        assert not self.mod._unlocked
         self.bus.set.assert_called_once_with(self.serno, table, param, [value])
 
     def test_set_serno_ModuleNotAlreadyUnlocked(self):
@@ -266,14 +272,14 @@ class TestModule(object):
 
         assert self.mod.set_serno(value)
         assert self.mod._serno == value
-        assert self.mod._unlocked is False
+        assert not self.mod._unlocked
         self.mod.unlock.assert_called_once_with()
         self.bus.set.assert_called_once_with(self.serno, table, param, [value])
 
     def test__get_analog_output_mode(self):
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
         param = 'AnalogOutputMode'
-        mode  = 0
+        mode = 0
 
         self.bus.get.return_value = (mode,)
 
@@ -291,16 +297,19 @@ class TestModule(object):
         self.bus.set.assert_called_once_with(self.serno, table, param, [value])
 
     def test__set_analog_output_mode_WithWrongMode(self):
-        with pytest.raises(ModuleError):
+        with pytest.raises(ModuleError) as e:
             self.mod._set_analog_output_mode(3)
+        assert e.value.message == "Wrong AnalogOutputMode!"
 
     def test_set_analog_moist_ValueToLow(self):
-        with pytest.raises(ModuleError):
+        with pytest.raises(ModuleError) as e:
             self.mod._set_analog_moist(-1)
+        assert e.value.message == "Value out of range!"
 
     def test_set_analog_moist_ValueToHigh(self):
-        with pytest.raises(ModuleError):
+        with pytest.raises(ModuleError) as e:
             self.mod._set_analog_moist(1001)
+        assert e.value.message == "Value out of range!"
 
     def test_set_analog_moist_CouldNotSetEventMode(self):
         min_value = 0
@@ -314,8 +323,9 @@ class TestModule(object):
         self.mod.set_event_mode = MagicMock()
         self.mod.set_event_mode.return_value = False
 
-        with pytest.raises(ModuleError):
+        with pytest.raises(ModuleError) as e:
             self.mod._set_analog_moist(mvolt)
+        assert e.value.message == "Could not set event mode!"
 
     def test_set_analog_moist(self):
         table = 'MEASURE_PARAMETER_TABLE'
@@ -339,16 +349,18 @@ class TestModule(object):
         self.bus.set.assert_called_once_with(self.serno, table, param, [value])
 
     def test_set_analog_temp_ValueToLow(self):
-        with pytest.raises(ModuleError):
+        with pytest.raises(ModuleError) as e:
             self.mod._set_analog_temp(-1)
+        assert e.value.message == "Value out of range!"
 
     def test_set_analog_temp_ValueToHigh(self):
-        with pytest.raises(ModuleError):
+        with pytest.raises(ModuleError) as e:
             self.mod._set_analog_temp(1001)
+        assert e.value.message == "Value out of range!"
 
     def test_set_analog_temp_CouldNotSetEventMode(self):
         min_value = -20
-        max_value =  70
+        max_value = 70
         mvolt = 550
 
         self.mod._get_temp_min_value = MagicMock()
@@ -358,8 +370,9 @@ class TestModule(object):
         self.mod.set_event_mode = MagicMock()
         self.mod.set_event_mode.return_value = False
 
-        with pytest.raises(ModuleError):
+        with pytest.raises(ModuleError) as e:
             self.mod._set_analog_temp(mvolt)
+        assert e.value.message == "Could not set event mode!"
 
     def test_set_analog_temp(self):
         table = 'MEASURE_PARAMETER_TABLE'
@@ -418,14 +431,15 @@ class TestModule(object):
     def test_set_event_mode_UnknownMode(self):
         mode = 'UNKNOWN'
         self.mod._unlocked = True
-        with pytest.raises(ModuleError):
+        with pytest.raises(ModuleError) as e:
             self.mod.set_event_mode(mode)
+        assert e.value.message == "Invalid event mode!"
 
     def test_set_measure_mode_AlreadyInNormalMeasureMode(self):
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
         param = 'MeasMode'
         value = 0
-        mode  = 'ModeA'
+        mode = 'ModeA'
 
         self.mod.get_event_mode = MagicMock()
         self.mod.get_event_mode.return_value = "NormalMeasure"
@@ -437,7 +451,7 @@ class TestModule(object):
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
         param = 'MeasMode'
         value = 0
-        mode  = 'ModeA'
+        mode = 'ModeA'
 
         self.mod.get_event_mode = MagicMock()
         self.mod.get_event_mode.return_value = "NotNormalMeasure"
@@ -448,12 +462,13 @@ class TestModule(object):
         self.bus.set.assert_called_once_with(self.serno, table, param, [value])
 
     def test_set_measure_mode_UnknownMode(self):
-        with pytest.raises(ModuleError):
+        with pytest.raises(ModuleError) as e:
             self.mod.set_measure_mode('ModeD')
+        assert e.value.message == "Invalid measure mode!"
 
     def test_write_eeprom_ModuleAlreadyUnlocked(self):
         head = (0, os.urandom(252))
-        mid  = (1, os.urandom(252))
+        mid = (1, os.urandom(252))
         tail = (2, os.urandom(128))
         gen = (x for x in [head, mid, tail])
 
@@ -468,7 +483,7 @@ class TestModule(object):
 
     def test_write_eeprom_ModuleNotAlreadyUnlocked(self):
         head = (0, os.urandom(252))
-        mid  = (1, os.urandom(252))
+        mid = (1, os.urandom(252))
         tail = (2, os.urandom(128))
         gen = (x for x in [head, mid, tail])
 
@@ -486,7 +501,7 @@ class TestModule(object):
 
     def test_write_eeprom_EEPRomWritingFailed(self):
         head = (0, os.urandom(252))
-        mid  = (1, os.urandom(252))
+        mid = (1, os.urandom(252))
         tail = (2, os.urandom(128))
         gen = (x for x in [head, mid, tail])
 
@@ -496,13 +511,14 @@ class TestModule(object):
         self.mod._unlocked = False
         self.mod.unlock = MagicMock()
 
-        with pytest.raises(ModuleError):
+        with pytest.raises(ModuleError) as e:
             self.mod.write_eeprom(eeprom)
+        assert e.value.message == "Writing EEPRom failed!"
 
     def test_turn_asic_on(self):
-        table    = 'ACTION_PARAMETER_TABLE'
-        param    = 'SelfTest'
-        value    = [1, 1, 63, 0]
+        table = 'ACTION_PARAMETER_TABLE'
+        param = 'SelfTest'
+        value = [1, 1, 63, 0]
 
         self.mod.set_event_mode = MagicMock()
         self.mod.set_event_mode.return_value = True
@@ -515,13 +531,14 @@ class TestModule(object):
         self.mod.set_event_mode = MagicMock()
         self.mod.set_event_mode.return_value = False
 
-        with pytest.raises(ModuleError):
+        with pytest.raises(ModuleError) as e:
             self.mod._turn_asic_on()
+        assert e.value.message == "Could not set event mode!"
 
     def test_turn_asic_off(self):
-        table    = 'ACTION_PARAMETER_TABLE'
-        param    = 'SelfTest'
-        value    = [1, 0, 255, 0]
+        table = 'ACTION_PARAMETER_TABLE'
+        param = 'SelfTest'
+        value = [1, 0, 255, 0]
 
         self.mod.set_event_mode = MagicMock()
         self.mod.set_event_mode.return_value = True
@@ -534,8 +551,9 @@ class TestModule(object):
         self.mod.set_event_mode = MagicMock()
         self.mod.set_event_mode.return_value = False
 
-        with pytest.raises(ModuleError):
+        with pytest.raises(ModuleError) as e:
             self.mod._turn_asic_off()
+        assert e.value.message == "Could not set event mode!"
 
     def test_start_measure(self):
         table = 'ACTION_PARAMETER_TABLE'
@@ -610,8 +628,9 @@ class TestModule(object):
         self.mod.measure_running = MagicMock()
         self.mod.measure_running.return_value = True
 
-        with pytest.raises(ModuleError):
+        with pytest.raises(ModuleError) as e:
             self.mod.start_measure()
+        assert e.value.message == "Measurement cycle already in progress!"
 
     def test_measure_running_YES(self):
         table = 'ACTION_PARAMETER_TABLE'
@@ -628,7 +647,7 @@ class TestModule(object):
 
         self.bus.get.return_value = (0,)
 
-        assert self.mod.measure_running() is False
+        assert not self.mod.measure_running()
         self.bus.get.assert_called_once_with(self.serno, table, param)
 
     def test_get_measure(self):
@@ -653,7 +672,8 @@ class TestModule(object):
 
         assert self.mod.get_moisture() == moist
         self.mod.start_measure.assert_called_once_with()
-        assert self.mod.measure_running.call_args_list, [call(), call(), call()]
+        assert (self.mod.measure_running.call_args_list ==
+                [call(), call(), call()])
         self.mod.get_measure.assert_called_once_with(quantity='Moist')
 
     def test_get_transit_time_tdr_EventModeAlreadyNormalMeasure(self):
@@ -733,4 +753,3 @@ class TestModule(object):
         self.mod.set_event_mode.assert_called_once_with("NormalMeasure")
         assert self.bus.set.call_args_list == set_calls
         assert self.bus.get.call_args_list == get_calls
-

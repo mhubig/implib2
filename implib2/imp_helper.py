@@ -20,6 +20,7 @@ You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 
+
 def _normalize(filename):
     """ .. function:: _normalize(filename)
 
@@ -33,6 +34,7 @@ def _normalize(filename):
     dir_name = os.path.dirname(abs_path)
     return os.path.join(dir_name, filename)
 
+
 def _load_json(filename):
     """ .. funktion:: _load_json(filename)
 
@@ -45,6 +47,7 @@ def _load_json(filename):
     filename = _normalize(filename)
     with open(filename) as js_file:
         return json.load(js_file)
+
 
 def _flp2(number):
     """ .. funktion:: _flp2(number)
@@ -60,6 +63,7 @@ def _flp2(number):
     number |= (number >> 8)
     number |= (number >> 16)
     return number - (number >> 1)
+
 
 def _imprange(low, high):
     """ .. funktion:: _imprange(low, high)
@@ -78,4 +82,3 @@ def _imprange(low, high):
     fill = mark | (mark - 1)
     mask = fill ^ 0xFFFFFF
     return low & mask, mark
-

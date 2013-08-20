@@ -26,6 +26,7 @@ from binascii import a2b_hex as a2b
 from implib2.imp_crc import MaximCRC
 from implib2.imp_packages import Package, PackageError
 
+
 # pylint: disable=C0103,E1101,W0201
 class TestPackage(object):
 
@@ -33,71 +34,76 @@ class TestPackage(object):
         self.pkg = Package()
         self.crc = MaximCRC()
 
-    def test_pack_header(self):
+    def test__pack_head(self):
         # e.g. get_long_ack
         pkg = a2b('fd0200bb81002d')
         assert self.pkg.pack(serno=33211, cmd=2) == pkg
 
-    def test_pack_header_and_data(self):
+    def test__pack_head_AndData(self):
         # e.g. get_erp_image, page1
         pkg = a2b('fd3c03bb810083ff01df')
         data = a2b('ff01')
         assert self.pkg.pack(serno=33211, cmd=60, data=data) == pkg
 
-    def test_pack_header_with_param_no_and_param_ad(self):
+    def test__pack_head_WithParamNoAndParamAd(self):
         # e.g get_serno
         pkg = a2b('fd0a03bb81009b0100c4')
         data = a2b('0100')
         assert self.pkg.pack(serno=33211, cmd=10, data=data) == pkg
 
-    def test_pack_header_with_param_no_and_param_ad_and_param(self):
+    def test__pack_head_WithParamNoAndParamAdAndParam(self):
         # e.g. set_serno
         pkg = a2b('fd0b07bb8100580100bb810000fb')
         data = a2b('0100bb810000')
         assert self.pkg.pack(serno=33211, cmd=11, data=data) == pkg
 
-    def test_pack_data_to_long(self):
+    def test__pack_data_ToLong(self):
         data = os.urandom(253)+"\xff"
-        with pytest.raises(PackageError):
+        with pytest.raises(PackageError) as e:
             self.pkg.pack(serno=33211, cmd=11, data=data)
+        assert e.value.message == "Data block bigger than 252Bytes!"
 
-    def test_unpack_header(self):
+    def test__unpack_head(self):
         # e.g. responce to probe_module_long(33211)
         data = {'header': {'state': 0, 'cmd': 11, 'length': 0,
-                'serno': 33211}, 'data'  : None}
+                'serno': 33211}, 'data': None}
         pkg = a2b('000b00bb8100e6')
         assert self.pkg.unpack(pkg) == data
 
-    def test_unpack_header_and_data(self):
+    def test__unpack_head_AndData(self):
         # e.g. responce to get_serial(33211)
         data = {'header': {'state': 0, 'cmd': 10, 'length': 5,
-                'serno': 33211}, 'data'  : '\xbb\x81\x00\x00'}
+                'serno': 33211}, 'data': '\xbb\x81\x00\x00'}
         pkg = a2b('000a05bb8100aabb810000cc')
         assert self.pkg.unpack(pkg) == data
 
-    def test_unpack_data_to_long(self):
+    def test__unpack_data_ToLong(self):
         random = os.urandom(253)
         crc = self.crc.calc_crc(random)
         pkg = a2b('fd3cffbb8100e0') + random + crc
-        with pytest.raises(PackageError):
+        with pytest.raises(PackageError) as e:
             self.pkg.unpack(pkg)
+        assert e.value.message == "Data block bigger than 252Bytes!"
 
-    def test_unpack_data_with_faulty_crc(self):
+    def test__unpack_data_FaultyCRC(self):
         random = os.urandom(253)
         pkg = a2b('fd3cffbb8100e0') + random
-        with pytest.raises(PackageError):
+        with pytest.raises(PackageError) as e:
             self.pkg.unpack(pkg)
+        assert e.value.message == "Package with faulty data CRC!"
 
-    def test_unpack_header_with_faulty_crc(self):
+    def test__unpack_head_FaultyCRC(self):
         random = os.urandom(252)
         crc = self.crc.calc_crc(random)
         pkg = a2b('fd3cffbb8100f0') + random + crc
-        with pytest.raises(PackageError):
+        with pytest.raises(PackageError) as e:
             self.pkg.unpack(pkg)
+        assert e.value.message == "Package with faulty header CRC!"
 
-    def test_unpack_header_with_probe_error_state(self):
+    def test__unpack_head_WithProbeErrorState(self):
         random = os.urandom(250)
         crc = self.crc.calc_crc(random)
         pkg = a2b('853cffbb8100d9') + random + crc
-        with pytest.raises(PackageError):
+        with pytest.raises(PackageError) as e:
             self.pkg.unpack(pkg)
+        assert e.value.message == "actual moisture is too small in DAC"
