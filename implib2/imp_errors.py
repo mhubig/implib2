@@ -22,8 +22,10 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 
 from .imp_helper import _load_json
 
+
 class ErrorsError(Exception):
     pass
+
 
 class Errors(object):
     # pylint: disable=R0903
@@ -35,4 +37,3 @@ class Errors(object):
             return self._errors[str(errno)]
         except KeyError:
             raise ErrorsError("Unknown error number: {}".format(errno))
-

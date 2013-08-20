@@ -25,6 +25,7 @@ import pytest
 from mock import patch, call, MagicMock
 from implib2.imp_modules import Module, ModuleError
 
+
 # pylint: disable=C0103,W0212,R0904,E1101,W0201
 class TestModule(object):
     def setup(self):
@@ -176,7 +177,7 @@ class TestModule(object):
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
         param = 'EPRByteLen'
         head = os.urandom(252)
-        mid  = os.urandom(252)
+        mid = os.urandom(252)
         tail = os.urandom(128)
         length = (252 * 31 + 128)
         pages = [head]
@@ -202,7 +203,7 @@ class TestModule(object):
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
         param = 'EPRByteLen'
         head = os.urandom(252)
-        mid  = os.urandom(252)
+        mid = os.urandom(252)
         tail = os.urandom(128)
         length = (252 * 31 + 128)
         pages = [head]
@@ -278,7 +279,7 @@ class TestModule(object):
     def test__get_analog_output_mode(self):
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
         param = 'AnalogOutputMode'
-        mode  = 0
+        mode = 0
 
         self.bus.get.return_value = (mode,)
 
@@ -359,7 +360,7 @@ class TestModule(object):
 
     def test_set_analog_temp_CouldNotSetEventMode(self):
         min_value = -20
-        max_value =  70
+        max_value = 70
         mvolt = 550
 
         self.mod._get_temp_min_value = MagicMock()
@@ -438,7 +439,7 @@ class TestModule(object):
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
         param = 'MeasMode'
         value = 0
-        mode  = 'ModeA'
+        mode = 'ModeA'
 
         self.mod.get_event_mode = MagicMock()
         self.mod.get_event_mode.return_value = "NormalMeasure"
@@ -450,7 +451,7 @@ class TestModule(object):
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
         param = 'MeasMode'
         value = 0
-        mode  = 'ModeA'
+        mode = 'ModeA'
 
         self.mod.get_event_mode = MagicMock()
         self.mod.get_event_mode.return_value = "NotNormalMeasure"
@@ -467,7 +468,7 @@ class TestModule(object):
 
     def test_write_eeprom_ModuleAlreadyUnlocked(self):
         head = (0, os.urandom(252))
-        mid  = (1, os.urandom(252))
+        mid = (1, os.urandom(252))
         tail = (2, os.urandom(128))
         gen = (x for x in [head, mid, tail])
 
@@ -482,7 +483,7 @@ class TestModule(object):
 
     def test_write_eeprom_ModuleNotAlreadyUnlocked(self):
         head = (0, os.urandom(252))
-        mid  = (1, os.urandom(252))
+        mid = (1, os.urandom(252))
         tail = (2, os.urandom(128))
         gen = (x for x in [head, mid, tail])
 
@@ -500,7 +501,7 @@ class TestModule(object):
 
     def test_write_eeprom_EEPRomWritingFailed(self):
         head = (0, os.urandom(252))
-        mid  = (1, os.urandom(252))
+        mid = (1, os.urandom(252))
         tail = (2, os.urandom(128))
         gen = (x for x in [head, mid, tail])
 
@@ -515,9 +516,9 @@ class TestModule(object):
         assert e.value.message == "Writing EEPRom failed!"
 
     def test_turn_asic_on(self):
-        table    = 'ACTION_PARAMETER_TABLE'
-        param    = 'SelfTest'
-        value    = [1, 1, 63, 0]
+        table = 'ACTION_PARAMETER_TABLE'
+        param = 'SelfTest'
+        value = [1, 1, 63, 0]
 
         self.mod.set_event_mode = MagicMock()
         self.mod.set_event_mode.return_value = True
@@ -535,9 +536,9 @@ class TestModule(object):
         assert e.value.message == "Could not set event mode!"
 
     def test_turn_asic_off(self):
-        table    = 'ACTION_PARAMETER_TABLE'
-        param    = 'SelfTest'
-        value    = [1, 0, 255, 0]
+        table = 'ACTION_PARAMETER_TABLE'
+        param = 'SelfTest'
+        value = [1, 0, 255, 0]
 
         self.mod.set_event_mode = MagicMock()
         self.mod.set_event_mode.return_value = True
@@ -671,7 +672,8 @@ class TestModule(object):
 
         assert self.mod.get_moisture() == moist
         self.mod.start_measure.assert_called_once_with()
-        assert self.mod.measure_running.call_args_list, [call(), call(), call()]
+        assert (self.mod.measure_running.call_args_list ==
+                [call(), call(), call()])
         self.mod.get_measure.assert_called_once_with(quantity='Moist')
 
     def test_get_transit_time_tdr_EventModeAlreadyNormalMeasure(self):
@@ -751,4 +753,3 @@ class TestModule(object):
         self.mod.set_event_mode.assert_called_once_with("NormalMeasure")
         assert self.bus.set.call_args_list == set_calls
         assert self.bus.get.call_args_list == get_calls
-

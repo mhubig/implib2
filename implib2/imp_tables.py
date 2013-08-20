@@ -22,8 +22,10 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 
 from .imp_helper import _load_json
 
+
 class TablesError(Exception):
     pass
+
 
 # pylint: disable=R0903,C0103
 class Tables(object):

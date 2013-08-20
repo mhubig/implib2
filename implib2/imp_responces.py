@@ -22,8 +22,10 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 
 import struct
 
+
 class ResponceError(Exception):
     pass
+
 
 class Responce(object):
     def __init__(self, tables, package, datatypes):
@@ -57,7 +59,7 @@ class Responce(object):
         return struct.unpack('<I', responce['data'])[0]
 
     def get_parameter(self, packet, table, param):
-        data  = self.pkg.unpack(packet)['data']
+        data = self.pkg.unpack(packet)['data']
         cmd = self.tbl.lookup(table, param)
 
         fmt = self.dts.lookup(cmd['Type'] % 0x80)
@@ -67,7 +69,7 @@ class Responce(object):
 
     def set_parameter(self, packet, table, serno):
         responce = self.pkg.unpack(packet)
-        command  = responce['header']['cmd']
+        command = responce['header']['cmd']
         cmd = self.tbl.lookup(table, 'Table')
 
         if not command == cmd['Set']:
@@ -85,10 +87,10 @@ class Responce(object):
         for point, tuble in enumerate(data):
             if not len(tuble) == 5:
                 raise ResponceError("Responce package has strange length!")
-            scan_point         = {}
-            scan_point['tdr']  = struct.unpack('<B', tuble[0])[0]
+            scan_point = {}
+            scan_point['tdr'] = struct.unpack('<B', tuble[0])[0]
             scan_point['time'] = struct.unpack('<f', tuble[1:5])[0]
-            scan[point]        = scan_point
+            scan[point] = scan_point
 
         return scan
 
@@ -106,4 +108,3 @@ class Responce(object):
         if not responce['header']['cmd'] == 61:
             raise ResponceError("Responce command doesn't match!")
         return True
-

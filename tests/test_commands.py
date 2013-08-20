@@ -28,6 +28,7 @@ from implib2.imp_packages import Package
 from implib2.imp_datatypes import DataTypes
 from implib2.imp_commands import Command, CommandError
 
+
 # pylint: disable=C0103,W0201,E1101
 class TestCommand(object):
 
@@ -51,15 +52,14 @@ class TestCommand(object):
         assert pkg == a2b('fd0800ffffff60')
 
     def test_get_parameter(self):
-        pkg = self.cmd.get_parameter(31002,
-                'SYSTEM_PARAMETER_TABLE',
-                'SerialNum')
+        pkg = self.cmd.get_parameter(31002, 'SYSTEM_PARAMETER_TABLE',
+                                     'SerialNum')
         assert pkg == a2b('fd0a031a7900290100c4')
 
     def test_set_parameter(self):
         pkg = self.cmd.set_parameter(31002,
-                'PROBE_CONFIGURATION_PARAMETER_TABLE',
-                'DeviceSerialNum', [31003])
+                                     'PROBE_CONFIGURATION_PARAMETER_TABLE',
+                                     'DeviceSerialNum', [31003])
         assert pkg == a2b('fd11071a79002b0c001b790000b0')
 
     def test_do_tdr_scan(self):
@@ -80,4 +80,3 @@ class TestCommand(object):
         with pytest.raises(CommandError) as e:
             self.cmd.set_epr_page(30001, 7, page)
         assert e.value.message == "Page to big, exeeds 250 Bytes!"
-

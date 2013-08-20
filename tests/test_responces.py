@@ -27,6 +27,7 @@ from implib2.imp_packages import Package
 from implib2.imp_datatypes import DataTypes
 from implib2.imp_responces import Responce, ResponceError
 
+
 # pylint: disable=C0103,E1101,W0201
 class TestResponce(object):
 
@@ -66,13 +67,13 @@ class TestResponce(object):
         assert self.res.get_negative_ack(pkg) == 31002
 
     def test_get_parameter(self):
-        pkg   = a2b('000a051a7900181a79000042')
+        pkg = a2b('000a051a7900181a79000042')
         param = 'SerialNum'
         table = 'SYSTEM_PARAMETER_TABLE'
         assert self.res.get_parameter(pkg, table, param) == (31002,)
 
     def test_set_parameter(self):
-        pkg   = a2b('0011001a790095')
+        pkg = a2b('0011001a790095')
         serno = 31002
         table = 'PROBE_CONFIGURATION_PARAMETER_TABLE'
         assert self.res.set_parameter(pkg, table, serno)
@@ -120,4 +121,3 @@ class TestResponce(object):
         with pytest.raises(ResponceError) as e:
             self.res.set_epr_page(pkg)
         assert e.value.message == "Responce command doesn't match!"
-

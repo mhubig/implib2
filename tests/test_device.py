@@ -20,10 +20,11 @@ You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 import pytest
-import serial # pylint: disable=W0611
+import serial  # pylint: disable=W0611
 from mock import patch, call
 from binascii import a2b_hex as a2b
 from implib2.imp_device import Device, DeviceError
+
 
 # pylint: disable=C0103,E1101,W0201
 class TestPackage(object):
@@ -100,6 +101,7 @@ class TestPackage(object):
         pkg = a2b('000a05bb8100aa')
 
         in_waiting = [1, 1, 1, 1, 1, 1, 1]
+
         def side_effect():
             if in_waiting:
                 return in_waiting.pop()
@@ -142,4 +144,3 @@ class TestPackage(object):
         empty_string = ''
         self.ser.inWaiting.return_value = 0
         assert self.dev.read() == empty_string
-

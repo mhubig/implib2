@@ -29,8 +29,10 @@ from .imp_responces import Responce
 from .imp_tables import Tables
 from .imp_helper import _imprange
 
+
 class BusError(Exception):
     pass
+
 
 class Bus(object):
     """The Bus object represents the IMPBus2 master device. It is used to
@@ -95,14 +97,14 @@ class Bus(object):
         :rtype: :const:`True`
 
         """
-        address  = 16777215 # 0xFFFFFF
-        table    = 'ACTION_PARAMETER_TABLE'
-        param    = 'EnterSleep'
-        value    = 0
+        address = 16777215  # 0xFFFFFF
+        table = 'ACTION_PARAMETER_TABLE'
+        param = 'EnterSleep'
+        value = 0
         ad_param = 0
 
-        package = self.cmd.set_parameter(address, table,
-                param, [value], ad_param)
+        package = self.cmd.set_parameter(address, table, param,
+                                         [value], ad_param)
 
         self.dev.write_pkg(package)
         time.sleep(0.300)
@@ -127,17 +129,17 @@ class Bus(object):
         :rtype: :const:`True`
 
         """
-        address  = 16777215
-        table    = 'SYSTEM_PARAMETER_TABLE'
-        param    = 'Baudrate'
-        value    = baudrate/100
+        address = 16777215
+        table = 'SYSTEM_PARAMETER_TABLE'
+        param = 'Baudrate'
+        value = baudrate/100
         ad_param = 0
 
         if not value in (12, 24, 48, 96):
             raise BusError("Unknown baudrate!")
 
-        package = self.cmd.set_parameter(address, table,
-                param, [value], ad_param)
+        package = self.cmd.set_parameter(address, table, param,
+                                         [value], ad_param)
 
         # first close the device
         self.dev.close_device()
@@ -236,7 +238,7 @@ class Bus(object):
         :rtype: tuple
 
         """
-        sernos  = list()
+        sernos = list()
         rng, mark = _imprange(minserial, maxserial)
         self._search(rng, mark, sernos)
 
@@ -401,7 +403,7 @@ class Bus(object):
         """
         # pylint: disable=R0913
         package = self.cmd.set_parameter(serno, table, param,
-                value, ad_param)
+                                         value, ad_param)
         self.dev.write_pkg(package)
         time.sleep(self.trans_wait)
         bytes_recv = self.dev.read_pkg()
@@ -450,4 +452,3 @@ class Bus(object):
         bytes_recv = self.dev.read_pkg()
         time.sleep(self.cycle_wait)
         return self.res.set_epr_page(bytes_recv)
-

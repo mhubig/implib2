@@ -24,8 +24,10 @@ import struct
 from .imp_crc import MaximCRC
 from .imp_errors import Errors
 
+
 class PackageError(Exception):
     pass
+
 
 class Package(object):
 
@@ -34,22 +36,22 @@ class Package(object):
         self.err = Errors()
 
     def _pack_data(self, data):
-        if len(data)> 253:
+        if len(data) > 253:
             raise PackageError("Data block bigger than 252Bytes!")
         return data + self.crc.calc_crc(data)
 
     def _unpack_data(self, data):
-        if len(data)> 253:
+        if len(data) > 253:
             raise PackageError("Data block bigger than 252Bytes!")
         if not self.crc.check_crc(data):
             raise PackageError("Package with faulty data CRC!")
         return data[:-1]
 
     def _pack_head(self, cmd, length, serno):
-        state  = struct.pack('<B', 0xfd) # indicates IMP232N protocol version
-        cmd    = struct.pack('<B', cmd)
+        state = struct.pack('<B', 0xfd)  # indicates IMP232N protocol version
+        cmd = struct.pack('<B', cmd)
         length = struct.pack('<B', length)
-        serno  = struct.pack('<I', serno)[:-1]
+        serno = struct.pack('<I', serno)[:-1]
 
         header = state + cmd + length + serno
         header = header + self.crc.calc_crc(header)
@@ -57,10 +59,10 @@ class Package(object):
         return header
 
     def _unpack_head(self, header):
-        state  = struct.unpack('<B', header[0])[0]
-        cmd    = struct.unpack('<B', header[1])[0]
+        state = struct.unpack('<B', header[0])[0]
+        cmd = struct.unpack('<B', header[1])[0]
         length = struct.unpack('<B', header[2])[0]
-        serno  = struct.unpack('<I', header[3:6] + '\x00')[0]
+        serno = struct.unpack('<I', header[3:6] + '\x00')[0]
 
         if not self.crc.check_crc(header):
             raise PackageError("Package with faulty header CRC!")
@@ -92,4 +94,3 @@ class Package(object):
         package = {'header': header, 'data': data}
 
         return package
-

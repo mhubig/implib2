@@ -24,12 +24,14 @@ import json
 import pytest
 from implib2.imp_errors import Errors, ErrorsError
 
+
 # pylint: disable=C0103
 def pytest_generate_tests(metafunc):
     if 'errno' in metafunc.fixturenames:
         with open('tests/test_errors.json') as js:
             j = json.load(js)
         metafunc.parametrize("errno", [errno for errno in j])
+
 
 # pylint: disable=C0103,W0212,E1101,W0201
 class TestErrors(object):
@@ -61,4 +63,3 @@ class TestErrors(object):
         msg = self.e.lookup(errno)
 
         assert err == msg
-

@@ -23,6 +23,7 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 from binascii import a2b_hex as a2b
 from implib2.imp_crc import MaximCRC
 
+
 # pylint: disable=C0103,W0201
 class TestMaximCRC(object):
 
@@ -36,4 +37,3 @@ class TestMaximCRC(object):
     def test_check_crc(self):
         data = a2b('FD15ED09f3')
         assert self.crc.check_crc(data)
-

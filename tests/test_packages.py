@@ -26,6 +26,7 @@ from binascii import a2b_hex as a2b
 from implib2.imp_crc import MaximCRC
 from implib2.imp_packages import Package, PackageError
 
+
 # pylint: disable=C0103,E1101,W0201
 class TestPackage(object):
 
@@ -65,14 +66,14 @@ class TestPackage(object):
     def test__unpack_head(self):
         # e.g. responce to probe_module_long(33211)
         data = {'header': {'state': 0, 'cmd': 11, 'length': 0,
-                'serno': 33211}, 'data'  : None}
+                'serno': 33211}, 'data': None}
         pkg = a2b('000b00bb8100e6')
         assert self.pkg.unpack(pkg) == data
 
     def test__unpack_head_AndData(self):
         # e.g. responce to get_serial(33211)
         data = {'header': {'state': 0, 'cmd': 10, 'length': 5,
-                'serno': 33211}, 'data'  : '\xbb\x81\x00\x00'}
+                'serno': 33211}, 'data': '\xbb\x81\x00\x00'}
         pkg = a2b('000a05bb8100aabb810000cc')
         assert self.pkg.unpack(pkg) == data
 
@@ -106,4 +107,3 @@ class TestPackage(object):
         with pytest.raises(PackageError) as e:
             self.pkg.unpack(pkg)
         assert e.value.message == "actual moisture is too small in DAC"
-
