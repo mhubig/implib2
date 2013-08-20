@@ -16,6 +16,7 @@ script:
     - pylint --rcfile=pylint.rc implib2
     - cd docs
     - sphinx-build -W -b html -d _build/doctrees . _build/html
+    - cd ..
 
 after_success:
-  - coveralls
+    - coveralls
