@@ -7,6 +7,7 @@ install:
     - pip install -r requirements.txt --use-mirrors
     - pip install -r requirements-docs.txt --use-mirrors
     - pip install -r requirements-tests.txt --use-mirrors
+    - pip install coveralls --use-mirrors
     - python setup.py install
 
 script:
@@ -15,3 +16,6 @@ script:
     - pylint --rcfile=pylint.rc implib2
     - cd docs
     - sphinx-build -W -b html -d _build/doctrees . _build/html
+
+after_success:
+  - coveralls
