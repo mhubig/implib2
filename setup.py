@@ -21,7 +21,23 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 
 import os
+import sys
 from setuptools import setup, find_packages
+from setuptools.command.test import test as TestCommand
+
+
+# The following snippet is taken directly from the tox documentation:
+class Tox(TestCommand):
+    def finalize_options(self):
+        TestCommand.finalize_options(self)
+        self.test_args = []
+        self.test_suite = True
+
+    def run_tests(self):
+        #import here, cause outside the eggs aren't loaded
+        import tox
+        errcode = tox.cmdline(self.test_args)
+        sys.exit(errcode)
 
 
 # Utility function to read the README file, used for the long_description.
@@ -44,27 +60,27 @@ setup(
     version='release-0.8.5',
     packages=find_packages(exclude=["tests"]),
 
-    # Include the *.yaml files
+    # include the *.yaml files
     package_data={
         'implib2': ['*.json'],
     },
 
-    # Install or upgrade the dependencies
+    # install or upgrade the dependencies
     install_requires=[
         'PySerial>=2.5',
     ],
+
+    # testing with tox
+    tests_require=['tox'],
+    cmdclass={'test': Tox},
 
     # metadata for upload to PyPI
     author='Markus Hubig',
     author_email='mhubig@imko.de',
     url='https://bitbucket.org/imko/implib2',
-    description=("Python implementation of the IMPBUS-2 data "
-                 "transmission protocol."),
-    long_description=("This library implements the IMPBus2 protocol "
-                      "which is used by the IMKO GmbH to access the "
-                      "TRIME PIKO and TRIME SONO moisture measurements "
-                      "probes. It is tested for Python 2.7 running on "
-                      "Linux, Windows and MacOSX."),
+    description=("Python implementation of the IMPBUS-2 "
+                 "data transmission protocol."),
+    long_description = open("README.md").read(),
     license="LGPL",
     keywords="serial impbus imko",
     classifiers=CLASSIFIERS,
