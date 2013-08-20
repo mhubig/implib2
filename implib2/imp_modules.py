@@ -427,7 +427,7 @@ class Module(object):
 
     def get_moisture(self):
         """This command is a simple wrapper arrond :func:`start_measure`,
-        :func:`measure_running` and :func:`get_measure` and returns the moisture.
+        :func:`measure_running` and :func:`get_measure`.
 
         :rtype: float
 
