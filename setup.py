@@ -59,7 +59,7 @@ setup(
         url = 'https://bitbucket.org/imko/implib2',
         description = ("Python implementation of the IMPBUS-2 data "
             "transmission protocol."),
-        long_description=read('README.rst'),
+        long_description=read('README.md'),
         license = "LGPL",
         keywords = "serial impbus imko",
         classifiers = CLASSIFIERS,

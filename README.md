@@ -1,26 +1,5 @@
-License
--------
-
-Copyright (C) 2011-2013, Markus Hubig <mhubig@imko.de>
-
-This is the documentation part of IMPLib2, a small Python library
-implementing the IMPBUS-2 data transmission protocol.
-
-IMPLib2 is free software: you can redistribute it and/or modify
-it under the terms of the GNU Lesser General Public License as
-published by the Free Software Foundation, either version 3 of
-the License, or (at your option) any later version.
-
-IMPLib2 is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU Lesser General Public License for more details.
-
-You should have received a copy of the GNU Lesser General Public
-License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
-
 Requirements
-------------
+============
 
 Before you can use the IMPLib2 software you have to make sure that
 you have at least the following software installed.
@@ -29,7 +8,7 @@ you have at least the following software installed.
 - PySerial 2.5 (http://pyserial.sourceforge.net)
 
 Installation
-------------
+============
 
 Just install the stable branch with pip using git::
 
@@ -41,8 +20,13 @@ Of if you brave enough::
 
 Depending on your system you may have to prefix these commands with ``sudo``!
 
+Travis-CI Build Status
+======================
+
+[![Build Status](https://travis-ci.org/mhubig/implib2.png?branch=develop)](https://travis-ci.org/mhubig/implib2)
+
 Quick Start Manual
-------------------
+==================
 
 This small quick start manual is intended to give you a basic example of how to
 use this library. In order to start playing with it you have to connect at
@@ -111,3 +95,23 @@ measurement on all connected probes ones an hour::
             print serno, moist
         time.sleep(3600) # one hour
 
+License
+=======
+
+> Copyright (C) 2011-2013, Markus Hubig <mhubig@imko.de>
+>
+> This is the documentation part of IMPLib2, a small Python library
+> implementing the IMPBUS-2 data transmission protocol.
+>
+> IMPLib2 is free software: you can redistribute it and/or modify
+> it under the terms of the GNU Lesser General Public License as
+> published by the Free Software Foundation, either version 3 of
+> the License, or (at your option) any later version.
+>
+> IMPLib2 is distributed in the hope that it will be useful,
+> but WITHOUT ANY WARRANTY; without even the implied warranty of
+> MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+> GNU Lesser General Public License for more details.
+>
+> You should have received a copy of the GNU Lesser General Public
+> License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
