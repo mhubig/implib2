@@ -10,7 +10,7 @@ This library implements the IMPBus2 protocol which is used by the `IMKO GmbH`_
 to access the TRIME PIKO and TRIME SONO moisture measurements probes. It is
 tested for Python 2.7 running on Linux, Windows and MacOSX.
 
-.. include:: ../README.rst
+.. include:: ../README.md
 
 The API Documentation
 ---------------------
