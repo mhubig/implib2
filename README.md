@@ -1,68 +1,75 @@
+Travis-CI & Test Coverage
+=========================
+
+[![Build Status](https://travis-ci.org/mhubig/implib2.png?branch=develop)](https://travis-ci.org/mhubig/implib2)
+[![Coverage Status](https://coveralls.io/repos/mhubig/implib2/badge.png?branch=develop)](https://coveralls.io/r/mhubig/implib2?branch=develop)
+
+
 Requirements
 ============
 
-Before you can use the IMPLib2 software you have to make sure that
-you have at least the following software installed.
+Before you can start using the IMPLib2 software you have to make sure, that
+you have at least the following software packages installed.
 
-- Python 2.7 (http://python.org)
-- PySerial 2.5 (http://pyserial.sourceforge.net)
+- Python 2.7 ([http://python.org]())
+- PySerial 2.6 ([http://pyserial.sourceforge.net]())
+
+For instructions on how to get and install these packages on your OS please
+head over to the offical project pages.
+
 
 Installation
 ============
 
-Just install the stable branch with pip using git::
+Install the stable branch with pip using git:
 
-    $ pip install git+http://bitbucket.org/imko/implib2.git@master
+    $ pip install git+https://github.com/mhubig/implib2.git@master
 
-Of if you brave enough::
+Of if you brave enough:
 
-    $ pip install git+http://bitbucket.org/imko/implib2.git@develop
+    $ pip install git+https://github.com/mhubig/implib2.git@develop
 
 Depending on your system you may have to prefix these commands with ``sudo``!
 
-Travis-CI Build Status & Test Coverage
-======================================
-
-[![Build Status](https://travis-ci.org/mhubig/implib2.png?branch=develop)](https://travis-ci.org/mhubig/implib2)
-[![Coverage Status](https://coveralls.io/repos/mhubig/implib2/badge.png)](https://coveralls.io/r/mhubig/implib2)
 
 Quick Start Manual
 ==================
 
-This small quick start manual is intended to give you a basic example of how to
-use this library. In order to start playing with it you have to connect at
-least one `Trime Pico`_ moisture measurement probe to your computer. An easy
-way to connect the probe is by using the USB-IMPBus Converter SM-USB.
+This small quick start manual is intended to give you a basic example of how
+to use this library. In order to start playing with it you have to connect at
+least one [Trime Pico](http://imko.de/en/products/soilmoisture) moisture
+measurement probe to your computer. An easy way to connect the probe is by
+using the USB-IMPBus Converter [SM-USB](http://imko.de/en/products).
 
-If you successfully installed the IMPLib2, start the Python CLI within you
-terminal::
+After successfully installing IMPLib2 and connecting, start the Python Shell
+within your terminal:
 
     $ python
-    Python 2.7.3 (default, Aug  1 2012, 05:14:39) 
+    Python 2.7.3 (default, Aug  1 2012, 05:14:39)
     [GCC 4.6.3] on linux2
     Type "help", "copyright", "credits" or "license" for more information.
     >>>
 
-Import the IMPLib2 modules::
+Import the IMPLib2 module:
 
-    >>> from implib2 import Bus, Module
+    >>> import implib2 as imp
 
-Now initialize the IMPBus, and sync and scan for connected Modules. Replace
-the USB Interface with the one you SM-USB uses::
+Now initialize the IMPBus, sync and scan for connected Modules. Replace the
+USB Interface with the one your SM-USB uses:
 
-    >>> bus = Bus('/dev/ttyUSB0')
+    >>> bus = imp.Bus('/dev/ttyUSB0')
     >>> bus.sync()
     >>> bus.scan()
     (10010, 10011)
 
-As you can see we have found two connected modules with ser serial numbers
-10010 and 10011. Now we can instantiate the modules::
+As you can see we found two connected modules with the serial numbers 10010
+and 10011. Now we can instantiate the module objects:
 
     >>> mod10 = Module(bus, 10010)
-    >>> mod11 = Module(bux, 10011)
+    >>> mod11 = Module(bus, 10011)
 
-With the Module objects we can now perform various operations, like doing a
-measurement or requesting the serial number::
+Using the handy module objects we can now perform various higher operations,
+like doing a measurement or requesting the serial number:
 
     >>> mod10.get_moisture()
     14.3
@@ -73,28 +80,35 @@ measurement or requesting the serial number::
     >>> mos11.get_serno()
     10011
 
-With this information we can easily build a little script which performs an
-measurement on all connected probes ones an hour::
+If you came so far you should be able to easily build a little script which
+performs an measurement on all connected probes ones an hour:
 
     #!/usr/bin/env python
     # -*- coding: UTF-8 -*-
 
     import time
-    from implib2 import Bus, Module
+    import implib2 as imp
 
-    bus = Bus('/dev/ttyUSB0')
+    # Initialize the IMPBus2
+    bus = imp.Bus('/dev/ttyUSB0')
     bus.sync()
 
-    modules = []
-    for serno in bus.scan():
-        modules.append(Module(bus, serno))
+    # Search the bus for connected modules
+    modules = [imp.Module(bus, serno) for serno in bus.scan()]
 
+    # Start a measurement and show the results once an hour
     while True:
         for module in modules:
             serno = module.get_serno()
-            moist = module.get_moist()
-            print serno, moist
-        time.sleep(3600) # one hour
+            moist = module.get_moisture()
+            mtemp = module.get_measure(quantity='MeasTemp')
+            print "Module {}: Moist {}, Temp {}".format(serno, moist, mtemp)
+
+        time.sleep(3600)  # for one hour
+
+For more and in depth information please head over to the API-Documentation on
+[ReadTheDocs](https://implib2.readthedocs.org).
+
 
 License
 =======
