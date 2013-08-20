@@ -20,10 +20,11 @@ Of if you brave enough::
 
 Depending on your system you may have to prefix these commands with ``sudo``!
 
-Travis-CI Build Status
-======================
+Travis-CI Build Status & Test Coverage
+======================================
 
 [![Build Status](https://travis-ci.org/mhubig/implib2.png?branch=develop)](https://travis-ci.org/mhubig/implib2)
+[![Coverage Status](https://coveralls.io/repos/mhubig/implib2/badge.png)](https://coveralls.io/r/mhubig/implib2)
 
 Quick Start Manual
 ==================
