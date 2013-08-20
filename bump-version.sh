@@ -29,12 +29,12 @@ function commit_hint () {
 }
 
 function update_version_init () {
-    sed -e "s/^__version__ = .*$/__version__ = 'release-$1'/g" \
+    sed -e "s/^__version__ = .*$/__version__ = '$1'/g" \
         implib2/__init__.py > .__init__.new
 }
 
 function update_version_setup () {
-    sed -e "s/version = .*$/version = 'release-$1',/g" \
+    sed -e "s/version = .*$/version = '$1',/g" \
         setup.py > .setup.new
 }
 
