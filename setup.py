@@ -21,6 +21,7 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 
 import os
+import re
 import sys
 from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
@@ -40,11 +41,17 @@ class Tox(TestCommand):
         sys.exit(errcode)
 
 
-# Utility function to read the README file, used for the long_description.
-# It's nice, because now 1) we have a top level README file and 2) it's
-# easier to type in the README file than to put a raw string in below ...
-def read(fname):
-    return open(os.path.join(os.path.dirname(__file__), fname)).read()
+# Extracts the version information from the init file.
+def get_version():
+    return re.search(
+        r"""__version__\s+=\s+(?P<quote>['"])(?P<version>.+?)(?P=quote)""",
+        open('implib2/__init__.py').read()).group('version')
+
+
+# Extracts the requirements from the requirements.txt file.
+def get_requirements():
+    return [i.strip() for i in open("requirements.txt").readlines()
+            if i.strip()]
 
 CLASSIFIERS = [
     "Development Status :: 4 - Beta",
@@ -57,7 +64,7 @@ CLASSIFIERS = [
 
 setup(
     name='IMPLib2',
-    version='0.9.0',
+    version='0.9.1',
     packages=find_packages(exclude=["tests"]),
 
     # include the *.yaml files
@@ -66,9 +73,7 @@ setup(
     },
 
     # install or upgrade the dependencies
-    install_requires=[
-        'PySerial>=2.5',
-    ],
+    install_requires=get_requirements(),
 
     # testing with tox
     tests_require=['tox'],
@@ -77,10 +82,10 @@ setup(
     # metadata for upload to PyPI
     author='Markus Hubig',
     author_email='mhubig@imko.de',
-    url='https://bitbucket.org/imko/implib2',
+    url='https://github.com/mhubig/implib2',
     description=("Python implementation of the IMPBUS-2 "
                  "data transmission protocol."),
-    long_description = open("README.md").read(),
+    long_description = open("README.rst").read(),
     license="LGPL",
     keywords="serial impbus imko",
     classifiers=CLASSIFIERS,
