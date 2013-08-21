@@ -73,7 +73,7 @@ setup(
     },
 
     # install or upgrade the dependencies
-    install_requires=get_requirements()
+    install_requires=get_requirements(),
 
     # testing with tox
     tests_require=['tox'],
