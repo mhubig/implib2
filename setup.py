@@ -85,7 +85,7 @@ setup(
     url='https://github.com/mhubig/implib2',
     description=("Python implementation of the IMPBUS-2 "
                  "data transmission protocol."),
-    long_description = open("README.md").read(),
+    long_description = open("README.rst").read(),
     license="LGPL",
     keywords="serial impbus imko",
     classifiers=CLASSIFIERS,

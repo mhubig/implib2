@@ -40,7 +40,7 @@ function update_version_setup () {
 
 function update_version_readme () {
     sed -e "/\*\*Stable Branch/s/(.*)\*\*/($1)**/g" \
-        README.md > .README.new
+        README.rst > .README.new
 }
 
 function update_version_sphinx () {
