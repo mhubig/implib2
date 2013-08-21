@@ -1,15 +1,22 @@
-.. IMPLib2 documentation master file, created by
-   sphinx-quickstart on Mon Nov 19 23:07:06 2012.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
 IMPBUS-2 Library
 ================
 
-This library implements the IMPBus2 protocol which is used by the `IMKO GmbH`_
-to access the TRIME PIKO and TRIME SONO moisture measurements probes. It is
-tested for Python 2.7 running on Linux, Windows and MacOSX.
+This library is a python implementation of the "Data transmission protocol for
+IMPBus2" called IMPBus2. IMPBus2 is a fieldbus system to which up to 250 single
+slaves may be connected by a bi-directional 2-wire line. The modules are
+controlled by the bus master, typically this is the host computer. Each
+computer with a standard RS-232 interface can be used as the bus master. The
+master is able to send a set of commands to the slaves, to start actions or to
+acquire data. The IMPBus-2 itself is interfaced by a special active adapter
+(SM23U or SM-USB, please contact the `IMKO GmbH`_ for more informations).
 
+The communication is based on the transmission of address- and data blocks. The
+transmission itself uses asynchronous symbolic address-based and byte-based
+protocols. Up to 250 bytes of significant data can be transmitted
+bi-directional in one telegram.
+
+This library is typically used to access `TRIME Pico`_ moisture measurements
+probes. It is tested for Python 2.7 running on Linux, Windows and MacOSX.
 
 .. include:: ../README.rst
    :start-after: ### INCLUDE_FROM_HERE ###
@@ -31,8 +38,5 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
-.. Place the link targets here:
 .. _IMKO GmbH: http://imko.de
 .. _Trime Pico: http://imko.de/en/products/soilmoisture
-.. _SM-USB: http://imko.de/en/products
-.. _ReadTheDocs: https://implib2.readthedocs.org
