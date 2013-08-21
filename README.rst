@@ -17,6 +17,7 @@ Travis-CI & Test Coverage
 .. image:: https://coveralls.io/repos/mhubig/implib2/badge.png?branch=develop
    :target: https://coveralls.io/r/mhubig/implib2?branch=develop
 
+.. ### INCLUDE_FROM_HERE ###
 
 Requirements
 ============
