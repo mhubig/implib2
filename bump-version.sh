@@ -38,6 +38,11 @@ function update_version_setup () {
         setup.py > .setup.new
 }
 
+function update_version_readme () {
+    sed -e "/\*\*Stable Branch/s/(.*)\*\*/($1)**/g" \
+        README.md > .README.new
+}
+
 function update_version_sphinx () {
     sed -e "s/version = .*$/version = '$1'/g" \
         -e "s/release = .*$/release = '$1'/g" \
@@ -61,6 +66,13 @@ if ! update_version_setup $1; then
     exit 2
 else
     mv .setup.new setup.py
+fi
+
+if ! update_version_readme $1; then
+    echo "Could not replace version in 'setup.py'!" >&2
+    exit 2
+else
+    mv .README.new README.rst
 fi
 
 if ! update_version_sphinx $1; then
