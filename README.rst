@@ -1,7 +1,7 @@
 Travis-CI & Test Coverage
 =========================
 
-**Stable Branch (0.9.0)**
+**Stable Branch (0.9.1)**
 
 .. image:: https://travis-ci.org/mhubig/implib2.png?branch=master
    :target: https://travis-ci.org/mhubig/implib2
@@ -35,9 +35,9 @@ head over to the official project pages.
 Installation
 ============
 
-Install the stable branch with pip using git::
+Install the stable branch using pip::
 
-    $ pip install git+https://github.com/mhubig/implib2.git@master
+    $ pip install implib2
 
 Of if you brave enough::
 
