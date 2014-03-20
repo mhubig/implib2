@@ -1,7 +1,7 @@
 Travis-CI & Test Coverage
 =========================
 
-**Stable Branch (0.9.1)**
+**Stable Branch (0.9.2)**
 
 .. image:: https://travis-ci.org/mhubig/implib2.png?branch=master
    :target: https://travis-ci.org/mhubig/implib2

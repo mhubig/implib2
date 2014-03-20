@@ -19,7 +19,7 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
-__version__ = '0.9.1'
+__version__ = '0.9.2'
 
 from .imp_bus import Bus, BusError
 from .imp_modules import Module, ModuleError
