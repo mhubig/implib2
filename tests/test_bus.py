@@ -394,7 +394,7 @@ class TestBus(object):
             call.cmd.set_parameter(serno, table, param, value, ad_param),
             call.dev.write_pkg(package),
             call.dev.read_pkg(),
-            call.res.set_parameter(bytes_recv, serno, table)
+            call.res.set_parameter(bytes_recv, table, serno)
         ]
 
         self.cmd.set_parameter.return_value = package
