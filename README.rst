@@ -1,7 +1,7 @@
 Travis-CI & Test Coverage
 =========================
 
-**Stable Branch (0.9.1)**
+**Stable Branch (0.9.2)**
 
 .. image:: https://travis-ci.org/mhubig/implib2.png?branch=master
    :target: https://travis-ci.org/mhubig/implib2
@@ -78,8 +78,8 @@ USB Interface with the one your SM-USB uses::
 As you can see we found two connected modules with the serial numbers 10010
 and 10011. Now we can instantiate the module objects::
 
-    >>> mod10 = Module(bus, 10010)
-    >>> mod11 = Module(bus, 10011)
+    >>> mod10 = imp.Module(bus, 10010)
+    >>> mod11 = imp.Module(bus, 10011)
 
 Using the handy module objects we can now perform various higher operations,
 like doing a measurement or requesting the serial number::
@@ -90,7 +90,7 @@ like doing a measurement or requesting the serial number::
     17.4
     >>> mod10.get_serno()
     10010
-    >>> mos11.get_serno()
+    >>> mod11.get_serno()
     10011
 
 If you came so far you should be able to easily build a little script which

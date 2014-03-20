@@ -408,7 +408,7 @@ class Bus(object):
         time.sleep(self.trans_wait)
         bytes_recv = self.dev.read_pkg()
         time.sleep(self.cycle_wait)
-        return self.res.set_parameter(bytes_recv, serno, table)
+        return self.res.set_parameter(bytes_recv, table, serno)
 
     def get_eeprom_page(self, serno, page_nr):
         """This is the base command for reading a single page of EEPRom data
