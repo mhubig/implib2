@@ -1,7 +1,7 @@
 language: python
 
 python:
-  - 2.7
+    - 2.7
 
 install:
     - pip install -r requirements.txt --use-mirrors
@@ -19,4 +19,14 @@ script:
     - cd ..
 
 after_success:
-    - coveralls
+- coveralls
+
+deploy:
+  provider: pypi
+  user: mhubig
+  password:
+    secure: V3FcCr361MDnurFXx02+oZVLOBEJaPnmhK0Pm5jnh9S2RkH5b75uNkqwbx5oWB9SrEpPjy5A+wnTAntSGjfeDt1CxXBLZmcxHXHPfoiiiPAyVzI7OVL9K69G9ff1LU4lYRDEWnSKnnYDcviBwdXSZr4QRyefReeIDF6I9CAbO2c=
+  on:
+    tags: true
+    branch: master
+    repo: mhubig/implib2
