@@ -1,0 +1,6 @@
+site_name: IMPLib2 - IMPBus2 for Python.
+pages:
+  - Home: index.md
+  - API: api.md
+  - About: about.md
+theme: readthedocs
