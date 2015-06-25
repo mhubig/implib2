@@ -93,8 +93,8 @@ class EEPRom(object):
         """
         self._filename = _normalize(filename)
         stuff = '; ' + '\n; '.join(self._stuff)
-        header = '; ' + '\n; '.join(['%s = %s' % (x, self._header[x])
-                                    for x in self._header])
+        header = '; ' + '\n; '.join(['%s = %s' % (x, self._header[x]) for
+                                     x in self._header])
         data = self._data.getvalue()
         with open(self._filename, 'w') as epr:
             if self._stuff:

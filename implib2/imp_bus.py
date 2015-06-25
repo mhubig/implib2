@@ -69,22 +69,22 @@ class Bus(object):
 
     def _search(self, range_address, range_marker, found):
         probes = len(found)
-        broadcast = range_address + range_marker
+        bcast_address = range_address + range_marker
 
-        if not self.probe_range(broadcast):
+        if not self.probe_range(bcast_address):
             return False
 
         if range_marker == 1:
-            if self.probe_module_short(broadcast):
-                found.append(broadcast)
+            if self.probe_module_short(bcast_address):
+                found.append(bcast_address)
 
-            if self.probe_module_short(broadcast - 1):
-                found.append(broadcast - 1)
+            if self.probe_module_short(bcast_address - 1):
+                found.append(bcast_address - 1)
 
             return not probes == len(found)
 
         # divide-and-conquer by splitting the range into two pices.
-        self._search(broadcast,     range_marker >> 1, found)
+        self._search(bcast_address, range_marker >> 1, found)
         self._search(range_address, range_marker >> 1, found)
         return True
 

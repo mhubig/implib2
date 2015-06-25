@@ -61,7 +61,6 @@ class Command(object):
 
         param_no = struct.pack('<B', cmd['No'])
         param_ad = struct.pack('<B', ad_param)
-        # pylint: disable=W0142
         param = struct.pack(fmt.format(len(values)), *values)
         data = param_no + param_ad + param
 
