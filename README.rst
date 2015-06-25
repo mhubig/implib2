@@ -3,19 +3,19 @@ Travis-CI & Test Coverage
 
 **Stable Branch (0.9.2)**
 
-.. image:: https://travis-ci.org/mhubig/implib2.png?branch=master
-   :target: https://travis-ci.org/mhubig/implib2
+.. image:: http://img.shields.io/travis/mhubig/implib2.svg?branch=master&style=flat-square
+    :target: https://travis-ci.org/mhubig/implib2
 
-.. image:: https://coveralls.io/repos/mhubig/implib2/badge.png?branch=master
-   :target: https://coveralls.io/r/mhubig/implib2?branch=master
+.. image:: http://img.shields.io/coveralls/mhubig/implib2.svg?branch=master&style=flat-square
+  :target: https://coveralls.io/r/mhubig/implib2?branch=master
 
 **Development Branch**
 
-.. image:: https://travis-ci.org/mhubig/implib2.png?branch=develop
-   :target: https://travis-ci.org/mhubig/implib2
+.. image:: http://img.shields.io/travis/mhubig/implib2.svg?branch=develop&style=flat-square
+    :target: https://travis-ci.org/mhubig/implib2
 
-.. image:: https://coveralls.io/repos/mhubig/implib2/badge.png?branch=develop
-   :target: https://coveralls.io/r/mhubig/implib2?branch=develop
+.. image:: http://img.shields.io/coveralls/mhubig/implib2.svg?branch=develop&style=flat-square
+  :target: https://coveralls.io/r/mhubig/implib2?branch=master
 
 .. ### INCLUDE_FROM_HERE ###
 
