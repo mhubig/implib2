@@ -1,22 +1,18 @@
 language: python
+python: 2.7
 
-python:
-    - 2.7
+env:
+  - TOX_ENV=py27
+  - TOX_ENV=docs
+  - TOX_ENV=pylint
+  - TOX_ENV=flake8
 
 install:
-    - pip install -r requirements.txt --use-mirrors
-    - pip install -r requirements-docs.txt --use-mirrors
-    - pip install -r requirements-tests.txt --use-mirrors
-    - pip install coveralls --use-mirrors
-    - python setup.py install
+  - pip install tox
+  - pip install coveralls
 
 script:
-    - py.test --cov-report xml --cov-report term-missing --cov implib2 --junitxml=unittests.xml tests
-    - pylint --rcfile=pylint.rc tests
-    - pylint --rcfile=pylint.rc implib2
-    - cd docs
-    - sphinx-build -W -b html -d _build/doctrees . _build/html
-    - cd ..
+  - tox -e $TOX_ENV
 
 after_success:
 - coveralls

@@ -44,7 +44,7 @@ class TestErrors(object):
     def test_load_json(self):
         assert self.e._errors == self.j
 
-    #pylint: disable=R0201,
+    # pylint: disable=R0201,
     def test_load_json_no_file(self):
         with pytest.raises(IOError):
             Errors('dont_exists.json')

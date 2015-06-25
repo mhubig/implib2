@@ -155,7 +155,7 @@ class Module(object):
         table = 'ACTION_PARAMETER_TABLE'
         param = 'Event'
 
-        if not mode in self.event_modes:
+        if mode not in self.event_modes:
             raise ModuleError("Invalid event mode!")
 
         value = self.event_modes[mode]
@@ -222,7 +222,7 @@ class Module(object):
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
         param = 'MeasMode'
 
-        if not mode in self.measure_modes:
+        if mode not in self.measure_modes:
             raise ModuleError("Invalid measure mode!")
 
         value = self.measure_modes[mode]
@@ -439,9 +439,9 @@ class Module(object):
             time.sleep(0.500)
         return self.get_measure(quantity='Moist')
 
-    ###########################
-    ## END of the Public API ##
-    ###########################
+    #########################
+    # END of the Public API #
+    #########################
 
     def _get_analog_output_mode(self):
         """Command to retrieve the analog output mode.
@@ -488,7 +488,7 @@ class Module(object):
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
         param = 'AnalogOutputMode'
 
-        if not mode in (0, 1):
+        if mode not in (0, 1):
             raise ModuleError("Wrong AnalogOutputMode!")
 
         value = mode
@@ -568,7 +568,7 @@ class Module(object):
         :raises ModuleError: If EventMode can not be set to AnalogOut.
 
         """
-        if not mvolt in range(0, 1001):
+        if mvolt not in range(0, 1001):
             raise ModuleError("Value out of range!")
 
         table = 'MEASURE_PARAMETER_TABLE'
@@ -596,7 +596,7 @@ class Module(object):
         :raises ModuleError: If EventMode can not be set to AnalogOut.
 
         """
-        if not mvolt in range(0, 1001):
+        if mvolt not in range(0, 1001):
             raise ModuleError('Value out of range!')
 
         table = 'MEASURE_PARAMETER_TABLE'

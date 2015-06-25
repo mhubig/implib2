@@ -135,7 +135,7 @@ class Bus(object):
         value = baudrate/100
         ad_param = 0
 
-        if not value in (12, 24, 48, 96):
+        if value not in (12, 24, 48, 96):
             raise BusError("Unknown baudrate!")
 
         package = self.cmd.set_parameter(address, table, param,

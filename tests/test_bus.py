@@ -25,9 +25,9 @@ from mock import patch, call, MagicMock
 from binascii import a2b_hex as a2b
 
 from implib2.imp_bus import Bus, BusError
-from implib2.imp_device import Device, DeviceError  # pylint: disable=W0611
-from implib2.imp_commands import Command            # pylint: disable=W0611
-from implib2.imp_responces import Responce          # pylint: disable=W0611
+from implib2.imp_device import Device, DeviceError  # noqa pylint: disable=W0611
+from implib2.imp_commands import Command            # noqa pylint: disable=W0611
+from implib2.imp_responces import Responce          # noqa pylint: disable=W0611
 
 
 # pylint: disable=C0103,R0902,W0201,E1101
