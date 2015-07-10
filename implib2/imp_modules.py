@@ -22,6 +22,8 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 
 import time
 import struct
+import string
+
 from .imp_crc import MaximCRC
 from .imp_eeprom import EEPRom
 
@@ -665,3 +667,51 @@ class Module(object):
         assert self.bus.set(self._serno, table, param, [value])
 
         return (transit_time, tdr_value)
+
+    def _set_sdi12_address(self, address=0):
+        """Command to set the SDI-12 address
+
+        This command sets the SDI-12 address of the probe.
+
+        :param address: SDI-12 Address to set. (0-9, a-z, A-Z)
+        :type  address: str
+
+        :rtype: bool
+
+        :raises ModuleError: If `address` parameter is out of range.
+
+        """
+        table = 'SYSTEM_PARAMETER_TABLE'
+        param = 'ModuleInfo1'
+
+        sdi12_address_rage = (range(0,9) + [c for c in string.lowercase]
+                              + [C for C in string.uppercase])
+
+        if address not in sdi12_address_rage:
+            raise ModuleError("Wrong AnalogOutputMode!")
+
+        value = address
+
+        return self.bus.set(self._serno, table, param, [value])
+
+    def _set_protocol(self, protocol='IMPBUS'):
+        """Command to set the bus protocol.
+
+        :param protocol: Bus protocol to use. ('IMPBUS' or 'SDI12')
+        :type  protocol: str
+
+        :rtype: bool
+
+        :raises ModuleError: If `protocol` parameter is unknown.
+        """
+        table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
+        param = 'Protocol'
+        protocols = {0: 'IMPBUS', 1: 'SDI12'}
+
+        try:
+            value = protocols[protocol]
+        except KeyError as e:
+            raise ModuleError("Wrong protocol: {}".format(e))
+
+        return self.bus.set(self._serno, table, param, [value])
+
