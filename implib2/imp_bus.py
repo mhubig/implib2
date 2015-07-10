@@ -425,7 +425,7 @@ class Bus(object):
         """
         package = self.cmd.get_epr_page(serno, page_nr)
         self.dev.write_pkg(package)
-        time.sleep(self.trans_wait)
+        time.sleep(0.2)
         bytes_recv = self.dev.read_pkg()
         time.sleep(self.cycle_wait)
         return self.res.get_epr_page(bytes_recv)
@@ -448,7 +448,7 @@ class Bus(object):
         """
         package = self.cmd.set_epr_page(serno, page_nr, page)
         self.dev.write_pkg(package)
-        time.sleep(self.trans_wait)
+        time.sleep(0.2)
         bytes_recv = self.dev.read_pkg()
         time.sleep(self.cycle_wait)
         return self.res.set_epr_page(bytes_recv)
