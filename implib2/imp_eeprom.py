@@ -114,8 +114,8 @@ class EEPRom(object):
         :rtype: byte
 
         """
-        self._data.seek(page * 252)
-        return self._data.read(252)
+        self._data.seek(page * 250)
+        return self._data.read(250)
 
     def set_page(self, page):
         """This command **appends** the given page to the EEPROM image.
@@ -133,8 +133,8 @@ class EEPRom(object):
     def pages(self):
         """Pages proberty, returns the number of pages stored.
         """
-        pages = self.length / 252
-        if self.length % 252:
+        pages = self.length / 250
+        if self.length % 250:
             pages += 1
         return pages
 
