@@ -706,7 +706,7 @@ class Module(object):
         """
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
         param = 'Protocol'
-        protocols = {0: 'IMPBUS', 1: 'SDI12'}
+        protocols = {'IMPBUS': 0, 'SDI12': 1}
 
         try:
             value = protocols[protocol]
@@ -714,4 +714,3 @@ class Module(object):
             raise ModuleError("Wrong protocol: {}".format(e))
 
         return self.bus.set(self._serno, table, param, [value])
-
