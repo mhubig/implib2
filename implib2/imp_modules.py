@@ -76,7 +76,6 @@ class Module(object):
     def __init__(self, bus, serno):
         self.crc = MaximCRC()
         self.bus = bus
-        self._unlocked = False
         self._serno = serno
 
         self.event_modes = {
@@ -109,8 +108,7 @@ class Module(object):
         param = 'SupportPW'
         value = passwd
 
-        self._unlocked = self.bus.set(self._serno, table, param, [value])
-        return self._unlocked
+        return self.bus.set(self._serno, table, param, [value])
 
     def get_event_mode(self):
         """Command to retrieve the event mode parameter of the probe. For more
@@ -160,8 +158,7 @@ class Module(object):
 
         value = self.event_modes[mode]
 
-        if not self._unlocked:
-            self.unlock()
+        self.unlock()
 
         return self.bus.set(self._serno, table, param, [value])
 
@@ -299,12 +296,10 @@ class Module(object):
         table = 'SYSTEM_PARAMETER_TABLE'
         param = 'SerialNum'
 
-        if not self._unlocked:
-            self.unlock()
+        self.unlock()
 
         if self.bus.set(self._serno, table, param, [serno]):
             self._serno = serno
-            self._unlocked = False
 
         return True
 
@@ -322,8 +317,7 @@ class Module(object):
         param = 'EPRByteLen'
         length = self.bus.get(self._serno, table, param)[0]
 
-        if not self._unlocked:
-            self.unlock()
+        self.unlock()
 
         pages = length / 252
         if length % 252:
@@ -348,8 +342,7 @@ class Module(object):
         :rtype: bool
 
         """
-        if not self._unlocked:
-            self.unlock()
+        self.unlock()
 
         for page_nr, page in image:
             if not self.bus.set_eeprom_page(self._serno, page_nr, page):
@@ -439,9 +432,9 @@ class Module(object):
             time.sleep(0.500)
         return self.get_measure(quantity='Moist')
 
-    #########################
-    # END of the Public API #
-    #########################
+    ###########################
+    ## END of the Public API ##
+    ###########################
 
     def _get_analog_output_mode(self):
         """Command to retrieve the analog output mode.
