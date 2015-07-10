@@ -60,7 +60,7 @@ class EEPRom(object):
 
         """
         self._reload()
-        self._filename = _normalize(filename)
+        self._filename = filename
         regex = re.compile('^; (.*?) = (.*?)$')
 
         with open(self._filename) as epr:
