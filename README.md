@@ -4,11 +4,13 @@
 
 [![Build Status](https://travis-ci.org/mhubig/implib2.svg?branch=master)](https://travis-ci.org/mhubig/implib2)
 [![Coverage Status](https://coveralls.io/repos/mhubig/implib2/badge.svg?branch=master)](https://coveralls.io/r/mhubig/implib2?branch=master)
+[![Code Health](https://landscape.io/github/mhubig/implib2/master/landscape.svg?style=flat)](https://landscape.io/github/mhubig/implib2/master)
 
 **Development Branch**
 
 [![Build Status](https://travis-ci.org/mhubig/implib2.svg?branch=develop)](https://travis-ci.org/mhubig/implib2)
 [![Coverage Status](https://coveralls.io/repos/mhubig/implib2/badge.svg?branch=develop)](https://coveralls.io/r/mhubig/implib2?branch=develop)
+[![Code Health](https://landscape.io/github/mhubig/implib2/develop/landscape.svg?style=flat)](https://landscape.io/github/mhubig/implib2/develop)
 
 ### Requirements
 
