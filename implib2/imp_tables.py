@@ -27,7 +27,7 @@ class TablesError(Exception):
     pass
 
 
-# pylint: disable=R0903,C0103
+# pylint: disable=too-few-public-methods
 class Tables(object):
 
     def __init__(self, filename='imp_tables.json'):
@@ -38,7 +38,7 @@ class Tables(object):
             cmd = self._tables[table][param]
             cmd[u'Set'] = self._tables[table]["Table"]["Set"]
             cmd[u'Get'] = self._tables[table]["Table"]["Get"]
-        except KeyError as e:
-            raise TablesError("Unknown param or table: {}!".format(e.message))
+        except KeyError as err:
+            raise TablesError("Unknown param or table: {}!".format(err.message))
 
         return cmd

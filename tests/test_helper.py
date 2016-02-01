@@ -86,7 +86,6 @@ def test_load_json():
     assert _load_json('imp_tables.json') == jsdict
 
 
-# pylint: disable=E1101
 @pytest.mark.parametrize("test", TESTS.items())
 def test_flp2(test):
     number, floor = test

@@ -24,7 +24,7 @@ from binascii import a2b_hex as a2b
 from implib2.imp_crc import MaximCRC
 
 
-# pylint: disable=C0103,W0201
+# pylint: disable=invalid-name, attribute-defined-outside-init
 class TestMaximCRC(object):
 
     def setup(self):

@@ -24,7 +24,7 @@ import pytest
 from implib2.imp_datatypes import DataTypes
 
 
-# pylint: disable=C0103,W0201,E1101
+# pylint: disable=invalid-name, attribute-defined-outside-init
 class TestDataTypes(object):
 
     def setup(self):

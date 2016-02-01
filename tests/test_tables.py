@@ -25,21 +25,20 @@ import pytest
 from implib2.imp_tables import Tables, TablesError
 
 
-# pylint: disable=C0103
 def pytest_generate_tests(metafunc):
     if 'table' in metafunc.fixturenames:
-        with open('tests/test_tables.json') as js:
-            j = json.load(js)
+        with open('tests/test_tables.json') as tables_file:
+            tables = json.load(tables_file)
 
         tests = []
-        for table in j:
-            for param in j[table]:
+        for table in tables:
+            for param in tables[table]:
                 tests.append((table, param))
 
         metafunc.parametrize(("table", "param"), tests)
 
 
-# pylint: disable=C0103,W0212,E1101,W0201
+# pylint: disable=invalid-name, protected-access, attribute-defined-outside-init
 class TestTables(object):
 
     def setup(self):
@@ -51,12 +50,12 @@ class TestTables(object):
         assert self.t._tables, self.j
 
     def test_load_json_no_file(self):
-        # pylint: disable=R0201
+        # pylint: disable=no-self-use
         with pytest.raises(IOError):
             Tables('dont_exists.json')
 
     def test_load_json_falty_file(self):
-        # pylint: disable=R0201
+        # pylint: disable=no-self-use
         with pytest.raises(ValueError):
             Tables('imp_tables.py')
 

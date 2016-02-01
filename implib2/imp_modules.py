@@ -31,8 +31,8 @@ class ModuleError(Exception):
     pass
 
 
+# pylint: disable=too-many-public-methods
 class Module(object):
-    # pylint: disable=R0904
     """The Module object represents a IMPBus2 probe. It is used to provide a
     easy to use interface for the probe specific commands. It is mostly just a
     small wrapper around the much more general :func:`Bus.set` and
@@ -257,7 +257,7 @@ class Module(object):
         :rtype: json
 
         """
-        # pylint: disable=W0613,R0201
+        # pylint: disable=unused-argument, no-self-use
         raise ModuleError("Not yet implemented!")
 
     def set_table(self, table, data):
@@ -276,7 +276,7 @@ class Module(object):
 
         :rtype: bool
         """
-        # pylint: disable=W0613,R0201
+        # pylint: disable=unused-argument, no-self-use
         raise ModuleError("Not yet implemented!")
 
     def get_serno(self):

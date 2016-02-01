@@ -27,7 +27,7 @@ from implib2.imp_crc import MaximCRC
 from implib2.imp_packages import Package, PackageError
 
 
-# pylint: disable=C0103,E1101,W0201
+# pylint: disable=invalid-name, attribute-defined-outside-init
 class TestPackage(object):
 
     def setup(self):

@@ -20,13 +20,13 @@ You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 import pytest
-import serial  # noqa pylint: disable=W0611
+import serial  # noqa pylint: disable=unused-import
 from mock import patch, call
 from binascii import a2b_hex as a2b
 from implib2.imp_device import Device, DeviceError
 
 
-# pylint: disable=C0103,E1101,W0201
+# pylint: disable=invalid-name, attribute-defined-outside-init
 class TestPackage(object):
 
     def setup(self):

@@ -30,12 +30,12 @@ class DeviceError(Exception):
 
 
 class Device(object):
+
     def __init__(self, port):
         self.ser = serial.serial_for_url(port, do_not_open=True)
         self.open_device()
 
     def _timeout(self, length):
-        # pylint: disable=C0321
         if not length:
             return 0
         baudrate = self.ser.baudrate
