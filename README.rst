@@ -1,21 +1,21 @@
 Travis-CI & Test Coverage
 =========================
 
-**Stable Branch (0.9.2)**
+**Stable Branch (0.10.0)**
 
-.. image:: https://travis-ci.org/mhubig/implib2.png?branch=master
-   :target: https://travis-ci.org/mhubig/implib2
+.. image:: https://travis-ci.org/mhubig/implib2.svg?branch=master
+    :target: https://travis-ci.org/mhubig/implib2
 
-.. image:: https://coveralls.io/repos/mhubig/implib2/badge.png?branch=master
-   :target: https://coveralls.io/r/mhubig/implib2?branch=master
+.. image:: https://coveralls.io/repos/mhubig/implib2/badge.svg?branch=master
+  :target: https://coveralls.io/r/mhubig/implib2?branch=master
 
 **Development Branch**
 
-.. image:: https://travis-ci.org/mhubig/implib2.png?branch=develop
-   :target: https://travis-ci.org/mhubig/implib2
+.. image:: https://travis-ci.org/mhubig/implib2.svg?branch=develop
+    :target: https://travis-ci.org/mhubig/implib2
 
-.. image:: https://coveralls.io/repos/mhubig/implib2/badge.png?branch=develop
-   :target: https://coveralls.io/r/mhubig/implib2?branch=develop
+.. image:: https://coveralls.io/repos/mhubig/implib2/badge.svg?branch=develop
+  :target: https://coveralls.io/r/mhubig/implib2?branch=develop
 
 .. ### INCLUDE_FROM_HERE ###
 
@@ -26,7 +26,7 @@ Before you can start using the IMPLib2 software you have to make sure, that
 you have at least the following software packages installed.
 
 - Python 2.7 (http://python.org)
-- PySerial 2.6 (http://pyserial.sourceforge.net)
+- PySerial 2.7 (http://pyserial.sourceforge.net)
 
 For instructions on how to get and install these packages on your OS please
 head over to the official project pages.
@@ -128,7 +128,7 @@ License
 
 ::
 
-    Copyright (C) 2011-2013, Markus Hubig <mhubig@imko.de>
+    Copyright (C) 2011-2015, Markus Hubig <mhubig@imko.de>
 
     This is the documentation part of IMPLib2, a small Python library
     implementing the IMPBUS-2 data transmission protocol.

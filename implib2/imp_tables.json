@@ -34,7 +34,14 @@
     "MoistAnalogAdjust": {"No":   9, "Type":   0, "Status": "WR", "Length": 1},
     "TempAnalogAdjust":  {"No":  10, "Type":   0, "Status": "WR", "Length": 1},
     "TMsMode":           {"No":  11, "Type":   2, "Status": "WR", "Length": 2},
-    "EPRByteLen":        {"No":  12, "Type":   2, "Status": "OR", "Length": 2}
+    "EPRByteLen":        {"No":  12, "Type":   2, "Status": "OR", "Length": 2},
+    "AnalogOutputMode":  {"No":  13, "Type":   0, "Status": "WR", "Length": 1},
+    "AnalogOutParaMode": {"No":  14, "Type":   0, "Status": "WR", "Length": 1},
+    "ConductMaxValue":   {"No":  15, "Type":   0, "Status": "WR", "Length": 1},
+    "ConductMinValue":   {"No":  16, "Type":   0, "Status": "WR", "Length": 1},
+    "Protocol":          {"No":  17, "Type":   0, "Status": "WR", "Length": 1},
+    "Reserved1":         {"No":  18, "Type":   0, "Status": "WR", "Length": 1},
+    "Reserved2":         {"No":  19, "Type":   2, "Status": "WR", "Length": 1}
   },
 
   "DEVICE_CALIBRATION_PARAMETER_TABLE": {

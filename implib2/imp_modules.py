@@ -22,8 +22,9 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 
 import time
 import struct
+import string
+
 from .imp_crc import MaximCRC
-from .imp_eeprom import EEPRom
 
 
 class ModuleError(Exception):
@@ -76,8 +77,11 @@ class Module(object):
     def __init__(self, bus, serno):
         self.crc = MaximCRC()
         self.bus = bus
-        self._unlocked = False
         self._serno = serno
+
+        self.protocols = {
+            'IMPBUS': 0,
+            'SDI12':  1}
 
         self.event_modes = {
             "NormalMeasure":    0x00,
@@ -109,8 +113,7 @@ class Module(object):
         param = 'SupportPW'
         value = passwd
 
-        self._unlocked = self.bus.set(self._serno, table, param, [value])
-        return self._unlocked
+        return self.bus.set(self._serno, table, param, [value])
 
     def get_event_mode(self):
         """Command to retrieve the event mode parameter of the probe. For more
@@ -155,13 +158,12 @@ class Module(object):
         table = 'ACTION_PARAMETER_TABLE'
         param = 'Event'
 
-        if not mode in self.event_modes:
+        if mode not in self.event_modes:
             raise ModuleError("Invalid event mode!")
 
         value = self.event_modes[mode]
 
-        if not self._unlocked:
-            self.unlock()
+        self.unlock()
 
         return self.bus.set(self._serno, table, param, [value])
 
@@ -222,7 +224,7 @@ class Module(object):
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
         param = 'MeasMode'
 
-        if not mode in self.measure_modes:
+        if mode not in self.measure_modes:
             raise ModuleError("Invalid measure mode!")
 
         value = self.measure_modes[mode]
@@ -299,61 +301,42 @@ class Module(object):
         table = 'SYSTEM_PARAMETER_TABLE'
         param = 'SerialNum'
 
-        if not self._unlocked:
-            self.unlock()
+        self.unlock()
 
         if self.bus.set(self._serno, table, param, [serno]):
             self._serno = serno
-            self._unlocked = False
 
         return True
 
     def read_eeprom(self):
         """Command to read the EEPROM image from the probe. The image get's
-        stored into a EEPRom object.
+        stored into a EEPROM object.
 
-        :rtype: :class:`EEPRom`
+        :rtype: :class:`EEPROM`
 
         :raises: **ModuleError** - If length of the constructed :class:`EEPRom`
             does not match the length value from the probe table.
 
         """
-        table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
-        param = 'EPRByteLen'
-        length = self.bus.get(self._serno, table, param)[0]
-
-        if not self._unlocked:
-            self.unlock()
-
-        pages = length / 252
-        if length % 252:
-            pages += 1
-
-        image = EEPRom()
-        for page in range(0, pages):
-            image.set_page(self.bus.get_epr_page(self._serno, page))
-
-        if not image.length == length:
-            raise ModuleError("EEPROM length don't match!")
-
-        return image
+        # pylint: disable=fixme
+        # TODO: add methode to create a EEPROM file.
+        raise NotImplementedError()
 
     def write_eeprom(self, image):
-        """Command to write a new EEPROM image to the probe. The EEPRom
-        image must be an instance of the :class:`EEPRom`.
+        """Command to write a new EEPROM image to the probe. The EEPROM
+        image must be an instance of the :class:`EEPROM`.
 
         :param image: The Image to write.
-        :type  image: :class:`EEPRom`
+        :type  image: :class:`EEPROM`
 
         :rtype: bool
 
         """
-        if not self._unlocked:
-            self.unlock()
+        self.unlock()
 
-        for page_nr, page in image:
-            if not self.bus.set_eeprom_page(self._serno, page_nr, page):
-                raise ModuleError("Writing EEPRom failed!")
+        for number, page in enumerate(image):
+            if not self.bus.set_eeprom_page(self._serno, number, page):
+                raise ModuleError("Writing EEPROM failed!")
             time.sleep(0.05)
 
         return True
@@ -439,9 +422,9 @@ class Module(object):
             time.sleep(0.500)
         return self.get_measure(quantity='Moist')
 
-    ###########################
-    ## END of the Public API ##
-    ###########################
+    #########################
+    # END of the Public API #
+    #########################
 
     def _get_analog_output_mode(self):
         """Command to retrieve the analog output mode.
@@ -488,7 +471,7 @@ class Module(object):
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
         param = 'AnalogOutputMode'
 
-        if not mode in (0, 1):
+        if mode not in (0, 1):
             raise ModuleError("Wrong AnalogOutputMode!")
 
         value = mode
@@ -568,7 +551,7 @@ class Module(object):
         :raises ModuleError: If EventMode can not be set to AnalogOut.
 
         """
-        if not mvolt in range(0, 1001):
+        if mvolt not in range(0, 1001):
             raise ModuleError("Value out of range!")
 
         table = 'MEASURE_PARAMETER_TABLE'
@@ -596,7 +579,7 @@ class Module(object):
         :raises ModuleError: If EventMode can not be set to AnalogOut.
 
         """
-        if not mvolt in range(0, 1001):
+        if mvolt not in range(0, 1001):
             raise ModuleError('Value out of range!')
 
         table = 'MEASURE_PARAMETER_TABLE'
@@ -672,3 +655,49 @@ class Module(object):
         assert self.bus.set(self._serno, table, param, [value])
 
         return (transit_time, tdr_value)
+
+    def _set_sdi12_address(self, address=0):
+        """Command to set the SDI-12 address
+
+        This command sets the SDI-12 address of the probe.
+
+        :param address: SDI-12 Address to set. (0-9, a-z, A-Z)
+        :type  address: str
+
+        :rtype: bool
+
+        :raises ModuleError: If `address` parameter is out of range.
+
+        """
+        table = 'SYSTEM_PARAMETER_TABLE'
+        param = 'ModuleInfo1'
+
+        sdi12_address_rage = (range(0, 9) + [c for c in string.lowercase]
+                              + [C for C in string.uppercase])
+
+        if address not in sdi12_address_rage:
+            raise ModuleError("SDI12 address out of range!")
+
+        value = address
+
+        return self.bus.set(self._serno, table, param, [value])
+
+    def _set_protocol(self, protocol='IMPBUS'):
+        """Command to set the bus protocol.
+
+        :param protocol: Bus protocol to use. ('IMPBUS' or 'SDI12')
+        :type  protocol: str
+
+        :rtype: bool
+
+        :raises ModuleError: If `protocol` parameter is unknown.
+        """
+        table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
+        param = 'Protocol'
+
+        try:
+            value = self.protocols[protocol]
+        except KeyError as err:
+            raise ModuleError("Wrong protocol: {}".format(err))
+
+        return self.bus.set(self._serno, table, param, [value])

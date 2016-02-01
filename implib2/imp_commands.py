@@ -61,7 +61,6 @@ class Command(object):
 
         param_no = struct.pack('<B', cmd['No'])
         param_ad = struct.pack('<B', ad_param)
-        # pylint: disable=W0142
         param = struct.pack(fmt.format(len(values)), *values)
         data = param_no + param_ad + param
 
@@ -93,11 +92,7 @@ class Command(object):
 
         param_no = struct.pack('<B', 255)
         param_ad = struct.pack('<B', page_nr)
-        param = str()
-
-        for byte in page:
-            param += struct.pack('<B', byte)
-
+        param = page
         data = param_no + param_ad + param
 
         package = self.pkg.pack(serno=serno, cmd=0x3d, data=data)

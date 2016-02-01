@@ -20,7 +20,6 @@ You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 
-import os
 import re
 import sys
 from setuptools import setup, find_packages
@@ -35,7 +34,7 @@ class Tox(TestCommand):
         self.test_suite = True
 
     def run_tests(self):
-        #import here, cause outside the eggs aren't loaded
+        # import here, cause outside the eggs aren't loaded
         import tox
         errcode = tox.cmdline(self.test_args)
         sys.exit(errcode)
@@ -64,7 +63,7 @@ CLASSIFIERS = [
 
 setup(
     name='IMPLib2',
-    version='0.9.2',
+    version='0.10.0',
     packages=find_packages(exclude=["tests"]),
 
     # include the *.yaml files

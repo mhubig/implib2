@@ -24,7 +24,7 @@ The Module Class
 The EEPRom Class
 ----------------------
 
-.. autoclass:: EEPRom
+.. autoclass:: EEPROM
    :members:
    :inherited-members:
 

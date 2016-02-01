@@ -71,7 +71,7 @@ class TestCommand(object):
         assert pkg == a2b('fd3c0331750029ff0081')
 
     def test_set_epr_page(self):
-        page = [0, 0, 0, 0, 0, 0, 0, 0, 35, 255, 255, 0]
+        page = a2b('000000000000000023ffff00')
         pkg = self.cmd.set_epr_page(30001, 7, page)
         assert pkg == a2b('fd3d0f317500f6ff07000000000000000023ffff007b')
 

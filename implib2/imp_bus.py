@@ -69,22 +69,22 @@ class Bus(object):
 
     def _search(self, range_address, range_marker, found):
         probes = len(found)
-        broadcast = range_address + range_marker
+        bcast_address = range_address + range_marker
 
-        if not self.probe_range(broadcast):
+        if not self.probe_range(bcast_address):
             return False
 
         if range_marker == 1:
-            if self.probe_module_short(broadcast):
-                found.append(broadcast)
+            if self.probe_module_short(bcast_address):
+                found.append(bcast_address)
 
-            if self.probe_module_short(broadcast - 1):
-                found.append(broadcast - 1)
+            if self.probe_module_short(bcast_address - 1):
+                found.append(bcast_address - 1)
 
             return not probes == len(found)
 
         # divide-and-conquer by splitting the range into two pices.
-        self._search(broadcast,     range_marker >> 1, found)
+        self._search(bcast_address, range_marker >> 1, found)
         self._search(range_address, range_marker >> 1, found)
         return True
 
@@ -135,7 +135,7 @@ class Bus(object):
         value = baudrate/100
         ad_param = 0
 
-        if not value in (12, 24, 48, 96):
+        if value not in (12, 24, 48, 96):
             raise BusError("Unknown baudrate!")
 
         package = self.cmd.set_parameter(address, table, param,
@@ -425,7 +425,7 @@ class Bus(object):
         """
         package = self.cmd.get_epr_page(serno, page_nr)
         self.dev.write_pkg(package)
-        time.sleep(self.trans_wait)
+        time.sleep(1.0)
         bytes_recv = self.dev.read_pkg()
         time.sleep(self.cycle_wait)
         return self.res.get_epr_page(bytes_recv)
@@ -448,7 +448,7 @@ class Bus(object):
         """
         package = self.cmd.set_epr_page(serno, page_nr, page)
         self.dev.write_pkg(package)
-        time.sleep(self.trans_wait)
+        time.sleep(1.0)
         bytes_recv = self.dev.read_pkg()
         time.sleep(self.cycle_wait)
         return self.res.set_epr_page(bytes_recv)
