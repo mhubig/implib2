@@ -22,12 +22,12 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 
 import io
 import mock
-import pytest
 
 from implib2.imp_eeprom import EEPROM
 
 
-class TestEEPROM:
+# pylint: disable=no-init, invalid-name, protected-access, no-self-use
+class TestEEPROM(object):
 
     def test_init_ReadsData(self):
         data = io.StringIO(u'255\n255\n255')
@@ -42,6 +42,7 @@ class TestEEPROM:
             mock_open.return_value = data
             eeprom = EEPROM('test.epr')
 
+        # pylint: disable=no-member
         assert eeprom._data.getvalue() == '\xff\xff\xff'
         assert eeprom.some == 'header'
 
@@ -51,6 +52,7 @@ class TestEEPROM:
             mock_open.return_value = data
             eeprom = EEPROM('test.epr')
 
+        # pylint: disable=no-member
         assert eeprom._data.getvalue() == '\xff\xff\xff'
         assert eeprom.some_bla == 'header'
 
@@ -79,4 +81,3 @@ class TestEEPROM:
             else:
                 assert len(page) == 125
                 assert page == '\xff' * 125
-

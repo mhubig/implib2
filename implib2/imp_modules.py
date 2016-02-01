@@ -25,7 +25,6 @@ import struct
 import string
 
 from .imp_crc import MaximCRC
-from .imp_eeprom import EEPROM
 
 
 class ModuleError(Exception):
@@ -79,6 +78,10 @@ class Module(object):
         self.crc = MaximCRC()
         self.bus = bus
         self._serno = serno
+
+        self.protocols = {
+            'IMPBUS': 0,
+            'SDI12':  1}
 
         self.event_modes = {
             "NormalMeasure":    0x00,
@@ -315,17 +318,7 @@ class Module(object):
             does not match the length value from the probe table.
 
         """
-        table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
-        param = 'EPRByteLen'
-        length = self.bus.get(self._serno, table, param)[0]
-
-
-        self.unlock()
-
-        pages = length / 252
-        if length % 252:
-            pages += 1
-
+        # pylint: disable=fixme
         # TODO: add methode to create a EEPROM file.
         raise NotImplementedError()
 
@@ -341,8 +334,8 @@ class Module(object):
         """
         self.unlock()
 
-        for no, page in enumerate(image):
-            if not self.bus.set_eeprom_page(self._serno, no, page):
+        for number, page in enumerate(image):
+            if not self.bus.set_eeprom_page(self._serno, number, page):
                 raise ModuleError("Writing EEPROM failed!")
             time.sleep(0.05)
 
@@ -429,9 +422,9 @@ class Module(object):
             time.sleep(0.500)
         return self.get_measure(quantity='Moist')
 
-    ###########################
-    ## END of the Public API ##
-    ###########################
+    #########################
+    # END of the Public API #
+    #########################
 
     def _get_analog_output_mode(self):
         """Command to retrieve the analog output mode.
@@ -679,11 +672,11 @@ class Module(object):
         table = 'SYSTEM_PARAMETER_TABLE'
         param = 'ModuleInfo1'
 
-        sdi12_address_rage = (range(0,9) + [c for c in string.lowercase]
+        sdi12_address_rage = (range(0, 9) + [c for c in string.lowercase]
                               + [C for C in string.uppercase])
 
         if address not in sdi12_address_rage:
-            raise ModuleError("Wrong AnalogOutputMode!")
+            raise ModuleError("SDI12 address out of range!")
 
         value = address
 
@@ -701,11 +694,10 @@ class Module(object):
         """
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
         param = 'Protocol'
-        protocols = {'IMPBUS': 0, 'SDI12': 1}
 
         try:
-            value = protocols[protocol]
-        except KeyError as e:
-            raise ModuleError("Wrong protocol: {}".format(e))
+            value = self.protocols[protocol]
+        except KeyError as err:
+            raise ModuleError("Wrong protocol: {}".format(err))
 
         return self.bus.set(self._serno, table, param, [value])

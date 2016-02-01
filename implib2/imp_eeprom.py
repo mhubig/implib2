@@ -25,7 +25,8 @@ import re
 import struct
 
 
-class EEPROM:
+# pylint: disable=too-few-public-methods
+class EEPROM(object):
     """This Class represents a simple data structure to hold an EEPROM
     image. It can be used with :func:`Module.write_eeprom` to update the
     EEPROM image of the probe.
@@ -61,4 +62,3 @@ class EEPROM:
         if match:
             key, value = match.group(1, 2)
             setattr(self, key.replace(' ', '_').strip(), value.strip())
-

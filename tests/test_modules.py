@@ -22,11 +22,13 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 
 import os
 import pytest
-from mock import patch, call, MagicMock
+
+from mock import call, MagicMock
 from implib2.imp_modules import Module, ModuleError
 
 
-# pylint: disable=C0103,W0212,R0904,E1101,W0201
+# pylint: disable=invalid-name, protected-access
+# pylint: disable=too-many-public-methods, attribute-defined-outside-init
 class TestModule(object):
     def setup(self):
         self.serno = 31002
@@ -323,26 +325,6 @@ class TestModule(object):
             "SelfTest":         0x04,
             "MatTempSensor":    0x05}
 
-        expected = []
-        for mode in event_modes:
-            value = event_modes[mode]
-            expected.append(call(self.serno, table, param, [value]))
-            self.mod._unlocked = True
-            self.mod.set_event_mode(mode)
-
-        assert self.bus.set.call_args_list == expected
-
-    def test_set_event_mode(self):
-        table = 'ACTION_PARAMETER_TABLE'
-        param = 'Event'
-        event_modes = {
-            "NormalMeasure":    0x00,
-            "TRDScan":          0x01,
-            "AnalogOut":        0x02,
-            "ACIC_TC":          0x03,
-            "SelfTest":         0x04,
-            "MatTempSensor":    0x05}
-
         assert event_modes == self.mod.event_modes
 
         self.mod.unlock = MagicMock()
@@ -356,7 +338,7 @@ class TestModule(object):
             assert self.mod.set_event_mode(mode)
 
         assert self.mod.unlock.call_args_list == expected_unlock_calles
-        assert self.bus.set.call_args_list== expected_set_calles
+        assert self.bus.set.call_args_list == expected_set_calles
 
     def test_set_event_mode_UnknownMode(self):
         mode = 'UNKNOWN'
@@ -396,11 +378,16 @@ class TestModule(object):
             self.mod.set_measure_mode('ModeD')
         assert e.value.message == "Invalid measure mode!"
 
+    def test_read_eeprom(self):
+        with pytest.raises(NotImplementedError) as e:
+            self.mod.read_eeprom()
+        assert e.value.message == ""
+
     def test_write_eeprom(self):
         head = os.urandom(250)
-        mid  = os.urandom(250)
+        midl = os.urandom(250)
         tail = os.urandom(128)
-        gen = (x for x in [head, mid, tail])
+        gen = (x for x in [head, midl, tail])
 
         eeprom = MagicMock()
         eeprom.__iter__.return_value = gen
@@ -410,14 +397,15 @@ class TestModule(object):
 
         assert self.mod.write_eeprom(eeprom)
         self.mod.unlock.assert_called_once_with()
-        expected = [call(self.serno, x, y) for x,y in enumerate([head, mid, tail])]
+        expected = [call(self.serno, x, y) for x, y in
+                    enumerate([head, midl, tail])]
         assert self.bus.set_eeprom_page.call_args_list == expected
 
     def test_write_eeprom_EEPROMWritingFailed(self):
         head = os.urandom(250)
-        mid  = os.urandom(250)
+        midl = os.urandom(250)
         tail = os.urandom(128)
-        gen = (x for x in [head, mid, tail])
+        gen = (x for x in [head, midl, tail])
 
         eeprom = MagicMock()
         eeprom.__iter__.return_value = gen
@@ -666,3 +654,37 @@ class TestModule(object):
         self.mod.set_event_mode.assert_called_once_with("NormalMeasure")
         assert self.bus.set.call_args_list == set_calls
         assert self.bus.get.call_args_list == get_calls
+
+    def test__set_sdi12_address(self):
+        table = 'SYSTEM_PARAMETER_TABLE'
+        param = 'ModuleInfo1'
+        value = 0
+
+        self.mod._set_sdi12_address(value)
+        self.bus.set.assert_called_once_with(self.serno, table, param, [value])
+
+    def test__set_sdi12_address_WrongAddress(self):
+        with pytest.raises(ModuleError) as e:
+            self.mod._set_sdi12_address(2000)
+        assert e.value.message == 'SDI12 address out of range!'
+
+    def test__set_protocol(self):
+        table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
+        param = 'Protocol'
+        protocols = {'IMPBUS': 0, 'SDI12': 1}
+
+        assert protocols == self.mod.protocols
+
+        expected = []
+        for protocol in protocols:
+            value = protocols[protocol]
+            self.mod._set_protocol(protocol)
+            expected.append(call(self.serno, table, param, [value]))
+
+        assert self.bus.set.call_args_list == expected
+
+    def test__set_protocol_WrongProtocol(self):
+        value = 'chocolate_jesus'
+        with pytest.raises(ModuleError) as e:
+            self.mod._set_protocol(value)
+        assert e.value.message == "Wrong protocol: '{}'".format(value)
