@@ -25,7 +25,7 @@ import struct
 import string
 
 from .imp_crc import MaximCRC
-from .imp_eeprom import EEPRom
+from .imp_eeprom import EEPROM
 
 
 class ModuleError(Exception):
@@ -307,9 +307,9 @@ class Module(object):
 
     def read_eeprom(self):
         """Command to read the EEPROM image from the probe. The image get's
-        stored into a EEPRom object.
+        stored into a EEPROM object.
 
-        :rtype: :class:`EEPRom`
+        :rtype: :class:`EEPROM`
 
         :raises: **ModuleError** - If length of the constructed :class:`EEPRom`
             does not match the length value from the probe table.
@@ -319,36 +319,31 @@ class Module(object):
         param = 'EPRByteLen'
         length = self.bus.get(self._serno, table, param)[0]
 
+
         self.unlock()
 
         pages = length / 252
         if length % 252:
             pages += 1
 
-        image = EEPRom()
-        for page in range(0, pages):
-            image.set_page(self.bus.get_epr_page(self._serno, page))
-
-        if not image.length == length:
-            raise ModuleError("EEPROM length don't match!")
-
-        return image
+        # TODO: add methode to create a EEPROM file.
+        raise NotImplementedError()
 
     def write_eeprom(self, image):
-        """Command to write a new EEPROM image to the probe. The EEPRom
-        image must be an instance of the :class:`EEPRom`.
+        """Command to write a new EEPROM image to the probe. The EEPROM
+        image must be an instance of the :class:`EEPROM`.
 
         :param image: The Image to write.
-        :type  image: :class:`EEPRom`
+        :type  image: :class:`EEPROM`
 
         :rtype: bool
 
         """
         self.unlock()
 
-        for page_nr, page in image:
-            if not self.bus.set_eeprom_page(self._serno, page_nr, page):
-                raise ModuleError("Writing EEPRom failed!")
+        for no, page in enumerate(image):
+            if not self.bus.set_eeprom_page(self._serno, no, page):
+                raise ModuleError("Writing EEPROM failed!")
             time.sleep(0.05)
 
         return True

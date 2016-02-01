@@ -170,75 +170,7 @@ class TestModule(object):
         self.bus.set.return_value = True
 
         assert self.mod.unlock()
-        assert self.mod._unlocked
         self.bus.set.assert_called_once_with(self.serno, table, param, [value])
-
-    def test_read_eeprom_ModuleAlreadyUnlocked(self):
-        table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
-        param = 'EPRByteLen'
-        head = os.urandom(252)
-        mid = os.urandom(252)
-        tail = os.urandom(128)
-        length = (252 * 31 + 128)
-        pages = [head]
-        pages.extend(30 * [mid])
-        pages.extend([tail])
-
-        self.bus.get.return_value = (length,)
-        self.bus.get_epr_page.side_effect = pages
-
-        with patch('implib2.imp_modules.EEPRom') as mock:
-            eeprom = mock()
-            eeprom.length = length
-            self.mod._unlocked = True
-
-            assert self.mod.read_eeprom() == eeprom
-            expected = [call(x) for x in pages]
-            assert eeprom.set_page.call_args_list == expected
-            self.bus.get.assert_called_once_with(self.serno, table, param)
-            expected = [call(self.serno, x) for x in range(0, 32)]
-            assert self.bus.get_epr_page.call_args_list == expected
-
-    def test_read_eeprom_ModuleNotAlreadyUnlocked(self):
-        table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
-        param = 'EPRByteLen'
-        head = os.urandom(252)
-        mid = os.urandom(252)
-        tail = os.urandom(128)
-        length = (252 * 31 + 128)
-        pages = [head]
-        pages.extend(30 * [mid])
-        pages.extend([tail])
-
-        self.bus.get.return_value = (length,)
-        self.bus.get_epr_page.side_effect = pages
-
-        with patch('implib2.imp_modules.EEPRom') as mock:
-            eeprom = mock()
-            eeprom.length = length
-            self.mod.unlock = MagicMock()
-            self.mod._unlocked = False
-
-            assert self.mod.read_eeprom() == eeprom
-            expected = [call(x) for x in pages]
-            assert eeprom.set_page.call_args_list == expected
-            self.mod.unlock.assert_called_once_with()
-            self.bus.get.assert_called_once_with(self.serno, table, param)
-            expected = [call(self.serno, x) for x in range(0, 32)]
-            assert self.bus.get_epr_page.call_args_list == expected
-
-    def test_read_eeprom_ButLengthDontMatch(self):
-        length = (252 * 31 + 128)
-        self.bus.get.return_value = (length,)
-
-        with patch('implib2.imp_modules.EEPRom') as mock:
-            eeprom = mock()
-            eeprom.length = length - 1
-            self.mod._unlocked = True
-
-            with pytest.raises(ModuleError) as e:
-                self.mod.read_eeprom()
-            assert e.value.message == "EEPROM length don't match!"
 
     def test_set_table(self):
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
@@ -248,31 +180,16 @@ class TestModule(object):
             self.mod.set_table(table, data)
         assert e.value.message == "Not yet implemented!"
 
-    def test_set_serno_ModuleAlreadyUnlocked(self):
+    def test_set_serno(self):
         table = 'SYSTEM_PARAMETER_TABLE'
         param = 'SerialNum'
         value = self.serno + 1
 
         self.bus.set.return_value = True
-        self.mod._unlocked = True
-
-        assert self.mod.set_serno(value)
-        assert self.mod._serno == value
-        assert not self.mod._unlocked
-        self.bus.set.assert_called_once_with(self.serno, table, param, [value])
-
-    def test_set_serno_ModuleNotAlreadyUnlocked(self):
-        table = 'SYSTEM_PARAMETER_TABLE'
-        param = 'SerialNum'
-        value = self.serno + 1
-
-        self.bus.set.return_value = True
-        self.mod._unlocked = False
         self.mod.unlock = MagicMock()
 
         assert self.mod.set_serno(value)
         assert self.mod._serno == value
-        assert not self.mod._unlocked
         self.mod.unlock.assert_called_once_with()
         self.bus.set.assert_called_once_with(self.serno, table, param, [value])
 
@@ -415,18 +332,31 @@ class TestModule(object):
 
         assert self.bus.set.call_args_list == expected
 
-    def test_set_event_mode_NotAlreadyUnlocked(self):
+    def test_set_event_mode(self):
         table = 'ACTION_PARAMETER_TABLE'
         param = 'Event'
-        value = 0x00
-        mode = "NormalMeasure"
+        event_modes = {
+            "NormalMeasure":    0x00,
+            "TRDScan":          0x01,
+            "AnalogOut":        0x02,
+            "ACIC_TC":          0x03,
+            "SelfTest":         0x04,
+            "MatTempSensor":    0x05}
 
-        self.mod._unlocked = False
+        assert event_modes == self.mod.event_modes
+
         self.mod.unlock = MagicMock()
 
-        assert self.mod.set_event_mode(mode)
-        self.mod.unlock.assert_called_once_with()
-        self.bus.set.assert_called_once_with(self.serno, table, param, [value])
+        expected_set_calles = []
+        expected_unlock_calles = []
+        for mode in event_modes:
+            value = event_modes[mode]
+            expected_set_calles.append(call(self.serno, table, param, [value]))
+            expected_unlock_calles.append(call())
+            assert self.mod.set_event_mode(mode)
+
+        assert self.mod.unlock.call_args_list == expected_unlock_calles
+        assert self.bus.set.call_args_list== expected_set_calles
 
     def test_set_event_mode_UnknownMode(self):
         mode = 'UNKNOWN'
@@ -466,54 +396,37 @@ class TestModule(object):
             self.mod.set_measure_mode('ModeD')
         assert e.value.message == "Invalid measure mode!"
 
-    def test_write_eeprom_ModuleAlreadyUnlocked(self):
-        head = (0, os.urandom(252))
-        mid = (1, os.urandom(252))
-        tail = (2, os.urandom(128))
-        gen = (x for x in [head, mid, tail])
-
-        eeprom = MagicMock()
-        eeprom.__iter__.return_value = gen
-        self.bus.set_eeprom_page.return_value = True
-        self.mod._unlocked = True
-
-        assert self.mod.write_eeprom(eeprom)
-        expected = [call(self.serno, x[0], x[1]) for x in [head, mid, tail]]
-        assert self.bus.set_eeprom_page.call_args_list == expected
-
-    def test_write_eeprom_ModuleNotAlreadyUnlocked(self):
-        head = (0, os.urandom(252))
-        mid = (1, os.urandom(252))
-        tail = (2, os.urandom(128))
+    def test_write_eeprom(self):
+        head = os.urandom(250)
+        mid  = os.urandom(250)
+        tail = os.urandom(128)
         gen = (x for x in [head, mid, tail])
 
         eeprom = MagicMock()
         eeprom.__iter__.return_value = gen
 
         self.bus.set_eeprom_page.return_value = True
-        self.mod._unlocked = False
         self.mod.unlock = MagicMock()
 
         assert self.mod.write_eeprom(eeprom)
         self.mod.unlock.assert_called_once_with()
-        expected = [call(self.serno, x[0], x[1]) for x in [head, mid, tail]]
+        expected = [call(self.serno, x, y) for x,y in enumerate([head, mid, tail])]
         assert self.bus.set_eeprom_page.call_args_list == expected
 
-    def test_write_eeprom_EEPRomWritingFailed(self):
-        head = (0, os.urandom(252))
-        mid = (1, os.urandom(252))
-        tail = (2, os.urandom(128))
+    def test_write_eeprom_EEPROMWritingFailed(self):
+        head = os.urandom(250)
+        mid  = os.urandom(250)
+        tail = os.urandom(128)
         gen = (x for x in [head, mid, tail])
 
         eeprom = MagicMock()
         eeprom.__iter__.return_value = gen
-        self.bus.set_eeprom_page.side_effect = [True, True, False]
-        self.mod._unlocked = False
-        self.mod.unlock = MagicMock()
+
+        self.bus.set_eeprom_page.side_effect = [False]
 
         with pytest.raises(ModuleError) as e:
             self.mod.write_eeprom(eeprom)
-        assert e.value.message == "Writing EEPRom failed!"
+        assert e.value.message == "Writing EEPROM failed!"
 
     def test_turn_asic_on(self):
         table = 'ACTION_PARAMETER_TABLE'

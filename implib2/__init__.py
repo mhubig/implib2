@@ -21,8 +21,8 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 __version__ = '0.9.2'
 
+from .imp_eeprom import EEPROM
 from .imp_bus import Bus, BusError
 from .imp_modules import Module, ModuleError
-from .imp_eeprom import EEPRom, EEPRomError
 
-__all__ = ["Bus", "BusError", "Module", "ModuleError", "EEPRom", "EEPRomError"]
+__all__ = ["Bus", "BusError", "Module", "ModuleError", "EEPROM"]
