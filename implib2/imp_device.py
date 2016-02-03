@@ -33,59 +33,45 @@ class Device(object):
 
     def __init__(self, port):
         self.ser = serial.serial_for_url(port, do_not_open=True)
-        self.open_device()
-
-    def _timeout(self, length):
-        if not length:
-            return 0
-        baudrate = self.ser.baudrate
-        return 600.0 / baudrate * length
-
-    def open_device(self, baudrate=9600):
-        self.ser.baudrate = baudrate
         self.ser.bytesize = serial.EIGHTBITS
         self.ser.parity = serial.PARITY_ODD
         self.ser.stopbits = serial.STOPBITS_TWO
-        self.ser.timeout = 0.01 # 10ms
+        self.ser.timeout = 0.1 # 100ms
         self.ser.xonxoff = 0
         self.ser.rtscts = 0
         self.ser.dsrdtr = 0
+        self.open_device()
+
+    def open_device(self, baudrate=9600):
+        self.ser.baudrate = baudrate
         self.ser.open()
         self.ser.flush()
         time.sleep(0.05) # 50ms
 
     def close_device(self):
-        if self.ser.isOpen():
+        try:
             self.ser.flush()
             self.ser.close()
-        time.sleep(0.05) # 50ms
+        except:
+            pass
+        finally:
+            time.sleep(0.05) # 50ms
 
     def write_pkg(self, packet):
         bytes_send = self.ser.write(packet)
         if not bytes_send == len(packet):
             raise DeviceError("Couldn't write all bytes!")
-
         return True
 
     def read_pkg(self):
         # read header, always 7 bytes
-        header = str()
-        length = 7
-        timeout = self._timeout(length)
-        tic = time.time()
-        while (time.time() - tic < timeout) and (len(header) < length):
-            header += self.ser.read(self.ser.inWaiting() or 1)
+        header = self.ser.read(7)
 
-        if len(header) < length:
+        if len(header) < 7:
             raise DeviceError('Timeout reading header!')
 
-        # read data, length is known from header
-        data = str()
         length = unpack('<B', header[2])[0]
-        timeout = self._timeout(length)
-        tic = time.time()
-        while (time.time() - tic < timeout) and (len(data) < length):
-            data += self.ser.read(self.ser.inWaiting() or 1)
+        data = self.ser.read(length)
 
         if len(data) < length:
             raise DeviceError('Timeout reading data!')
@@ -93,18 +79,14 @@ class Device(object):
         return header + data
 
     def read_bytes(self, length):
-        rbs = str()
-        timeout = self._timeout(length)
-        tic = time.time()
-        while (time.time() - tic < timeout) and (len(rbs) < length):
-            rbs += self.ser.read(self.ser.inWaiting() or 1)
+        data = self.ser.read(length)
 
-        if len(rbs) < length:
+        if len(data) < length:
             raise DeviceError('Timeout reading bytes!')
 
-        return rbs
+        return data
 
     def read(self):
-        byte = self.ser.read(self.ser.inWaiting() or 1)
+        byte = self.ser.read(1)
         self.ser.flushInput()
         return byte
