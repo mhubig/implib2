@@ -40,7 +40,6 @@ class Device(object):
         self.ser.xonxoff = 0
         self.ser.rtscts = 0
         self.ser.dsrdtr = 0
-        self.open_device()
 
     def open_device(self, baudrate=9600):
         self.ser.baudrate = baudrate
@@ -71,6 +70,10 @@ class Device(object):
             raise DeviceError('Timeout reading header!')
 
         length = unpack('<B', header[2])[0]
+
+        if length == 0:
+            return header
+
         data = self.ser.read(length)
 
         if len(data) < length:
