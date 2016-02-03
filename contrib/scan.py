@@ -2,16 +2,15 @@
 # -*- coding: UTF-8 -*-
 
 import time
-import numpy as np
 import logging
-from implib2 import Bus, Module
+import implib2
 
 logging.basicConfig(
         format='%(message)s',
         filename='scan.log',
         level=logging.DEBUG)
 
-bus = Bus('/dev/ttyUSB0', rs485=False)
+bus = implib2.Bus('/dev/ttyUSB0', rs485=False)
 
 def scan():
 
@@ -19,8 +18,8 @@ def scan():
         tic = time.time()
         probes = bus.scan_bus()
         s_time = time.time() - tic
-    except:
-        logging.debug('ERROR: Exception caught!')
+    except implib2.BusError as err:
+        logging.debug('ERROR: %s', err)
         probes = []
         s_time = 0.0
     finally:
@@ -41,7 +40,7 @@ for nr in range(1,11):
     print "== Nr: {} =================================".format(nr)
     found, scan_time, probes = scan()
     probes = list(reference - set(probes))
-    logging.debug("{:03};{:02};{:.6f};{}" .format(nr, found,
-        scan_time, probes))
+    msg = "{:03};{:02};{:.6f};{}" .format(nr, found, scan_time, probes)
+    logging.debug(msg)
 
 bus.dev.close_device()

@@ -4,14 +4,14 @@
 import time
 import numpy as np
 import logging
-from implib2 import Bus, Module
+import implib2
 
 logging.basicConfig(
         format='%(message)s',
         filename='scan.log',
         level=logging.DEBUG)
 
-bus = Bus('/dev/ttyUSB0')
+bus = implib2.Bus('/dev/ttyUSB0')
 
 def scan(trans_wait, cycle_wait, range_wait):
     bus.trans_wait = trans_wait
@@ -22,8 +22,8 @@ def scan(trans_wait, cycle_wait, range_wait):
         tic = time.time()
         probes = bus.scan_bus()
         s_time = time.time() - tic
-    except:
-        logging.debug('ERROR: Exception caught!')
+    except implib2.BusError as err:
+        logging.debug('ERROR: %s', err)
         probes = []
         s_time = 0.0
     finally:
@@ -50,9 +50,9 @@ for trans_wait in np.arange(0.070, 0.075, 0.005):
                 print "== Serie: {} == Nr: {} =================================".format(serie, nr)
                 found, s_time, probes = scan(trans_wait, cycle_wait, range_wait)
                 probes = list(reference - set(probes))
-                logging.debug("{:03};{:02};{:02};{:.6f};{:.3f};{:.3f};{:.3f};{}"
-                        .format(serie, nr, found, s_time, trans_wait,
-                            cycle_wait,range_wait, probes))
+                msg = "{:03};{:02};{:02};{:.6f};{:.3f};{:.3f};{:.3f};{}".format(serie, nr, found,
+                        s_time, trans_wait, cycle_wait,range_wait, probes)
+                logging.debug()
 
             bus.dev.close_device()
 
