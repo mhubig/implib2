@@ -96,6 +96,12 @@ class Module(object):
             "ModeB":            0x01,
             "ModeC":            0x02}
 
+        self.average_modes = {
+            "CA":               0x00,
+            "CK":               0x01,
+            "CS":               0x02,
+            "CF":               0x03}
+
     def unlock(self):
         """Command to unlock the write protected rows in the probes tables.
         The unlock key is the `CRC + 0x8000` of serial number of the probe.
@@ -232,6 +238,54 @@ class Module(object):
         if not self.get_event_mode() == "NormalMeasure":
             self.set_event_mode("NormalMeasure")
 
+        return self.bus.set(self._serno, table, param, [value])
+
+    def get_default_measure_mode(self):
+        table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
+        param = 'DefaultMeasMode'
+        modes = {v: k for k, v in self.measure_modes.items()}
+
+        try:
+            mode = modes[self.bus.get(self._serno, table, param)[0]]
+        except KeyError:
+            raise ModuleError("Unknown default measure mode!")
+
+        return mode
+
+    def set_default_measure_mode(self, mode='ModeC'):
+        table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
+        param = 'DefaultMeasMode'
+
+        if mode not in self.measure_modes:
+            raise ModuleError("Invalid measure mode!")
+
+        value = self.measure_modes[mode]
+
+        if not self.get_event_mode() == "NormalMeasure":
+            self.set_event_mode("NormalMeasure")
+
+        return self.bus.set(self._serno, table, param, [value])
+
+    def get_average_mode(self):
+        table = 'APPLICATION_PARAMETER_TABLE'
+        param = 'AverageMode'
+        modes = {v: k for k, v in self.average_modes.items()}
+
+        try:
+            mode = modes[self.bus.get(self._serno, table, param)[0]]
+        except KeyError:
+            raise ModuleError("Unknown average mode!")
+
+        return mode
+
+    def set_average_mode(self, mode='CA'):
+        table = 'APPLICATION_PARAMETER_TABLE'
+        param = 'AverageMode'
+
+        if mode not in self.average_modes:
+            raise ModuleError("Invalid average mode!")
+
+        value = self.average_modes[mode]
         return self.bus.set(self._serno, table, param, [value])
 
     def get_table(self, table):
