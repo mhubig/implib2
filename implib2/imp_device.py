@@ -46,19 +46,19 @@ class Device(object):
         self.ser.bytesize = serial.EIGHTBITS
         self.ser.parity = serial.PARITY_ODD
         self.ser.stopbits = serial.STOPBITS_TWO
-        self.ser.timeout = 0  # act nonblocking
+        self.ser.timeout = 0.01 # 10ms
         self.ser.xonxoff = 0
         self.ser.rtscts = 0
         self.ser.dsrdtr = 0
         self.ser.open()
         self.ser.flush()
-        time.sleep(0.050)
+        time.sleep(0.05) # 50ms
 
     def close_device(self):
         if self.ser.isOpen():
             self.ser.flush()
             self.ser.close()
-        time.sleep(0.050)
+        time.sleep(0.05) # 50ms
 
     def write_pkg(self, packet):
         bytes_send = self.ser.write(packet)
@@ -74,8 +74,7 @@ class Device(object):
         timeout = self._timeout(length)
         tic = time.time()
         while (time.time() - tic < timeout) and (len(header) < length):
-            if self.ser.inWaiting():
-                header += self.ser.read()
+            header += self.ser.read(self.ser.inWaiting() or 1)
 
         if len(header) < length:
             raise DeviceError('Timeout reading header!')
@@ -86,8 +85,7 @@ class Device(object):
         timeout = self._timeout(length)
         tic = time.time()
         while (time.time() - tic < timeout) and (len(data) < length):
-            if self.ser.inWaiting():
-                data += self.ser.read()
+            data += self.ser.read(self.ser.inWaiting() or 1)
 
         if len(data) < length:
             raise DeviceError('Timeout reading data!')
@@ -99,8 +97,7 @@ class Device(object):
         timeout = self._timeout(length)
         tic = time.time()
         while (time.time() - tic < timeout) and (len(rbs) < length):
-            if self.ser.inWaiting():
-                rbs += self.ser.read()
+            rbs += self.ser.read(self.ser.inWaiting() or 1)
 
         if len(rbs) < length:
             raise DeviceError('Timeout reading bytes!')
@@ -108,9 +105,6 @@ class Device(object):
         return rbs
 
     def read(self):
-        byte = bytes()
-        if self.ser.inWaiting():
-            byte = self.ser.read()
-
+        byte = self.ser.read(self.ser.inWaiting() or 1)
         self.ser.flushInput()
         return byte
