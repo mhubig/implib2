@@ -51,7 +51,7 @@ class Device(object):
         try:
             self.ser.flush()
             self.ser.close()
-        except:
+        except serial.SerialException:
             pass
         finally:
             time.sleep(0.05) # 50ms

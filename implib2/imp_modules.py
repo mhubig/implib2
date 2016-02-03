@@ -726,8 +726,8 @@ class Module(object):
         table = 'SYSTEM_PARAMETER_TABLE'
         param = 'ModuleInfo1'
 
-        sdi12_address_rage = (range(0, 9) + [c for c in string.lowercase]
-                              + [C for C in string.uppercase])
+        sdi12_address_rage = (range(0, 9) + [c for c in string.lowercase] +
+                              [C for C in string.uppercase])
 
         if address not in sdi12_address_rage:
             raise ModuleError("SDI12 address out of range!")
