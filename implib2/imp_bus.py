@@ -60,6 +60,7 @@ class Bus(object):
         self.cmd = Command(tbl, pkg, dts)
         self.res = Responce(tbl, pkg, dts)
         self.dev = Device(port)
+        self.dev.open_device()
         self.bus_synced = False
 
         # timing magic, adds some extra love for rs485
