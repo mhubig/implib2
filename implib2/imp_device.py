@@ -22,7 +22,7 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 
 import time
 import serial
-from struct import unpack
+import struct
 
 
 class DeviceError(Exception):
@@ -69,7 +69,7 @@ class Device(object):
         if len(header) < 7:
             raise DeviceError('Timeout reading header!')
 
-        length = unpack('<B', header[2])[0]
+        length = struct.unpack('<B', header[2])[0]
 
         if length == 0:
             return header
