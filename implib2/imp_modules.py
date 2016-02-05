@@ -171,7 +171,17 @@ class Module(object):
 
         self.unlock()
 
-        return self.bus.set(self._serno, table, param, [value])
+        if not self.bus.set(self._serno, table, param, [value]):
+            return False
+
+        # let's try 5 times.
+        for attempt in range(5):
+            if self.bus.get(self._serno, table, param)[0] == value + 0x80:
+                break
+            if attempt == 4:
+                return False
+
+        return True
 
     def get_measure_mode(self):
         """Command to retrieve the measure mode parameter of the probe. For
@@ -608,15 +618,15 @@ class Module(object):
         if mvolt not in range(0, 1001):
             raise ModuleError("Value out of range!")
 
+        if not self.get_event_mode() == "AnalogOut":
+            raise ModuleError("Wrong event mode, need 'AnalogOut'!")
+
         table = 'MEASURE_PARAMETER_TABLE'
         param = 'Moist'
 
         min_value = self._get_moist_min_value()
         max_value = self._get_moist_max_value()
         value = (max_value - min_value) / 1000.0 * mvolt + min_value
-
-        if not self.set_event_mode("AnalogOut"):
-            raise ModuleError("Could not set event mode!")
 
         return self.bus.set(self._serno, table, param, [value])
 
@@ -636,15 +646,15 @@ class Module(object):
         if mvolt not in range(0, 1001):
             raise ModuleError('Value out of range!')
 
+        if not self.get_event_mode() == "AnalogOut":
+            raise ModuleError("Wrong event mode, need 'AnalogOut'!")
+
         table = 'MEASURE_PARAMETER_TABLE'
         param = 'CompTemp'
 
         min_value = self._get_temp_min_value()
         max_value = self._get_temp_max_value()
         value = (max_value - min_value) / 1000.0 * mvolt + min_value
-
-        if not self.set_event_mode("AnalogOut"):
-            raise ModuleError("Could not set event mode!")
 
         return self.bus.set(self._serno, table, param, [value])
 
@@ -654,12 +664,13 @@ class Module(object):
         SelfTest is used for primary for internal test by IMKO.
         In this context, it will be used to 'ON' the ASIC.
         """
+
+        if not self.get_event_mode() == "SelfTest":
+            raise ModuleError("Wrong event mode, need 'SelfTest'!")
+
         table = 'ACTION_PARAMETER_TABLE'
         param = 'SelfTest'
         value = [1, 1, 63, 0]
-
-        if not self.set_event_mode("SelfTest"):
-            raise ModuleError("Could not set event mode!")
 
         return self.bus.set(self._serno, table, param, value)
 
@@ -669,19 +680,20 @@ class Module(object):
         SelfTest is used for primary for internal test by IMKO.
         In this context, it will be used to 'OFF' the ASIC.
         """
+
+        if not self.get_event_mode() == "SelfTest":
+            raise ModuleError("Wrong event mode, need 'SelfTest'!")
+
         table = 'ACTION_PARAMETER_TABLE'
         param = 'SelfTest'
         value = [1, 0, 255, 0]
-
-        if not self.set_event_mode("SelfTest"):
-            raise ModuleError("Could not set event mode!")
 
         return self.bus.set(self._serno, table, param, value)
 
     def _get_transit_time_tdr(self):
         # ** Internal usage - Trime IBT
         if not self.get_event_mode() == "NormalMeasure":
-            assert self.set_event_mode("NormalMeasure")
+            raise ModuleError("Wrong event mode, need 'NormalMeasure'!")
 
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
         param = 'MeasMode'
