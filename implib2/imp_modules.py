@@ -134,12 +134,11 @@ class Module(object):
         param = 'Event'
         modes = {v: k for k, v in self.event_modes.items()}
 
-        try:
-            mode = modes[self.bus.get(self._serno, table, param)[0] % 0x80]
-        except KeyError:
-            raise ModuleError("Unknown event mode!")
+        mode = self.bus.get(self._serno, table, param)[0]
+        if not mode in range(127, 134):
+            raise ModuleError("Wrong event mode: {}".format(mode))
 
-        return mode
+        return modes[mode]
 
     def set_event_mode(self, mode="NormalMeasure"):
         """Command to set the the EventMode of the probe. This parameter
@@ -630,6 +629,12 @@ class Module(object):
 
         return self.bus.set(self._serno, table, param, [value])
 
+    def _get_analog_moist(self):
+        table = 'MEASURE_PARAMETER_TABLE'
+        param = 'Moist'
+        return self.bus.get(self._serno, table, param)[0]
+
+
     def _set_analog_temp(self, mvolt=500):
         """Command so set the analog output of the temperatur channel to a
         fixed value. This command can be used for calibration purposes.
@@ -657,6 +662,11 @@ class Module(object):
         value = (max_value - min_value) / 1000.0 * mvolt + min_value
 
         return self.bus.set(self._serno, table, param, [value])
+
+    def _get_analog_temp(self):
+        table = 'MEASURE_PARAMETER_TABLE'
+        param = 'CompTemp'
+        return self.bus.get(self._serno, table, param)[0]
 
     def _turn_asic_on(self):
         """Command to start the selftest of the probe.
