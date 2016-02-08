@@ -138,7 +138,7 @@ class Module(object):
         if not mode in range(127, 134):
             raise ModuleError("Wrong event mode: {}".format(mode))
 
-        return modes[mode]
+        return modes[mode % 0x80]
 
     def set_event_mode(self, mode="NormalMeasure"):
         """Command to set the the EventMode of the probe. This parameter
