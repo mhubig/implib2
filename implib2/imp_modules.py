@@ -620,6 +620,9 @@ class Module(object):
         if not self.get_event_mode() == "AnalogOut":
             raise ModuleError("Wrong event mode, need 'AnalogOut'!")
 
+        if not self._get_analog_output_mode() == 0:
+            raise ModuleError("Wrong AnalogOutputMode, need mode 0 here")
+
         table = 'MEASURE_PARAMETER_TABLE'
         param = 'Moist'
 
@@ -653,6 +656,9 @@ class Module(object):
 
         if not self.get_event_mode() == "AnalogOut":
             raise ModuleError("Wrong event mode, need 'AnalogOut'!")
+
+        if not self._get_analog_output_mode() == 0:
+            raise ModuleError("Wrong AnalogOutputMode, need mode 0 here")
 
         table = 'MEASURE_PARAMETER_TABLE'
         param = 'CompTemp'
