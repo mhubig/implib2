@@ -22,7 +22,7 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 
 import time
 import serial
-from struct import unpack
+import struct
 
 
 class DeviceError(Exception):
@@ -33,61 +33,48 @@ class Device(object):
 
     def __init__(self, port):
         self.ser = serial.serial_for_url(port, do_not_open=True)
-        self.open_device()
-
-    def _timeout(self, length):
-        if not length:
-            return 0
-        baudrate = self.ser.baudrate
-        return 600.0 / baudrate * length
-
-    def open_device(self, baudrate=9600):
-        self.ser.baudrate = baudrate
         self.ser.bytesize = serial.EIGHTBITS
         self.ser.parity = serial.PARITY_ODD
         self.ser.stopbits = serial.STOPBITS_TWO
-        self.ser.timeout = 0  # act nonblocking
+        self.ser.timeout = 0.1 # 100ms
         self.ser.xonxoff = 0
         self.ser.rtscts = 0
         self.ser.dsrdtr = 0
+
+    def open_device(self, baudrate=9600):
+        self.ser.baudrate = baudrate
         self.ser.open()
         self.ser.flush()
-        time.sleep(0.050)
+        time.sleep(0.05) # 50ms
 
     def close_device(self):
-        if self.ser.isOpen():
+        try:
             self.ser.flush()
             self.ser.close()
-        time.sleep(0.050)
+        except serial.SerialException:
+            pass
+        finally:
+            time.sleep(0.05) # 50ms
 
     def write_pkg(self, packet):
         bytes_send = self.ser.write(packet)
         if not bytes_send == len(packet):
             raise DeviceError("Couldn't write all bytes!")
-
         return True
 
     def read_pkg(self):
         # read header, always 7 bytes
-        header = str()
-        length = 7
-        timeout = self._timeout(length)
-        tic = time.time()
-        while (time.time() - tic < timeout) and (len(header) < length):
-            if self.ser.inWaiting():
-                header += self.ser.read()
+        header = self.ser.read(7)
 
-        if len(header) < length:
+        if len(header) < 7:
             raise DeviceError('Timeout reading header!')
 
-        # read data, length is known from header
-        data = str()
-        length = unpack('<B', header[2])[0]
-        timeout = self._timeout(length)
-        tic = time.time()
-        while (time.time() - tic < timeout) and (len(data) < length):
-            if self.ser.inWaiting():
-                data += self.ser.read()
+        length = struct.unpack('<B', header[2])[0]
+
+        if length == 0:
+            return header
+
+        data = self.ser.read(length)
 
         if len(data) < length:
             raise DeviceError('Timeout reading data!')
@@ -95,22 +82,14 @@ class Device(object):
         return header + data
 
     def read_bytes(self, length):
-        rbs = str()
-        timeout = self._timeout(length)
-        tic = time.time()
-        while (time.time() - tic < timeout) and (len(rbs) < length):
-            if self.ser.inWaiting():
-                rbs += self.ser.read()
+        data = self.ser.read(length)
 
-        if len(rbs) < length:
+        if len(data) < length:
             raise DeviceError('Timeout reading bytes!')
 
-        return rbs
+        return data
 
     def read(self):
-        byte = bytes()
-        if self.ser.inWaiting():
-            byte = self.ser.read()
-
+        byte = self.ser.read(1)
         self.ser.flushInput()
         return byte
