@@ -47,7 +47,7 @@ class TestTables(object):
         self.t = Tables()
 
     def test_load_json(self):
-        assert self.t._tables, self.j
+        assert self.t._tables == self.j
 
     def test_load_json_no_file(self):
         # pylint: disable=no-self-use
