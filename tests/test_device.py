@@ -44,6 +44,18 @@ class TestPackage(object):
         self.ser.flush.assert_called_once_with()
         self.ser.close.assert_called_once_with()
 
+    def test_close_device_FlushThowsException(self):
+        self.ser.flush.side_effect = serial.SerialException()
+        self.dev.close_device()
+        self.ser.flush.assert_called_once_with()
+        self.ser.close.assert_not_called()
+
+    def test_close_device_CloseThowsException(self):
+        self.ser.close.side_effect = serial.SerialException()
+        self.dev.close_device()
+        self.ser.flush.assert_called_once_with()
+        self.ser.close.assert_called_once_with()
+
     def test_write_pkg(self):
         packet = a2b('ffffff')
         self.ser.write.return_value = 3
