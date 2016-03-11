@@ -135,8 +135,8 @@ class Module(object):
         modes = {v: k for k, v in self.event_modes.items()}
 
         mode = self.bus.get(self._serno, table, param)[0]
-        if not mode in range(127, 134):
-            raise ModuleError("Wrong event mode: {}".format(mode))
+        if mode not in range(127, 134):
+            raise ModuleError("Unknown event mode: %s" % mode)
 
         return modes[mode % 0x80]
 
