@@ -36,7 +36,7 @@ class Device(object):
         self.ser.bytesize = serial.EIGHTBITS
         self.ser.parity = serial.PARITY_ODD
         self.ser.stopbits = serial.STOPBITS_TWO
-        self.ser.timeout = 0.1 # 100ms
+        self.ser.timeout = 0.1  # 100ms
         self.ser.xonxoff = 0
         self.ser.rtscts = 0
         self.ser.dsrdtr = 0
@@ -45,7 +45,7 @@ class Device(object):
         self.ser.baudrate = baudrate
         self.ser.open()
         self.ser.flush()
-        time.sleep(0.05) # 50ms
+        time.sleep(0.05)  # 50ms
 
     def close_device(self):
         try:
@@ -54,7 +54,7 @@ class Device(object):
         except serial.SerialException:
             pass
         finally:
-            time.sleep(0.05) # 50ms
+            time.sleep(0.05)  # 50ms
 
     def write_pkg(self, packet):
         bytes_send = self.ser.write(packet)
