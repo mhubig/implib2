@@ -20,9 +20,10 @@ You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 
-import pytest
-from mock import patch, call, MagicMock
 from binascii import a2b_hex as a2b
+from mock import patch, call, MagicMock
+
+import pytest
 
 from implib2.imp_bus import Bus, BusError
 from implib2.imp_device import Device, DeviceError  # noqa pylint: disable=unused-import

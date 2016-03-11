@@ -19,10 +19,13 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
+
+from binascii import a2b_hex as a2b
+
 import pytest
 import serial  # noqa pylint: disable=unused-import
 from mock import patch, call
-from binascii import a2b_hex as a2b
+
 from implib2.imp_device import Device, DeviceError
 
 

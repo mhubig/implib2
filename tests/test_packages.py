@@ -21,8 +21,10 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 
 import os
-import pytest
 from binascii import a2b_hex as a2b
+
+import pytest
+
 from implib2.imp_crc import MaximCRC
 from implib2.imp_packages import Package, PackageError
 
