@@ -460,7 +460,7 @@ class Module(object):
         param = 'StartMeasure'
         return self.bus.get(self._serno, table, param)[0] == 1
 
-    def get_measure(self, quantity='Moist'):
+    def get_measurement(self, quantity='Moist'):
         """This command gets the measured value of the requested quantity.
         It's mostly used within a wrapper like :func:`get_moisture`.
 
@@ -484,7 +484,7 @@ class Module(object):
         assert self.start_measure()
         while self.measure_running():
             time.sleep(0.500)
-        return self.get_measure(quantity='Moist')
+        return self.get_measurement(quantity='Moist')
 
     #########################
     # END of the Public API #
