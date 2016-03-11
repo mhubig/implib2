@@ -164,21 +164,22 @@ class Module(object):
         param = 'Event'
 
         if mode not in self.event_modes:
-            raise ModuleError("Invalid event mode!")
+            raise ModuleError("%s: Invalid event mode!" % mode)
 
         value = self.event_modes[mode]
 
-        self.unlock()
+        if not self.unlock():
+            raise ModuleError("Failed not unlock module!")
 
         if not self.bus.set(self._serno, table, param, [value]):
-            return False
+            raise ModuleError("Could not set event mode!")
 
         # let's try 5 times.
         for attempt in range(5):
             if self.bus.get(self._serno, table, param)[0] == value + 0x80:
                 break
             if attempt == 4:
-                return False
+                raise ModuleError("Failed to set event mode!")
 
         return True
 
@@ -197,8 +198,8 @@ class Module(object):
 
         try:
             mode = modes[self.bus.get(self._serno, table, param)[0]]
-        except KeyError:
-            raise ModuleError("Unknown measure mode!")
+        except KeyError as err:
+            raise ModuleError("Unknown measure mode: %s!" % err.args[0])
 
         return mode
 
@@ -240,12 +241,12 @@ class Module(object):
         param = 'MeasMode'
 
         if mode not in self.measure_modes:
-            raise ModuleError("Invalid measure mode!")
-
-        value = self.measure_modes[mode]
+            raise ModuleError("%s: Invalid measure mode!" % mode)
 
         if not self.get_event_mode() == "NormalMeasure":
-            self.set_event_mode("NormalMeasure")
+            raise ModuleError("Wrong event mode, need 'NormalMeasure'!")
+
+        value = self.measure_modes[mode]
 
         return self.bus.set(self._serno, table, param, [value])
 
@@ -256,8 +257,8 @@ class Module(object):
 
         try:
             mode = modes[self.bus.get(self._serno, table, param)[0]]
-        except KeyError:
-            raise ModuleError("Unknown default measure mode!")
+        except KeyError as err:
+            raise ModuleError("Unknown default measure mode: %s!" % err.args[0])
 
         return mode
 
@@ -266,12 +267,12 @@ class Module(object):
         param = 'DefaultMeasMode'
 
         if mode not in self.measure_modes:
-            raise ModuleError("Invalid measure mode!")
-
-        value = self.measure_modes[mode]
+            raise ModuleError("%s: Invalid default measure mode!" % mode)
 
         if not self.get_event_mode() == "NormalMeasure":
-            self.set_event_mode("NormalMeasure")
+            raise ModuleError("Wrong event mode, need 'NormalMeasure'!")
+
+        value = self.measure_modes[mode]
 
         return self.bus.set(self._serno, table, param, [value])
 
@@ -282,8 +283,8 @@ class Module(object):
 
         try:
             mode = modes[self.bus.get(self._serno, table, param)[0]]
-        except KeyError:
-            raise ModuleError("Unknown average mode!")
+        except KeyError as err:
+            raise ModuleError("Unknown average mode: %s!" % err.args[0])
 
         return mode
 
@@ -292,7 +293,7 @@ class Module(object):
         param = 'AverageMode'
 
         if mode not in self.average_modes:
-            raise ModuleError("Invalid average mode!")
+            raise ModuleError("%s: Invalid average mode!" % mode)
 
         value = self.average_modes[mode]
         return self.bus.set(self._serno, table, param, [value])
@@ -321,7 +322,7 @@ class Module(object):
 
         """
         # pylint: disable=unused-argument, no-self-use
-        raise ModuleError("Not yet implemented!")
+        raise NotImplementedError()
 
     def set_table(self, table, data):
         """Special command to set the values of a hole table.
@@ -340,7 +341,7 @@ class Module(object):
         :rtype: bool
         """
         # pylint: disable=unused-argument, no-self-use
-        raise ModuleError("Not yet implemented!")
+        raise NotImplementedError()
 
     def get_serno(self):
         """Command to retrieve the serial number of the probe.
@@ -436,13 +437,13 @@ class Module(object):
         param = 'StartMeasure'
         value = 1
 
-        # Refer to Protocol Handbook page 18.
-        if not self.get_measure_mode() == 'ModeA':
-            assert self.set_measure_mode('ModeA')
-
         # Set Event mode to 'NormalMeasure'
         if not self.get_event_mode() == "NormalMeasure":
-            assert self.set_event_mode("NormalMeasure")
+            raise ModuleError("Wrong event mode, need 'NormalMeasure'!")
+
+        # Refer to Protocol Handbook page 18.
+        if not self.get_measure_mode() == 'ModeA':
+            raise ModuleError("Wrong measure mode, need 'ModeA'!")
 
         if self.measure_running():
             raise ModuleError("Measurement cycle already in progress!")
@@ -614,6 +615,9 @@ class Module(object):
         :raises ModuleError: If EventMode can not be set to AnalogOut.
 
         """
+        table = 'MEASURE_PARAMETER_TABLE'
+        param = 'Moist'
+
         if mvolt not in range(0, 1001):
             raise ModuleError("Value out of range!")
 
@@ -621,10 +625,7 @@ class Module(object):
             raise ModuleError("Wrong event mode, need 'AnalogOut'!")
 
         if not self._get_analog_output_mode() == 0:
-            raise ModuleError("Wrong AnalogOutputMode, need mode 0 here")
-
-        table = 'MEASURE_PARAMETER_TABLE'
-        param = 'Moist'
+            raise ModuleError("Wrong AnalogOutputMode, need mode 0 here!")
 
         min_value = self._get_moist_min_value()
         max_value = self._get_moist_max_value()
@@ -636,7 +637,6 @@ class Module(object):
         table = 'MEASURE_PARAMETER_TABLE'
         param = 'Moist'
         return self.bus.get(self._serno, table, param)[0]
-
 
     def _set_analog_temp(self, mvolt=500):
         """Command so set the analog output of the temperatur channel to a
@@ -780,6 +780,6 @@ class Module(object):
         try:
             value = self.protocols[protocol]
         except KeyError as err:
-            raise ModuleError("Wrong protocol: {}".format(err))
+            raise ModuleError("Wrong protocol: %s" % err.args[0])
 
         return self.bus.set(self._serno, table, param, [value])
