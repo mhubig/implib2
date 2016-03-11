@@ -25,15 +25,14 @@ import pytest
 from implib2.imp_errors import Errors, ErrorsError
 
 
-# pylint: disable=C0103
 def pytest_generate_tests(metafunc):
     if 'errno' in metafunc.fixturenames:
-        with open('tests/test_errors.json') as js:
-            j = json.load(js)
-        metafunc.parametrize("errno", [errno for errno in j])
+        with open('tests/test_errors.json') as error_file:
+            errors = json.load(error_file)
+        metafunc.parametrize("errno", [errno for errno in errors])
 
 
-# pylint: disable=C0103,W0212,E1101,W0201
+# pylint: disable=protected-access, invalid-name, attribute-defined-outside-init
 class TestErrors(object):
 
     def setup(self):
@@ -44,11 +43,12 @@ class TestErrors(object):
     def test_load_json(self):
         assert self.e._errors == self.j
 
-    # pylint: disable=R0201,
+    # pylint: disable=no-self-use
     def test_load_json_no_file(self):
         with pytest.raises(IOError):
             Errors('dont_exists.json')
 
+    # pylint: disable=no-self-use
     def test_load_json_falty_file(self):
         with pytest.raises(ValueError):
             Errors('imp_errors.py')

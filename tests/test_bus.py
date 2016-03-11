@@ -25,12 +25,13 @@ from mock import patch, call, MagicMock
 from binascii import a2b_hex as a2b
 
 from implib2.imp_bus import Bus, BusError
-from implib2.imp_device import Device, DeviceError  # noqa pylint: disable=W0611
-from implib2.imp_commands import Command            # noqa pylint: disable=W0611
-from implib2.imp_responces import Responce          # noqa pylint: disable=W0611
+from implib2.imp_device import Device, DeviceError  # noqa pylint: disable=unused-import
+from implib2.imp_commands import Command            # noqa pylint: disable=unused-import
+from implib2.imp_responces import Responce          # noqa pylint: disable=unused-import
 
 
-# pylint: disable=C0103,R0902,W0201,E1101
+# pylint: disable=invalid-name, too-many-instance-attributes
+# pylint: disable=attribute-defined-outside-init
 class TestBus(object):
 
     def setup(self):
@@ -67,6 +68,7 @@ class TestBus(object):
         package = a2b('fd1504fffffffe05000035')
 
         expected_calls = [
+            call.dev.open_device(),
             call.cmd.set_parameter(address, table, param, [value], ad_param),
             call.dev.write_pkg(package),
         ]
@@ -87,6 +89,7 @@ class TestBus(object):
         package = a2b('fd0b05ffffffaf0400600054')
 
         expected_calls = [
+            call.dev.open_device(),
             call.cmd.set_parameter(address, table, param, [value], ad_param),
             call.dev.close_device(),
 
@@ -213,6 +216,7 @@ class TestBus(object):
         bytes_recv = a2b('000805ffffffd91a79000042')
 
         expected_calls = [
+            call.dev.open_device(),
             call.cmd.get_negative_ack(),
             call.dev.write_pkg(package),
             call.dev.read_pkg(),
@@ -231,6 +235,7 @@ class TestBus(object):
         bytes_recv = DeviceError('Timeout reading header!')
 
         expected_calls = [
+            call.dev.open_device(),
             call.cmd.get_negative_ack(),
             call.dev.write_pkg(package),
             call.dev.read_pkg()
@@ -249,6 +254,7 @@ class TestBus(object):
         bytes_recv = a2b('0002001a7900a7')
 
         expected_calls = [
+            call.dev.open_device(),
             call.cmd.get_long_ack(serno),
             call.dev.write_pkg(package),
             call.dev.read_pkg(),
@@ -269,6 +275,7 @@ class TestBus(object):
         bytes_recv = DeviceError('Timeout reading header!')
 
         expected_calls = [
+            call.dev.open_device(),
             call.cmd.get_long_ack(serno),
             call.dev.write_pkg(package),
             call.dev.read_pkg(),
@@ -287,6 +294,7 @@ class TestBus(object):
         bytes_recv = a2b('24')
 
         expected_calls = [
+            call.dev.open_device(),
             call.cmd.get_short_ack(serno),
             call.dev.write_pkg(package),
             call.dev.read_bytes(1),
@@ -307,6 +315,7 @@ class TestBus(object):
         bytes_recv = DeviceError('Timeout reading header!')
 
         expected_calls = [
+            call.dev.open_device(),
             call.cmd.get_short_ack(serno),
             call.dev.write_pkg(package),
             call.dev.read_bytes(1)
@@ -325,6 +334,7 @@ class TestBus(object):
         bytes_recv = a2b('ff')
 
         expected_calls = [
+            call.dev.open_device(),
             call.cmd.get_range_ack(broadcast),
             call.dev.write_pkg(package),
             call.dev.read(),
@@ -345,6 +355,7 @@ class TestBus(object):
         bytes_recv = str()
 
         expected_calls = [
+            call.dev.open_device(),
             call.cmd.get_range_ack(broadcast),
             call.dev.write_pkg(package),
             call.dev.read(),
@@ -367,6 +378,7 @@ class TestBus(object):
         bytes_recv = a2b('000a051a7900181a79000042')
 
         expected_calls = [
+            call.dev.open_device(),
             call.cmd.get_parameter(serno, table, param),
             call.dev.write_pkg(package),
             call.dev.read_pkg(),
@@ -391,6 +403,7 @@ class TestBus(object):
         bytes_recv = a2b('0011001a790095')
 
         expected_calls = [
+            call.dev.open_device(),
             call.cmd.set_parameter(serno, table, param, value, ad_param),
             call.dev.write_pkg(package),
             call.dev.read_pkg(),
@@ -413,6 +426,7 @@ class TestBus(object):
         bytes_recv = a2b('003c0b1a790015112fc44e3702f3e7fb3dc5')
 
         expected_calls = [
+            call.dev.open_device(),
             call.cmd.get_epr_page(serno, page_nr),
             call.dev.write_pkg(package),
             call.dev.read_pkg(),
@@ -435,6 +449,7 @@ class TestBus(object):
         bytes_recv = a2b('003d001a79004c')
 
         expected_calls = [
+            call.dev.open_device(),
             call.cmd.set_epr_page(serno, page_nr, page),
             call.dev.write_pkg(package),
             call.dev.read_pkg(),

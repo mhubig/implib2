@@ -27,8 +27,9 @@ class ErrorsError(Exception):
     pass
 
 
+# pylint: disable=too-few-public-methods
 class Errors(object):
-    # pylint: disable=R0903
+
     def __init__(self, filename='imp_errors.json'):
         self._errors = _load_json(filename)
 

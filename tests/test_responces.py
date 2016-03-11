@@ -28,7 +28,7 @@ from implib2.imp_datatypes import DataTypes
 from implib2.imp_responces import Responce, ResponceError
 
 
-# pylint: disable=C0103,E1101,W0201
+# pylint: disable=invalid-name, attribute-defined-outside-init
 class TestResponce(object):
 
     def setup(self):

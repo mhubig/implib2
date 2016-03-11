@@ -19,7 +19,7 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
-__version__ = '0.10.0'
+__version__ = '0.11.0'
 
 from .imp_eeprom import EEPROM
 from .imp_bus import Bus, BusError

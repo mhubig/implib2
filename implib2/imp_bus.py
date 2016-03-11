@@ -60,12 +60,17 @@ class Bus(object):
         self.cmd = Command(tbl, pkg, dts)
         self.res = Responce(tbl, pkg, dts)
         self.dev = Device(port)
+        self.dev.open_device()
         self.bus_synced = False
 
         # timing magic, adds some extra love for rs485
-        self.trans_wait = 0.001 if not rs485 else 0.070
-        self.cycle_wait = 0.020 if not rs485 else 0.070
+        self.trans_wait = 0.002 if not rs485 else 0.070
+        self.cycle_wait = 0.001 if not rs485 else 0.070
         self.range_wait = 0.020 if not rs485 else 0.070
+
+    def _wait(self, package_len, process_time=0.1):
+        transit_time = package_len * self.trans_wait
+        time.sleep(transit_time + process_time + transit_time)
 
     def _search(self, range_address, range_marker, found):
         probes = len(found)
@@ -261,7 +266,7 @@ class Bus(object):
 
         try:
             self.dev.write_pkg(package)
-            time.sleep(self.trans_wait)
+            self._wait(len(package))
             bytes_recv = self.dev.read_pkg()
         except DeviceError:
             return False
@@ -286,7 +291,7 @@ class Bus(object):
 
         try:
             self.dev.write_pkg(package)
-            time.sleep(self.trans_wait)
+            self._wait(len(package))
             bytes_recv = self.dev.read_pkg()
         except DeviceError:
             return False
@@ -312,7 +317,7 @@ class Bus(object):
 
         try:
             self.dev.write_pkg(package)
-            time.sleep(self.trans_wait)
+            self._wait(len(package))
             bytes_recv = self.dev.read_bytes(1)
         except DeviceError:
             return False
@@ -336,7 +341,7 @@ class Bus(object):
         """
         package = self.cmd.get_range_ack(broadcast)
         self.dev.write_pkg(package)
-        time.sleep(self.range_wait)
+        self._wait(len(package))
         bytes_recv = self.dev.read()
         time.sleep(self.cycle_wait)
         return self.res.get_range_ack(bytes_recv)
@@ -367,7 +372,7 @@ class Bus(object):
         """
         package = self.cmd.get_parameter(serno, table, param)
         self.dev.write_pkg(package)
-        time.sleep(self.trans_wait)
+        self._wait(len(package))
         bytes_recv = self.dev.read_pkg()
         time.sleep(self.cycle_wait)
         return self.res.get_parameter(bytes_recv, table, param)
@@ -401,11 +406,11 @@ class Bus(object):
         :rtype: :const:`bool`
 
         """
-        # pylint: disable=R0913
+        # pylint: disable=too-many-arguments
         package = self.cmd.set_parameter(serno, table, param,
                                          value, ad_param)
         self.dev.write_pkg(package)
-        time.sleep(self.trans_wait)
+        self._wait(len(package))
         bytes_recv = self.dev.read_pkg()
         time.sleep(self.cycle_wait)
         return self.res.set_parameter(bytes_recv, table, serno)
@@ -425,7 +430,7 @@ class Bus(object):
         """
         package = self.cmd.get_epr_page(serno, page_nr)
         self.dev.write_pkg(package)
-        time.sleep(1.0)
+        self._wait(len(package))
         bytes_recv = self.dev.read_pkg()
         time.sleep(self.cycle_wait)
         return self.res.get_epr_page(bytes_recv)
@@ -447,8 +452,10 @@ class Bus(object):
 
         """
         package = self.cmd.set_epr_page(serno, page_nr, page)
+
         self.dev.write_pkg(package)
-        time.sleep(1.0)
+        self._wait(len(package))
         bytes_recv = self.dev.read_pkg()
         time.sleep(self.cycle_wait)
+
         return self.res.set_epr_page(bytes_recv)

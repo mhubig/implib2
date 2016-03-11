@@ -31,8 +31,8 @@ class ModuleError(Exception):
     pass
 
 
+# pylint: disable=too-many-public-methods
 class Module(object):
-    # pylint: disable=R0904
     """The Module object represents a IMPBus2 probe. It is used to provide a
     easy to use interface for the probe specific commands. It is mostly just a
     small wrapper around the much more general :func:`Bus.set` and
@@ -96,6 +96,12 @@ class Module(object):
             "ModeB":            0x01,
             "ModeC":            0x02}
 
+        self.average_modes = {
+            "CA":               0x00,
+            "CK":               0x01,
+            "CS":               0x02,
+            "CF":               0x03}
+
     def unlock(self):
         """Command to unlock the write protected rows in the probes tables.
         The unlock key is the `CRC + 0x8000` of serial number of the probe.
@@ -128,12 +134,11 @@ class Module(object):
         param = 'Event'
         modes = {v: k for k, v in self.event_modes.items()}
 
-        try:
-            mode = modes[self.bus.get(self._serno, table, param)[0] % 0x80]
-        except KeyError:
-            raise ModuleError("Unknown event mode!")
+        mode = self.bus.get(self._serno, table, param)[0]
+        if mode not in range(127, 134):
+            raise ModuleError("Unknown event mode: %s" % mode)
 
-        return mode
+        return modes[mode % 0x80]
 
     def set_event_mode(self, mode="NormalMeasure"):
         """Command to set the the EventMode of the probe. This parameter
@@ -159,13 +164,24 @@ class Module(object):
         param = 'Event'
 
         if mode not in self.event_modes:
-            raise ModuleError("Invalid event mode!")
+            raise ModuleError("%s: Invalid event mode!" % mode)
 
         value = self.event_modes[mode]
 
-        self.unlock()
+        if not self.unlock():
+            raise ModuleError("Failed not unlock module!")
 
-        return self.bus.set(self._serno, table, param, [value])
+        if not self.bus.set(self._serno, table, param, [value]):
+            raise ModuleError("Could not set event mode!")
+
+        # let's try 5 times.
+        for attempt in range(5):
+            if self.bus.get(self._serno, table, param)[0] == value + 0x80:
+                break
+            if attempt == 4:
+                raise ModuleError("Failed to set event mode!")
+
+        return True
 
     def get_measure_mode(self):
         """Command to retrieve the measure mode parameter of the probe. For
@@ -182,8 +198,8 @@ class Module(object):
 
         try:
             mode = modes[self.bus.get(self._serno, table, param)[0]]
-        except KeyError:
-            raise ModuleError("Unknown measure mode!")
+        except KeyError as err:
+            raise ModuleError("Unknown measure mode: %s!" % err.args[0])
 
         return mode
 
@@ -225,13 +241,61 @@ class Module(object):
         param = 'MeasMode'
 
         if mode not in self.measure_modes:
-            raise ModuleError("Invalid measure mode!")
+            raise ModuleError("%s: Invalid measure mode!" % mode)
+
+        if not self.get_event_mode() == "NormalMeasure":
+            raise ModuleError("Wrong event mode, need 'NormalMeasure'!")
 
         value = self.measure_modes[mode]
 
-        if not self.get_event_mode() == "NormalMeasure":
-            self.set_event_mode("NormalMeasure")
+        return self.bus.set(self._serno, table, param, [value])
 
+    def get_default_measure_mode(self):
+        table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
+        param = 'DefaultMeasMode'
+        modes = {v: k for k, v in self.measure_modes.items()}
+
+        try:
+            mode = modes[self.bus.get(self._serno, table, param)[0]]
+        except KeyError as err:
+            raise ModuleError("Unknown default measure mode: %s!" % err.args[0])
+
+        return mode
+
+    def set_default_measure_mode(self, mode='ModeC'):
+        table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
+        param = 'DefaultMeasMode'
+
+        if mode not in self.measure_modes:
+            raise ModuleError("%s: Invalid default measure mode!" % mode)
+
+        if not self.get_event_mode() == "NormalMeasure":
+            raise ModuleError("Wrong event mode, need 'NormalMeasure'!")
+
+        value = self.measure_modes[mode]
+
+        return self.bus.set(self._serno, table, param, [value])
+
+    def get_average_mode(self):
+        table = 'APPLICATION_PARAMETER_TABLE'
+        param = 'AverageMode'
+        modes = {v: k for k, v in self.average_modes.items()}
+
+        try:
+            mode = modes[self.bus.get(self._serno, table, param)[0]]
+        except KeyError as err:
+            raise ModuleError("Unknown average mode: %s!" % err.args[0])
+
+        return mode
+
+    def set_average_mode(self, mode='CA'):
+        table = 'APPLICATION_PARAMETER_TABLE'
+        param = 'AverageMode'
+
+        if mode not in self.average_modes:
+            raise ModuleError("%s: Invalid average mode!" % mode)
+
+        value = self.average_modes[mode]
         return self.bus.set(self._serno, table, param, [value])
 
     def get_table(self, table):
@@ -257,8 +321,8 @@ class Module(object):
         :rtype: json
 
         """
-        # pylint: disable=W0613,R0201
-        raise ModuleError("Not yet implemented!")
+        # pylint: disable=unused-argument, no-self-use
+        raise NotImplementedError()
 
     def set_table(self, table, data):
         """Special command to set the values of a hole table.
@@ -276,8 +340,8 @@ class Module(object):
 
         :rtype: bool
         """
-        # pylint: disable=W0613,R0201
-        raise ModuleError("Not yet implemented!")
+        # pylint: disable=unused-argument, no-self-use
+        raise NotImplementedError()
 
     def get_serno(self):
         """Command to retrieve the serial number of the probe.
@@ -373,13 +437,13 @@ class Module(object):
         param = 'StartMeasure'
         value = 1
 
-        # Refer to Protocol Handbook page 18.
-        if not self.get_measure_mode() == 'ModeA':
-            assert self.set_measure_mode('ModeA')
-
         # Set Event mode to 'NormalMeasure'
         if not self.get_event_mode() == "NormalMeasure":
-            assert self.set_event_mode("NormalMeasure")
+            raise ModuleError("Wrong event mode, need 'NormalMeasure'!")
+
+        # Refer to Protocol Handbook page 18.
+        if not self.get_measure_mode() == 'ModeA':
+            raise ModuleError("Wrong measure mode, need 'ModeA'!")
 
         if self.measure_running():
             raise ModuleError("Measurement cycle already in progress!")
@@ -396,7 +460,7 @@ class Module(object):
         param = 'StartMeasure'
         return self.bus.get(self._serno, table, param)[0] == 1
 
-    def get_measure(self, quantity='Moist'):
+    def get_measurement(self, quantity='Moist'):
         """This command gets the measured value of the requested quantity.
         It's mostly used within a wrapper like :func:`get_moisture`.
 
@@ -420,7 +484,7 @@ class Module(object):
         assert self.start_measure()
         while self.measure_running():
             time.sleep(0.500)
-        return self.get_measure(quantity='Moist')
+        return self.get_measurement(quantity='Moist')
 
     #########################
     # END of the Public API #
@@ -551,20 +615,28 @@ class Module(object):
         :raises ModuleError: If EventMode can not be set to AnalogOut.
 
         """
+        table = 'MEASURE_PARAMETER_TABLE'
+        param = 'Moist'
+
         if mvolt not in range(0, 1001):
             raise ModuleError("Value out of range!")
 
-        table = 'MEASURE_PARAMETER_TABLE'
-        param = 'Moist'
+        if not self.get_event_mode() == "AnalogOut":
+            raise ModuleError("Wrong event mode, need 'AnalogOut'!")
+
+        if not self._get_analog_output_mode() == 0:
+            raise ModuleError("Wrong AnalogOutputMode, need mode 0 here!")
 
         min_value = self._get_moist_min_value()
         max_value = self._get_moist_max_value()
         value = (max_value - min_value) / 1000.0 * mvolt + min_value
 
-        if not self.set_event_mode("AnalogOut"):
-            raise ModuleError("Could not set event mode!")
-
         return self.bus.set(self._serno, table, param, [value])
+
+    def _get_analog_moist(self):
+        table = 'MEASURE_PARAMETER_TABLE'
+        param = 'Moist'
+        return self.bus.get(self._serno, table, param)[0]
 
     def _set_analog_temp(self, mvolt=500):
         """Command so set the analog output of the temperatur channel to a
@@ -582,6 +654,12 @@ class Module(object):
         if mvolt not in range(0, 1001):
             raise ModuleError('Value out of range!')
 
+        if not self.get_event_mode() == "AnalogOut":
+            raise ModuleError("Wrong event mode, need 'AnalogOut'!")
+
+        if not self._get_analog_output_mode() == 0:
+            raise ModuleError("Wrong AnalogOutputMode, need mode 0 here")
+
         table = 'MEASURE_PARAMETER_TABLE'
         param = 'CompTemp'
 
@@ -589,10 +667,12 @@ class Module(object):
         max_value = self._get_temp_max_value()
         value = (max_value - min_value) / 1000.0 * mvolt + min_value
 
-        if not self.set_event_mode("AnalogOut"):
-            raise ModuleError("Could not set event mode!")
-
         return self.bus.set(self._serno, table, param, [value])
+
+    def _get_analog_temp(self):
+        table = 'MEASURE_PARAMETER_TABLE'
+        param = 'CompTemp'
+        return self.bus.get(self._serno, table, param)[0]
 
     def _turn_asic_on(self):
         """Command to start the selftest of the probe.
@@ -600,12 +680,13 @@ class Module(object):
         SelfTest is used for primary for internal test by IMKO.
         In this context, it will be used to 'ON' the ASIC.
         """
+
+        if not self.get_event_mode() == "SelfTest":
+            raise ModuleError("Wrong event mode, need 'SelfTest'!")
+
         table = 'ACTION_PARAMETER_TABLE'
         param = 'SelfTest'
         value = [1, 1, 63, 0]
-
-        if not self.set_event_mode("SelfTest"):
-            raise ModuleError("Could not set event mode!")
 
         return self.bus.set(self._serno, table, param, value)
 
@@ -615,19 +696,20 @@ class Module(object):
         SelfTest is used for primary for internal test by IMKO.
         In this context, it will be used to 'OFF' the ASIC.
         """
+
+        if not self.get_event_mode() == "SelfTest":
+            raise ModuleError("Wrong event mode, need 'SelfTest'!")
+
         table = 'ACTION_PARAMETER_TABLE'
         param = 'SelfTest'
         value = [1, 0, 255, 0]
-
-        if not self.set_event_mode("SelfTest"):
-            raise ModuleError("Could not set event mode!")
 
         return self.bus.set(self._serno, table, param, value)
 
     def _get_transit_time_tdr(self):
         # ** Internal usage - Trime IBT
         if not self.get_event_mode() == "NormalMeasure":
-            assert self.set_event_mode("NormalMeasure")
+            raise ModuleError("Wrong event mode, need 'NormalMeasure'!")
 
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
         param = 'MeasMode'
@@ -672,8 +754,8 @@ class Module(object):
         table = 'SYSTEM_PARAMETER_TABLE'
         param = 'ModuleInfo1'
 
-        sdi12_address_rage = (range(0, 9) + [c for c in string.lowercase]
-                              + [C for C in string.uppercase])
+        sdi12_address_rage = (range(0, 9) + [c for c in string.lowercase] +
+                              [C for C in string.uppercase])
 
         if address not in sdi12_address_rage:
             raise ModuleError("SDI12 address out of range!")
@@ -698,6 +780,6 @@ class Module(object):
         try:
             value = self.protocols[protocol]
         except KeyError as err:
-            raise ModuleError("Wrong protocol: {}".format(err))
+            raise ModuleError("Wrong protocol: %s" % err.args[0])
 
         return self.bus.set(self._serno, table, param, [value])

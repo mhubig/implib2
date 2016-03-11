@@ -34,7 +34,21 @@
     "MoistAnalogAdjust": {"No":   9, "Type":   0, "Status": "WR", "Length": 1},
     "TempAnalogAdjust":  {"No":  10, "Type":   0, "Status": "WR", "Length": 1},
     "TMsMode":           {"No":  11, "Type":   2, "Status": "WR", "Length": 2},
-    "EPRByteLen":        {"No":  12, "Type":   2, "Status": "OR", "Length": 2}
+    "EPRByteLen":        {"No":  12, "Type":   2, "Status": "OR", "Length": 2},
+    "AnalogOutputMode":  {"No":  13, "Type":   0, "Status": "WR", "Length": 1},
+    "AnalogOutParaMode": {"No":  14, "Type":   0, "Status": "WR", "Length": 1},
+    "ConductMaxValue":   {"No":  15, "Type":   0, "Status": "WR", "Length": 1},
+    "ConductMinValue":   {"No":  16, "Type":   0, "Status": "WR", "Length": 1},
+    "NoMaterialCoeff":   {"No":  17, "Type":   0, "Status": "WR", "Length": 24},
+    "InitPulseNum":      {"No":  18, "Type":   0, "Status": "WR", "Length": 1},
+    "DefaultMeasMode":   {"No":  19, "Type":   0, "Status": "WR", "Length": 1},
+    "TempOutputTime":    {"No":  20, "Type":   0, "Status": "WR", "Length": 1},
+    "ConductOutputTime": {"No":  21, "Type":   0, "Status": "WR", "Length": 1},
+    "AirTpLimit":        {"No":  22, "Type":   0, "Status": "WR", "Length": 2},
+    "WaterTpLimit":      {"No":  23, "Type":   0, "Status": "WR", "Length": 2},
+    "Bus":               {"No":  24, "Type":   0, "Status": "WR", "Length": 1},
+    "Reserved1":         {"No":  25, "Type":   2, "Status": "WR", "Length": 1},
+    "Reserved2":         {"No":  26, "Type":   2, "Status": "WR", "Length": 2}
   },
 
   "DEVICE_CALIBRATION_PARAMETER_TABLE": {
@@ -365,5 +379,28 @@
     "Point098":  {"No":  99, "Type": 134, "Status": "WR", "Length": 8},
     "Point099":  {"No": 100, "Type": 134, "Status": "WR", "Length": 8},
     "Point100":  {"No": 101, "Type": 134, "Status": "WR", "Length": 8}
+  },
+
+  "APPLICATION_PARAMETER_TABLE": {
+    "Table":                {"Get": 40, "Set": 41},
+    "ConfigID":             {"No": 251, "Type": 2, "Status": "OR", "Length": 2},
+    "TableSize":            {"No": 252, "Type": 2, "Status": "OR", "Length": 2},
+    "DataSize":             {"No": 254, "Type": 2, "Status": "OR", "Length": 2},
+    "GetParam":             {"No": 253, "Type": 2, "Status": "OR", "Length": 2},
+    "GetData":              {"No": 255, "Type": 2, "Status": "OR", "Length": 2},
+    "AverageMode":          {"No":   1, "Type": 0, "Status": "WR", "Length": 1},
+    "KalmanWithBoost":      {"No":   2, "Type": 0, "Status": "WR", "Length": 1},
+    "AverageTime":          {"No":   3, "Type": 2, "Status": "WR", "Length": 2},
+    "NoMaterialDelay":      {"No":   4, "Type": 2, "Status": "WR", "Length": 2},
+    "QueueFillTime":        {"No":   5, "Type": 2, "Status": "WR", "Length": 2},
+    "QueueEmptyTime":       {"No":   6, "Type": 2, "Status": "WR", "Length": 2},
+    "UpperLimitKeepTime":   {"No":   7, "Type": 0, "Status": "WR", "Length": 1},
+    "LowerLimitKeepTime":   {"No":   8, "Type": 0, "Status": "WR", "Length": 1},
+    "BasicCorrectCount":    {"No":   9, "Type": 0, "Status": "WR", "Length": 1},
+    "BasicLimitCount":      {"No":  10, "Type": 0, "Status": "WR", "Length": 1},
+    "BasicMaxCount":        {"No":  11, "Type": 0, "Status": "WR", "Length": 1},
+    "BasicAirLimitNum":     {"No":  12, "Type": 0, "Status": "WR", "Length": 1},
+    "Boost":                {"No":  13, "Type": 6, "Status": "WR", "Length": 4},
+    "Offset":               {"No":  14, "Type": 6, "Status": "WR", "Length": 4}
   }
 }
