@@ -127,35 +127,21 @@ class TestModule(object):
         mode = 'UNKNOWN'
 
         self.mod.unlock = MagicMock()
-        self.mod.unlock.return_value = True
 
         with pytest.raises(ModuleError) as e:
             self.mod.set_event_mode(mode)
         assert e.value.message == "%s: Invalid event mode!" % mode
         self.mod.unlock.assert_not_called()
 
-    def test_set_event_mode_UnlockFailed(self):
-        mode = 'NormalMeasure'
-
-        self.mod.unlock = MagicMock()
-        self.mod.unlock.return_value = False
-
-        with pytest.raises(ModuleError) as e:
-            self.mod.set_event_mode(mode)
-        assert e.value.message == "Failed not unlock module!"
-        self.mod.unlock.assert_called_once_with()
-
     def test_set_event_mode_SetEventModeFailed(self):
         mode = 'NormalMeasure'
 
         self.mod.unlock = MagicMock()
-        self.mod.unlock.return_value = True
-
         self.bus.set.return_value = False
 
         with pytest.raises(ModuleError) as e:
             self.mod.set_event_mode(mode)
-        assert e.value.message == "Could not set event mode!"
+        assert e.value.message == "Failed to set event mode!"
         self.mod.unlock.assert_called_once_with()
 
     @pytest.mark.parametrize("mode", [
