@@ -20,7 +20,6 @@ You should have received a copy of the GNU Lesser General Public
 License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 
-import os
 from binascii import a2b_hex as a2b
 
 import pytest
@@ -60,7 +59,7 @@ class TestPackage(object):
         assert self.pkg.pack(serno=33211, cmd=11, data=data) == pkg
 
     def test__pack_data_ToLong(self):
-        data = os.urandom(253)+"\xff"
+        data = '\xff' * 253
         with pytest.raises(PackageError) as e:
             self.pkg.pack(serno=33211, cmd=11, data=data)
         assert e.value.message == "Data block bigger than 252Bytes!"
@@ -80,32 +79,32 @@ class TestPackage(object):
         assert self.pkg.unpack(pkg) == data
 
     def test__unpack_data_ToLong(self):
-        random = os.urandom(253)
-        crc = self.crc.calc_crc(random)
-        pkg = a2b('fd3cffbb8100e0') + random + crc
+        data = '\xff' * 253
+        crc = self.crc.calc_crc(data)
+        pkg = a2b('fd3cffbb8100e0') + data + crc
         with pytest.raises(PackageError) as e:
             self.pkg.unpack(pkg)
         assert e.value.message == "Data block bigger than 252Bytes!"
 
     def test__unpack_data_FaultyCRC(self):
-        random = os.urandom(253)
-        pkg = a2b('fd3cffbb8100e0') + random
+        data = '\xff' * 252
+        pkg = a2b('fd3cffbb8100e0') + data + '\xff'
         with pytest.raises(PackageError) as e:
             self.pkg.unpack(pkg)
         assert e.value.message == "Package with faulty data CRC!"
 
     def test__unpack_head_FaultyCRC(self):
-        random = os.urandom(252)
-        crc = self.crc.calc_crc(random)
-        pkg = a2b('fd3cffbb8100f0') + random + crc
+        data = '\xff' * 252
+        crc = self.crc.calc_crc(data)
+        pkg = a2b('fd3cffbb8100f0') + data + crc
         with pytest.raises(PackageError) as e:
             self.pkg.unpack(pkg)
         assert e.value.message == "Package with faulty header CRC!"
 
     def test__unpack_head_WithProbeErrorState(self):
-        random = os.urandom(250)
-        crc = self.crc.calc_crc(random)
-        pkg = a2b('853cffbb8100d9') + random + crc
+        data = '\xff' * 252
+        crc = self.crc.calc_crc(data)
+        pkg = a2b('853cffbb8100d9') + data + crc
         with pytest.raises(PackageError) as e:
             self.pkg.unpack(pkg)
         assert e.value.message == "actual moisture is too small in DAC"
