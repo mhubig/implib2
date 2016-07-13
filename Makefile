@@ -51,8 +51,8 @@ endif
 	git commit -a -s -m \"Bumped version number to $(VERSION).\"
 
 clean:
-	$(RM) -rf .coverage coverage.xml unittests.xml pylint_* .tox/ .cache/ build/ \
-	dist/ IMPLib2.egg-info/ docs/_build/ */__pycache__ $(TEMPDIR)
+	$(RM) -rf .coverage coverage.xml unittests.xml pylint_* *.pyc */*.pyc .tox/ \
+	.cache/ build/ dist/ IMPLib2.egg-info/ docs/_build/ */__pycache__ $(TEMPDIR)
 
 help:
 	@echo
