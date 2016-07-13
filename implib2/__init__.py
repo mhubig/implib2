@@ -25,4 +25,4 @@ from .imp_bus import Bus, BusError
 from .imp_modules import Module, ModuleError
 
 __all__ = ["Bus", "BusError", "Module", "ModuleError", "EEPROM"]
-__version__ = '0.11.0'
+__version__ = '0.11.1'
