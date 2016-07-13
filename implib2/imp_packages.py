@@ -36,12 +36,12 @@ class Package(object):
         self.err = Errors()
 
     def _pack_data(self, data):
-        if len(data) > 253:
+        if len(data) > 252:
             raise PackageError("Data block bigger than 252Bytes!")
         return data + self.crc.calc_crc(data)
 
     def _unpack_data(self, data):
-        if len(data) > 253:
+        if len(data[:-1]) > 252: # NOTE: crc is still attached
             raise PackageError("Data block bigger than 252Bytes!")
         if not self.crc.check_crc(data):
             raise PackageError("Package with faulty data CRC!")
