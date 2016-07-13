@@ -168,11 +168,8 @@ class Module(object):
 
         value = self.event_modes[mode]
 
-        if not self.unlock():
-            raise ModuleError("Failed not unlock module!")
-
-        if not self.bus.set(self._serno, table, param, [value]):
-            raise ModuleError("Could not set event mode!")
+        self.unlock()
+        self.bus.set(self._serno, table, param, [value])
 
         # let's try 5 times.
         for attempt in range(5):
@@ -367,9 +364,8 @@ class Module(object):
 
         self.unlock()
 
-        if self.bus.set(self._serno, table, param, [serno]):
-            self._serno = serno
-
+        self.bus.set(self._serno, table, param, [serno])
+        self._serno = serno
         return True
 
     def read_eeprom(self):
@@ -714,12 +710,12 @@ class Module(object):
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
         param = 'MeasMode'
         value = 0
-        assert self.bus.set(self._serno, table, param, [value])
+        self.bus.set(self._serno, table, param, [value])
 
         table = 'ACTION_PARAMETER_TABLE'
         param = 'StartMeasure'
         value = 1
-        assert self.bus.set(self._serno, table, param, [value])
+        self.bus.set(self._serno, table, param, [value])
 
         while self.bus.get(self._serno, table, param)[0]:
             time.sleep(0.5)
@@ -734,7 +730,7 @@ class Module(object):
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
         param = 'MeasMode'
         value = 2
-        assert self.bus.set(self._serno, table, param, [value])
+        self.bus.set(self._serno, table, param, [value])
 
         return (transit_time, tdr_value)
 

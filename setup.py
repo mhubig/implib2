@@ -28,6 +28,13 @@ from setuptools.command.test import test as TestCommand
 
 # The following snippet is taken directly from the tox documentation:
 class Tox(TestCommand):
+
+    user_options = [('tox-args=', 'a', "Arguments to pass to tox")]
+
+    def initialize_options(self):
+        TestCommand.initialize_options(self)
+        self.tox_args = None
+
     def finalize_options(self):
         TestCommand.finalize_options(self)
         self.test_args = []
@@ -36,8 +43,12 @@ class Tox(TestCommand):
     def run_tests(self):
         # import here, cause outside the eggs aren't loaded
         import tox
-        errcode = tox.cmdline(self.test_args)
-        sys.exit(errcode)
+        import shlex
+        args = self.tox_args
+        if args:
+            args = shlex.split(self.tox_args)
+        errno = tox.cmdline(args=args)
+        sys.exit(errno)
 
 
 # Extracts the version information from the init file.
@@ -46,11 +57,6 @@ def get_version():
         r"""__version__\s+=\s+(?P<quote>['"])(?P<version>.+?)(?P=quote)""",
         open('implib2/__init__.py').read()).group('version')
 
-
-# Extracts the requirements from the requirements.txt file.
-def get_requirements():
-    return [i.strip() for i in open("requirements.txt").readlines()
-            if i.strip()]
 
 CLASSIFIERS = [
     "Development Status :: 4 - Beta",
@@ -63,7 +69,7 @@ CLASSIFIERS = [
 
 setup(
     name='IMPLib2',
-    version='0.11.0',
+    version='0.11.1',
     packages=find_packages(exclude=["tests"]),
 
     # include the *.yaml files
@@ -72,7 +78,9 @@ setup(
     },
 
     # install or upgrade the dependencies
-    install_requires=get_requirements(),
+    install_requires=[
+        "pyserial",
+    ],
 
     # testing with tox
     tests_require=['tox'],
@@ -84,7 +92,7 @@ setup(
     url='https://github.com/mhubig/implib2',
     description=("Python implementation of the IMPBUS-2 "
                  "data transmission protocol."),
-    long_description = open("README.rst").read(),
+    long_description=open("README.rst").read(),
     license="LGPL",
     keywords="serial impbus imko",
     classifiers=CLASSIFIERS,

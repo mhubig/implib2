@@ -1,21 +1,27 @@
 Travis-CI & Test Coverage
 =========================
 
-**Stable Branch (0.11.0)**
+**Stable Branch (0.11.1)**
 
 .. image:: https://travis-ci.org/mhubig/implib2.svg?branch=master
     :target: https://travis-ci.org/mhubig/implib2
 
-.. image:: https://coveralls.io/repos/mhubig/implib2/badge.svg?branch=master
-  :target: https://coveralls.io/r/mhubig/implib2?branch=master
+.. image:: https://codecov.io/gh/mhubig/implib2/coverage.svg?branch=master
+    :target: https://codecov.io/gh/mhubig/implib2/branch/master
+
+.. image:: https://dependencyci.com/github/mhubig/implib2/badge
+    :target: https://dependencyci.com/github/mhubig/implib2/badge
 
 **Development Branch**
 
 .. image:: https://travis-ci.org/mhubig/implib2.svg?branch=develop
     :target: https://travis-ci.org/mhubig/implib2
 
-.. image:: https://coveralls.io/repos/mhubig/implib2/badge.svg?branch=develop
-  :target: https://coveralls.io/r/mhubig/implib2?branch=develop
+.. image:: https://codecov.io/gh/mhubig/implib2/coverage.svg?branch=develop
+    :target: https://codecov.io/gh/mhubig/implib2/branch/develop
+
+.. image:: https://dependencyci.com/github/mhubig/implib2/badge
+    :target: https://dependencyci.com/github/mhubig/implib2/badge
 
 .. ### INCLUDE_FROM_HERE ###
 

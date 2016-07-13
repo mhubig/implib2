@@ -21,8 +21,9 @@ License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
 """
 
 import time
-import serial
 import struct
+
+import serial
 
 
 class DeviceError(Exception):
