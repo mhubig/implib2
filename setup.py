@@ -58,11 +58,6 @@ def get_version():
         open('implib2/__init__.py').read()).group('version')
 
 
-# Extracts the requirements from the requirements.txt file.
-def get_requirements():
-    return [i.strip() for i in open("requirements.txt").readlines()
-            if i.strip()]
-
 CLASSIFIERS = [
     "Development Status :: 4 - Beta",
     "Topic :: Software Development :: Libraries",
@@ -83,7 +78,9 @@ setup(
     },
 
     # install or upgrade the dependencies
-    install_requires=get_requirements(),
+    install_requires=[
+        "pyserial",
+    ],
 
     # testing with tox
     tests_require=['tox'],
