@@ -9,6 +9,9 @@ Travis-CI & Test Coverage
 .. image:: https://codecov.io/gh/mhubig/implib2/coverage.svg?branch=master
     :target: https://codecov.io/gh/mhubig/implib2/branch/master
 
+.. image:: https://dependencyci.com/github/mhubig/implib2/badge
+    :target: https://dependencyci.com/github/mhubig/implib2/badge
+
 **Development Branch**
 
 .. image:: https://travis-ci.org/mhubig/implib2.svg?branch=develop
@@ -16,6 +19,9 @@ Travis-CI & Test Coverage
 
 .. image:: https://codecov.io/gh/mhubig/implib2/coverage.svg?branch=develop
     :target: https://codecov.io/gh/mhubig/implib2/branch/develop
+
+.. image:: https://dependencyci.com/github/mhubig/implib2/badge
+    :target: https://dependencyci.com/github/mhubig/implib2/badge
 
 .. ### INCLUDE_FROM_HERE ###
 
