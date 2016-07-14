@@ -56,7 +56,7 @@ endif
 	git commit -a -s -m \"Bumped version number to $(VERSION).\"
 
 clean:
-	$(RM) $(TRASH_FILES) $(TRASH_DIRS) $(TEMPDIR)
+	$(RM) -r $(TRASH_FILES) $(TRASH_DIRS) $(TEMPDIR)
 
 help:
 	@echo
