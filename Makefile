@@ -15,7 +15,12 @@ TOX_SPHINX_FLACS = -e docs
 TEMPDIR := $(shell mktemp -d -u)
 MKDIR_P  = mkdir -p
 
-.PHONY: pytest pylint flake8 sphinx clean help
+TRASH_FILES  = .coverage coverage.xml unittests.xml
+TRASH_FILES += pylint_* *.pyc */*.pyc
+TRASH_DIRS   = .tox/ .cache/ build/ dist/ docs/_build/
+TRASH_DIRS  += .egg/ IMPLib2.egg-info/ */__pycache__
+
+.PHONY: pytest pylint flake8 docs clean help
 
 all:
 	$(MKDIR_P) $(TEMPDIR)
@@ -37,7 +42,7 @@ flake8:
 	$(TOX) $(TOX_WORKDIR_FLAG) $(TEMPDIR) $(TOX_FLAKE8_FLAGS)
 	$(MKDIR_P) $(TEMPDIR)
 
-sphinx:
+docs:
 	$(MKDIR_P) $(TEMPDIR)
 	$(TOX) $(TOX_WORKDIR_FLAG) $(TEMPDIR) $(TOX_SPHINX_FLACS)
 	$(MKDIR_P) $(TEMPDIR)
@@ -51,8 +56,7 @@ endif
 	git commit -a -s -m \"Bumped version number to $(VERSION).\"
 
 clean:
-	$(RM) -rf .coverage coverage.xml unittests.xml pylint_* *.pyc */*.pyc .tox/ \
-	.cache/ build/ dist/ IMPLib2.egg-info/ docs/_build/ */__pycache__ $(TEMPDIR)
+	$(RM) $(TRASH_FILES) $(TRASH_DIRS) $(TEMPDIR)
 
 help:
 	@echo

@@ -57,6 +57,16 @@ def get_version():
         r"""__version__\s+=\s+(?P<quote>['"])(?P<version>.+?)(?P=quote)""",
         open('implib2/__init__.py').read()).group('version')
 
+# I really prefer Markdown to reStructuredText. PyPi does not. This allows me
+# to have things how I'd like, but not throw complaints when people are trying
+# to install the package and they don't have pypandoc or the README in the
+# right place. Inspired by: https://coderwall.com/p/qawuyq
+try:
+    import pypandoc
+    long_description = pypandoc.convert('README.md', 'rst')
+    long_description = long_description.replace("\r", "")
+except (IOError, ImportError):
+    long_description = ''
 
 CLASSIFIERS = [
     "Development Status :: 4 - Beta",
@@ -77,9 +87,14 @@ setup(
         'implib2': ['*.json'],
     },
 
-    # install or upgrade the dependencies
+    # required to use implib2
     install_requires=[
         "pyserial",
+    ],
+
+    # required to run setup.py
+    setup_requires=[
+        "pypandoc"
     ],
 
     # testing with tox
@@ -92,7 +107,7 @@ setup(
     url='https://github.com/mhubig/implib2',
     description=("Python implementation of the IMPBUS-2 "
                  "data transmission protocol."),
-    long_description=open("README.rst").read(),
+    long_description=long_description,
     license="LGPL",
     keywords="serial impbus imko",
     classifiers=CLASSIFIERS,

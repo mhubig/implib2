@@ -1,45 +1,31 @@
-Travis-CI & Test Coverage
-=========================
+# Travis-CI & Test Coverage
 
 **Stable Branch (0.11.1)**
 
-.. image:: https://travis-ci.org/mhubig/implib2.svg?branch=master
-    :target: https://travis-ci.org/mhubig/implib2
-
-.. image:: https://codecov.io/gh/mhubig/implib2/coverage.svg?branch=master
-    :target: https://codecov.io/gh/mhubig/implib2/branch/master
-
-.. image:: https://dependencyci.com/github/mhubig/implib2/badge
-    :target: https://dependencyci.com/github/mhubig/implib2/badge
+[![Build Status](https://travis-ci.org/mhubig/implib2.svg?branch=master)](https://travis-ci.org/mhubig/implib2)
+[![Test Coverage](https://codecov.io/gh/mhubig/implib2/coverage.svg?branch=master)](https://codecov.io/gh/mhubig/implib2/branch/master)
+[![Dependecy CI](https://dependencyci.com/github/mhubig/implib2/badge)](https://dependencyci.com/github/mhubig/implib2)
 
 **Development Branch**
 
-.. image:: https://travis-ci.org/mhubig/implib2.svg?branch=develop
-    :target: https://travis-ci.org/mhubig/implib2
+[![Build Status](https://travis-ci.org/mhubig/implib2.svg?branch=develop)](https://travis-ci.org/mhubig/implib2)
+[![Test Coverage](https://codecov.io/gh/mhubig/implib2/coverage.svg?branch=develop)](https://codecov.io/gh/mhubig/implib2/branch/develop)
+[![Dependecy CI](https://dependencyci.com/github/mhubig/implib2/badge)](https://dependencyci.com/github/mhubig/implib2)
 
-.. image:: https://codecov.io/gh/mhubig/implib2/coverage.svg?branch=develop
-    :target: https://codecov.io/gh/mhubig/implib2/branch/develop
 
-.. image:: https://dependencyci.com/github/mhubig/implib2/badge
-    :target: https://dependencyci.com/github/mhubig/implib2/badge
-
-.. ### INCLUDE_FROM_HERE ###
-
-Requirements
-============
+## Requirements
 
 Before you can start using the IMPLib2 software you have to make sure, that
 you have at least the following software packages installed.
 
 - Python 2.7 (http://python.org)
-- PySerial 2.7 (http://pyserial.sourceforge.net)
+- PySerial (http://pyserial.sourceforge.net)
 
 For instructions on how to get and install these packages on your OS please
 head over to the official project pages.
 
 
-Installation
-============
+## Installation
 
 Install the stable branch using pip::
 
@@ -52,13 +38,13 @@ Of if you brave enough::
 Depending on your system you may have to prefix these commands with ``sudo``!
 
 
-Quick Start Manual
-==================
+## Quick Start Manual
 
 This small quick start manual is intended to give you a basic example of how
 to use this library. In order to start playing with it you have to connect at
-least one `Trime Pico`_ moisture measurement probe to your computer. An easy
-way to connect the probe is by using the USB-IMPBus Converter SM-USB_.
+least one [Trime Pico](http://imko.de/en/products/soilmoisture) moisture
+measurement probe to your computer. An easy way to connect the probe is by using
+the USB-IMPBus Converter [SM-USB](http://imko.de/en/products).
 
 After successfully installing IMPLib2 and connecting, start the Python Shell
 within your terminal::
@@ -126,33 +112,25 @@ performs an measurement on all connected probes ones an hour::
         time.sleep(3600)  # for one hour
 
 For more and in depth information please head over to the API-Documentation on
-`Read the Docs`_.
+[Read the Docs](https://implib2.readthedocs.org).
 
 
-License
-=======
+## License
 
-::
+> Copyright (C) 2011-2015, Markus Hubig <mhubig@imko.de>
+>
+> This is the documentation part of IMPLib2, a small Python library
+> implementing the IMPBUS-2 data transmission protocol.
 
-    Copyright (C) 2011-2015, Markus Hubig <mhubig@imko.de>
+> IMPLib2 is free software: you can redistribute it and/or modify
+> it under the terms of the GNU Lesser General Public License as
+> published by the Free Software Foundation, either version 3 of
+> the License, or (at your option) any later version.
+>
+> IMPLib2 is distributed in the hope that it will be useful,
+> but WITHOUT ANY WARRANTY; without even the implied warranty of
+> MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+> GNU Lesser General Public License for more details.
 
-    This is the documentation part of IMPLib2, a small Python library
-    implementing the IMPBUS-2 data transmission protocol.
-
-    IMPLib2 is free software: you can redistribute it and/or modify
-    it under the terms of the GNU Lesser General Public License as
-    published by the Free Software Foundation, either version 3 of
-    the License, or (at your option) any later version.
-
-    IMPLib2 is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-    GNU Lesser General Public License for more details.
-
-    You should have received a copy of the GNU Lesser General Public
-    License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
-
-
-.. _Trime Pico: http://imko.de/en/products/soilmoisture
-.. _Read the Docs: https://implib2.readthedocs.org
-.. _SM-USB: http://imko.de/en/products
+> You should have received a copy of the GNU Lesser General Public
+> License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
