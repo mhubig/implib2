@@ -1,6 +1,6 @@
 ##############################################################################
 #
-#  Simple Makefile based wrapper for tox testrunner
+#  Simple Makefile based wrapper for tox.
 #    written by Markus Hubig <mhubig@gmail.com>
 #
 ##############################################################################

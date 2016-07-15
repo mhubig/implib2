@@ -17,6 +17,7 @@ addons:
 install:
   - pip install tox
   - pip install codecov
+  - pip install pypandoc
 
 script:
   - tox -e $TOX_ENV
