@@ -3,8 +3,6 @@ include COPYING
 include COPYING.LESSER
 include README.rst
 include requirements.txt
-include requirements-docs.txt
-include requirements-tests.txt
 include setup.py
 include tox.ini
 recursive-include docs *
