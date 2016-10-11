@@ -60,7 +60,7 @@ CLASSIFIERS = [
 
 setup(
     name='IMPLib2',
-    version='0.11.1',
+    version='0.12.0',
     packages=find_packages(exclude=["tests"]),
 
     # include the *.yaml files
