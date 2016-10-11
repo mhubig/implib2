@@ -1,24 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-"""
-Copyright (C) 2011-2013, Markus Hubig <mhubig@imko.de>
-
-This file is part of IMPLib2 a small Python library implementing
-the IMPBUS-2 data transmission protocol.
-
-IMPLib2 is free software: you can redistribute it and/or modify
-it under the terms of the GNU Lesser General Public License as
-published by the Free Software Foundation, either version 3 of
-the License, or (at your option) any later version.
-
-IMPLib2 is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU Lesser General Public License for more details.
-
-You should have received a copy of the GNU Lesser General Public
-License along with IMPLib2. If not, see <http://www.gnu.org/licenses/>.
-"""
 
 import re
 import sys
@@ -57,6 +38,16 @@ def get_version():
         r"""__version__\s+=\s+(?P<quote>['"])(?P<version>.+?)(?P=quote)""",
         open('implib2/__init__.py').read()).group('version')
 
+# I really prefer Markdown to reStructuredText. PyPi does not. This allows me
+# to have things how I'd like, but not throw complaints when people are trying
+# to install the package and they don't have pypandoc or the README in the
+# right place. Inspired by: https://coderwall.com/p/qawuyq
+try:
+    import pypandoc
+    long_description = pypandoc.convert('README.md', 'rst')
+    long_description = long_description.replace("\r", "")
+except (IOError, ImportError):
+    long_description = ''
 
 CLASSIFIERS = [
     "Development Status :: 4 - Beta",
@@ -69,7 +60,7 @@ CLASSIFIERS = [
 
 setup(
     name='IMPLib2',
-    version='0.11.1',
+    version='0.12.0',
     packages=find_packages(exclude=["tests"]),
 
     # include the *.yaml files
@@ -77,9 +68,14 @@ setup(
         'implib2': ['*.json'],
     },
 
-    # install or upgrade the dependencies
+    # required to use implib2
     install_requires=[
         "pyserial",
+    ],
+
+    # required to run setup.py
+    setup_requires=[
+        "pypandoc"
     ],
 
     # testing with tox
@@ -92,7 +88,7 @@ setup(
     url='https://github.com/mhubig/implib2',
     description=("Python implementation of the IMPBUS-2 "
                  "data transmission protocol."),
-    long_description=open("README.rst").read(),
+    long_description=long_description,
     license="LGPL",
     keywords="serial impbus imko",
     classifiers=CLASSIFIERS,
