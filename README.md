@@ -1,6 +1,6 @@
 # Travis-CI & Test Coverage
 
-**Stable Branch (0.11.1)**
+**Stable Branch (0.12.0)**
 
 [![Build Status](https://travis-ci.org/mhubig/implib2.svg?branch=master)](https://travis-ci.org/mhubig/implib2)
 [![Test Coverage](https://codecov.io/gh/mhubig/implib2/coverage.svg?branch=master)](https://codecov.io/gh/mhubig/implib2/branch/master)
