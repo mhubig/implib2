@@ -42,7 +42,6 @@ class Bus(object):
         self.cmd = Command(tbl, pkg, dts)
         self.res = Responce(tbl, pkg, dts)
         self.dev = Device(port)
-        self.dev.open_device()
         self.bus_synced = False
 
         # timing magic, adds some extra love for rs485
@@ -93,6 +92,7 @@ class Bus(object):
         package = self.cmd.set_parameter(address, table, param,
                                          [value], ad_param)
 
+        self.dev.open_device()
         self.dev.write_pkg(package)
         time.sleep(0.300)
 
