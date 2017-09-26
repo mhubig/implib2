@@ -32,11 +32,6 @@ pytest:
 	$(TOX) $(TOX_WORKDIR_FLAG) $(TEMPDIR) $(TOX_PYTEST_FLAGS)
 	$(RM) -rf $(TEMPDIR)
 
-pylint:
-	$(MKDIR_P) $(TEMPDIR)
-	$(TOX) $(TOX_WORKDIR_FLAG) $(TEMPDIR) $(TOX_PYLINT_FLAGS)
-	$(MKDIR_P) $(TEMPDIR)
-
 flake8:
 	$(MKDIR_P) $(TEMPDIR)
 	$(TOX) $(TOX_WORKDIR_FLAG) $(TEMPDIR) $(TOX_FLAKE8_FLAGS)
@@ -66,7 +61,6 @@ help:
 	@echo "     all             Run all the tests (default)."
 	@echo "     clean           Clean all the files and folders."
 	@echo "     pytest          Run all the tests with pytest."
-	@echo "     pylint          Run pylint on the files."
 	@echo "     flake8          Run the flake8 checks."
 	@echo "     sphinx          Only build the docs with sphinx."
 	@echo "     release         start a new release (use option VERSION=0.0.0)."
