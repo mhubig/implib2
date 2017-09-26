@@ -1,95 +1,107 @@
 #!/usr/bin/env python
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 
-import re
+# Note: To use the 'upload' functionality of this file, you must:
+#   $ pip install twine
+
+import io
+import os
 import sys
-from setuptools import setup, find_packages
-from setuptools.command.test import test as TestCommand
+from shutil import rmtree
 
+from setuptools import find_packages, setup, Command
 
-# The following snippet is taken directly from the tox documentation:
-class Tox(TestCommand):
+# Package meta-data.
+NAME = 'implib2'
+DESCRIPTION = 'Python implementation of the IMPBUS-2 data transmission protocol.'
+URL = 'https://github.com/mhubig/implib2'
+EMAIL = 'mh@imko.de'
+AUTHOR = 'Markus Hubig'
 
-    user_options = [('tox-args=', 'a', "Arguments to pass to tox")]
-
-    def initialize_options(self):
-        TestCommand.initialize_options(self)
-        self.tox_args = None
-
-    def finalize_options(self):
-        TestCommand.finalize_options(self)
-        self.test_args = []
-        self.test_suite = True
-
-    def run_tests(self):
-        # import here, cause outside the eggs aren't loaded
-        import tox
-        import shlex
-        args = self.tox_args
-        if args:
-            args = shlex.split(self.tox_args)
-        errno = tox.cmdline(args=args)
-        sys.exit(errno)
-
-
-# Extracts the version information from the init file.
-def get_version():
-    return re.search(
-        r"""__version__\s+=\s+(?P<quote>['"])(?P<version>.+?)(?P=quote)""",
-        open('implib2/__init__.py').read()).group('version')
-
-# I really prefer Markdown to reStructuredText. PyPi does not. This allows me
-# to have things how I'd like, but not throw complaints when people are trying
-# to install the package and they don't have pypandoc or the README in the
-# right place. Inspired by: https://coderwall.com/p/qawuyq
-try:
-    import pypandoc
-    long_description = pypandoc.convert('README.md', 'rst')
-    long_description = long_description.replace("\r", "")
-except (IOError, ImportError):
-    long_description = ''
-
-CLASSIFIERS = [
-    "Development Status :: 4 - Beta",
-    "Topic :: Software Development :: Libraries",
-    "Intended Audience :: Developers",
-    "Programming Language :: Python :: 2.7",
-    ("License :: OSI Approved :: GNU Lesser "
-     "General Public License v3 or later (LGPLv3+)"),
+# What packages are required for this module to be executed?
+REQUIRED = [
+    'pyserial',
 ]
 
+# The rest you shouldn't have to touch too much :)
+# ------------------------------------------------
+# Except, perhaps the License and Trove Classifiers!
+# If you do change the License, remember to change the Trove Classifier for that!
+
+here = os.path.abspath(os.path.dirname(__file__))
+
+# Import the README and use it as the long-description.
+# Note: this will only work if 'README.rst' is present in your MANIFEST.in file!
+with io.open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
+    long_description = '\n' + f.read()
+
+# Load the package's __version__.py module as a dictionary.
+about = {}
+with open(os.path.join(here, NAME, '__version__.py')) as f:
+    exec(f.read(), about)
+
+
+class UploadCommand(Command):
+    """Support setup.py upload."""
+
+    description = 'Build and publish the package.'
+    user_options = []
+
+    @staticmethod
+    def status(s):
+        """Prints things in bold."""
+        print('\033[1m{0}\033[0m'.format(s))
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        try:
+            self.status('Removing previous builds…')
+            rmtree(os.path.join(here, 'dist'))
+        except OSError:
+            pass
+
+        self.status('Building Source and Wheel (universal) distribution…')
+        os.system('{0} setup.py sdist bdist_wheel --universal'.format(sys.executable))
+
+        self.status('Uploading the package to PyPi via Twine…')
+        os.system('twine upload dist/*')
+
+        sys.exit()
+
+
+# Where the magic happens:
 setup(
-    name='IMPLib2',
-    version='0.12.0',
-    packages=find_packages(exclude=["tests"]),
-
-    # include the *.yaml files
-    package_data={
-        'implib2': ['*.json'],
-    },
-
-    # required to use implib2
-    install_requires=[
-        "pyserial",
-    ],
-
-    # required to run setup.py
-    setup_requires=[
-        "pypandoc"
-    ],
-
-    # testing with tox
-    tests_require=['tox'],
-    cmdclass={'test': Tox},
-
-    # metadata for upload to PyPI
-    author='Markus Hubig',
-    author_email='mhubig@imko.de',
-    url='https://github.com/mhubig/implib2',
-    description=("Python implementation of the IMPBUS-2 "
-                 "data transmission protocol."),
+    name=NAME,
+    version=about['__version__'],
+    description=DESCRIPTION,
     long_description=long_description,
-    license="LGPL",
-    keywords="serial impbus imko",
-    classifiers=CLASSIFIERS,
+    author=AUTHOR,
+    author_email=EMAIL,
+    url=URL,
+    packages=find_packages(exclude=('tests',)),
+    # If your package is a single module, use this instead of 'packages':
+    # py_modules=['mypackage'],
+
+    # entry_points={
+    #     'console_scripts': ['mycli=mymodule:cli'],
+    # },
+    install_requires=REQUIRED,
+    include_package_data=True,
+    license='MIT',
+    classifiers=[
+        # Trove classifiers
+        # Full list: https://pypi.python.org/pypi?%3Aaction=list_classifiers
+        'License :: OSI Approved :: MIT License',
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 2.7'
+    ],
+    # $ setup.py publish support.
+    cmdclass={
+        'upload': UploadCommand,
+    },
 )

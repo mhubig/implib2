@@ -10,19 +10,14 @@ function commit_hint () {
     echo $msg1 $msg2
 }
 
-function update_version_init () {
+function update_version_implib () {
     sed -e "s/^__version__ = .*$/__version__ = '$1'/g" \
-        implib2/__init__.py > .__init__.new
-}
-
-function update_version_setup () {
-    sed -e "s/version=.*$/version='$1',/g" \
-        setup.py > .setup.new
+        implib2/__version__.py > .__version__.new
 }
 
 function update_version_readme () {
     sed -e "/\*\*Stable Branch/s/(.*)\*\*/($1)**/g" \
-        README.md > .README.new
+        README.rst > .README.new
 }
 
 function update_version_sphinx () {
@@ -36,25 +31,18 @@ if [ $# -ne 1 ]; then
     exit 1
 fi
 
-if ! update_version_init $1; then
-    echo "Could not replace version in '__init__.py'!" >&2
+if ! update_version_implib $1; then
+    echo "Could not replace version in '__version__.py'!" >&2
     exit 2
 else
-    mv .__init__.new implib2/__init__.py
-fi
-
-if ! update_version_setup $1; then
-    echo "Could not replace version in 'setup.py'!" >&2
-    exit 2
-else
-    mv .setup.new setup.py
+    mv .__version__.new implib2/__version__.py
 fi
 
 if ! update_version_readme $1; then
-    echo "Could not replace version in 'setup.py'!" >&2
+    echo "Could not replace version in 'README.rst'!" >&2
     exit 2
 else
-    mv .README.new README.md
+    mv .README.new README.rst
 fi
 
 if ! update_version_sphinx $1; then

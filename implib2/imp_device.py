@@ -22,12 +22,14 @@ class Device(object):
         self.ser.xonxoff = 0
         self.ser.rtscts = 0
         self.ser.dsrdtr = 0
+        self.is_open = False
 
     def open_device(self, baudrate=9600):
         self.ser.baudrate = baudrate
         self.ser.open()
         self.ser.flush()
         time.sleep(0.05)  # 50ms
+        self.is_open = True
 
     def close_device(self):
         try:
@@ -37,14 +39,23 @@ class Device(object):
             pass
         finally:
             time.sleep(0.05)  # 50ms
+            self.is_open = False
 
     def write_pkg(self, packet):
+        if not self.is_open:
+            raise DeviceError("Couldn't write packet, device is closed!")
+
         bytes_send = self.ser.write(packet)
+
         if not bytes_send == len(packet):
             raise DeviceError("Couldn't write all bytes!")
+
         return True
 
     def read_pkg(self):
+        if not self.is_open:
+            raise DeviceError("Couldn't read packet, device is closed!")
+
         # read header, always 7 bytes
         header = self.ser.read(7)
 
@@ -64,6 +75,9 @@ class Device(object):
         return header + data
 
     def read_bytes(self, length):
+        if not self.is_open:
+            raise DeviceError("Couldn't read bytes, device is closed!")
+
         data = self.ser.read(length)
 
         if len(data) < length:
@@ -72,6 +86,10 @@ class Device(object):
         return data
 
     def read(self):
+        if not self.is_open:
+            raise DeviceError("Couldn't read byte, device is closed!")
+
         byte = self.ser.read(1)
         self.ser.flushInput()
+
         return byte
