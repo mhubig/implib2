@@ -1,18 +1,47 @@
-*.pyc
-*.DS_Store
-*~
+###################################
+## common python project ignores ##
+###################################
 
-.coverage
-coverage.xml
-unittests.xml
-pylint_*
-
+__pycache__/
+*.py[cod]
+*$py.class
+.python-version
 .tox/
 .eggs/
 .cache/
+.coverage
 build/
 dist/
-IMPLib2.egg-info/
-docs/_build/
-.python-version
+pylint_*
+coverage.xml
+unittests.xml
+
+# django stuff
+*.log
+local_settings.py
+staticfiles
+*.sqlite3
+
+# pipenv stuff
+.env
+
+# editor stuff
+*.swp
+*~
+
+# vscode stuff
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# ipython stuff
 .ipynb_checkpoints
+
+############################
+## project specific stuff ##
+############################
+
+implib2.egg-info/
+docs/_build/

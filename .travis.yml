@@ -6,7 +6,6 @@ python:
 env:
   - TOX_ENV=py27
   - TOX_ENV=docs
-  - TOX_ENV=pylint
   - TOX_ENV=flake8
 
 addons:
@@ -17,7 +16,6 @@ addons:
 install:
   - pip install tox
   - pip install codecov
-  - pip install pypandoc
 
 script:
   - tox -e $TOX_ENV
