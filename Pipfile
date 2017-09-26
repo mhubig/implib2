@@ -6,7 +6,9 @@ name = "pypi"
 [packages]
 pyserial = "*"
 
+
 [dev-packages]
+
 tox = "*"
 sphinx = "*"
 "sphinx-rtd-theme" = "*"
@@ -19,6 +21,7 @@ enum = "*"
 packaging = "*"
 bpython = "*"
 twine = "*"
+typing = "*"
 
 [requires]
 python_version = "2.7"
