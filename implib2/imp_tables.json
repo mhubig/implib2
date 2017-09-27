@@ -1,19 +1,19 @@
 {
   "SYSTEM_PARAMETER_TABLE": {
-    "Table":       {"Get": 10, "Set": 11},
-    "ConfigID":    {"No": 251, "Type":   2, "Status": "OR", "Length":  2},
-    "TableSize":   {"No": 252, "Type":   2, "Status": "OR", "Length":  2},
-    "DataSize":    {"No": 254, "Type":   2, "Status": "OR", "Length":  2},
-    "GetParam":    {"No": 253, "Type":   2, "Status": "OR", "Length":  2},
-    "GetData":     {"No": 255, "Type":   2, "Status": "OR", "Length":  2},
-    "SerialNum":   {"No":   1, "Type":   4, "Status": "OR", "Length":  4},
-    "HWVersion":   {"No":   2, "Type":   6, "Status": "OR", "Length":  4},
-    "FWVersion":   {"No":   3, "Type":   6, "Status": "OR", "Length":  4},
-    "Baudrate":    {"No":   4, "Type":   2, "Status": "WR", "Length":  2},
-    "ModuleName":  {"No":   5, "Type": 128, "Status": "OR", "Length": 16},
-    "ModuleCode":  {"No":   6, "Type":   2, "Status": "OR", "Length":  2},
-    "ModuleInfo1": {"No":   7, "Type":   0, "Status": "WR", "Length":  1},
-    "ModuleInfo2": {"No":   8, "Type":   0, "Status": "WR", "Length":  1}
+    "Table":        {"Get": 10, "Set": 11},
+    "ConfigID":     {"No": 251, "Type":   2, "Status": "OR", "Length":  2},
+    "TableSize":    {"No": 252, "Type":   2, "Status": "OR", "Length":  2},
+    "DataSize":     {"No": 254, "Type":   2, "Status": "OR", "Length":  2},
+    "GetParam":     {"No": 253, "Type":   2, "Status": "OR", "Length":  2},
+    "GetData":      {"No": 255, "Type":   2, "Status": "OR", "Length":  2},
+    "SerialNum":    {"No":   1, "Type":   4, "Status": "OR", "Length":  4},
+    "HWVersion":    {"No":   2, "Type":   6, "Status": "OR", "Length":  4},
+    "FWVersion":    {"No":   3, "Type":   6, "Status": "OR", "Length":  4},
+    "Baudrate":     {"No":   4, "Type":   2, "Status": "WR", "Length":  2},
+    "ModuleName":   {"No":   5, "Type": 128, "Status": "OR", "Length": 16},
+    "ModuleCode":   {"No":   6, "Type":   2, "Status": "OR", "Length":  2},
+    "SDI12Address": {"No":   7, "Type":   0, "Status": "WR", "Length":  1},
+    "ModuleInfo2":  {"No":   8, "Type":   0, "Status": "WR", "Length":  1}
   },
 
   "DEVICE_CONFIGURATION_PARAMETER_TABLE": {
@@ -39,7 +39,7 @@
     "AnalogOutParaMode": {"No":  14, "Type":   0, "Status": "WR", "Length": 1},
     "ConductMaxValue":   {"No":  15, "Type":   0, "Status": "WR", "Length": 1},
     "ConductMinValue":   {"No":  16, "Type":   0, "Status": "WR", "Length": 1},
-    "NoMaterialCoeff":   {"No":  17, "Type":   0, "Status": "WR", "Length": 24},
+    "Protocol":          {"No":  17, "Type":   0, "Status": "WR", "Length": 1},
     "InitPulseNum":      {"No":  18, "Type":   0, "Status": "WR", "Length": 1},
     "DefaultMeasMode":   {"No":  19, "Type":   0, "Status": "WR", "Length": 1},
     "TempOutputTime":    {"No":  20, "Type":   0, "Status": "WR", "Length": 1},

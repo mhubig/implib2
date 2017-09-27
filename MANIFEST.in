@@ -5,6 +5,8 @@ include Pipfile
 include Pipfile.lock
 include setup.py
 include tox.ini
+include implib2/imp_tables.json
+include implib2/imp_errors.json
 recursive-include docs *
 recursive-include tests *
 recursive-exclude * __pycache__
