@@ -4,7 +4,7 @@ IMPLib2 - Python implementation of the IMPBUS-2 data transmission protocol.
 Travis-CI & Test Coverage
 -------------------------
 
-**Stable Branch (0.13.1)**
+**Stable Branch (0.13.2)**
 
 |Build Status Master| |Test Coverage Master| |Dependecy CI Master|
 
