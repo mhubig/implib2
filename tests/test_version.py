@@ -1,10 +1,12 @@
+# -*- coding: UTF-8 -*-
+
 import pytest  # noqa
 
-import implib2 # noqa
+import implib2  # noqa
 from packaging.version import Version
 
 
-class TestImplib2(object):
+class TestImplib2:
 
     def setup(self):
         pass

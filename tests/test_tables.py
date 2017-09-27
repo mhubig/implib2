@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
 import json
@@ -19,8 +18,7 @@ def pytest_generate_tests(metafunc):
         metafunc.parametrize(("table", "param"), tests)
 
 
-# pylint: disable=invalid-name, protected-access, attribute-defined-outside-init
-class TestTables(object):
+class TestTables:
 
     def setup(self):
         with open('tests/test_tables.json') as js:
@@ -31,12 +29,10 @@ class TestTables(object):
         assert self.t._tables == self.j
 
     def test_load_json_no_file(self):
-        # pylint: disable=no-self-use
         with pytest.raises(IOError):
             Tables('dont_exists.json')
 
     def test_load_json_falty_file(self):
-        # pylint: disable=no-self-use
         with pytest.raises(ValueError):
             Tables('imp_tables.py')
 

@@ -8,7 +8,6 @@
 TOX = tox
 TOX_WORKDIR_FLAG = --workdir
 TOX_PYTEST_FLAGS = -e py27
-TOX_PYLINT_FLAGS = -e pylint
 TOX_FLAKE8_FLAGS = -e flake8
 TOX_SPHINX_FLACS = -e docs
 
@@ -16,11 +15,11 @@ TEMPDIR := $(shell mktemp -d -u)
 MKDIR_P  = mkdir -p
 
 TRASH_FILES  = .coverage coverage.xml unittests.xml
-TRASH_FILES += pylint_* *.pyc */*.pyc
+TRASH_FILES += *.pyc */*.pyc
 TRASH_DIRS   = .tox/ .cache/ build/ dist/ docs/_build/
 TRASH_DIRS  += .eggs/ IMPLib2.egg-info/ */__pycache__
 
-.PHONY: pytest pylint flake8 docs clean help
+.PHONY: pytest flake8 docs clean help
 
 all:
 	$(MKDIR_P) $(TEMPDIR)

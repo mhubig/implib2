@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
 import struct
@@ -8,7 +7,7 @@ class ResponceError(Exception):
     pass
 
 
-class Responce(object):
+class Responce:
     def __init__(self, tables, package, datatypes):
         self.tbl = tables
         self.pkg = package
@@ -44,7 +43,7 @@ class Responce(object):
         cmd = self.tbl.lookup(table, param)
 
         fmt = self.dts.lookup(cmd['Type'] % 0x80)
-        length = len(data)/struct.calcsize(fmt.format(1))
+        length = len(data) // struct.calcsize(fmt.format(1))
 
         return struct.unpack(fmt.format(length), data)
 
@@ -62,7 +61,7 @@ class Responce(object):
 
     def do_tdr_scan(self, packet):
         data = self.pkg.unpack(packet)['data']
-        data = [data[i:i+5] for i in range(0, len(data), 5)]
+        data = [data[i:i + 5] for i in range(0, len(data), 5)]
         scan = {}
 
         for point, tuble in enumerate(data):

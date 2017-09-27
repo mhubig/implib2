@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
 import time
@@ -12,8 +11,7 @@ class ModuleError(Exception):
     pass
 
 
-# pylint: disable=too-many-public-methods
-class Module(object):
+class Module:
     """The Module object represents a IMPBus2 probe. It is used to provide a
     easy to use interface for the probe specific commands. It is mostly just a
     small wrapper around the much more general :func:`Bus.set` and

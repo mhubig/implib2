@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
 import io
@@ -7,8 +6,7 @@ import mock
 from implib2.imp_eeprom import EEPROM
 
 
-# pylint: disable=no-init, invalid-name, protected-access, no-self-use
-class TestEEPROM(object):
+class TestEEPROM:
 
     def test_init_ReadsData(self):
         data = io.StringIO(u'255\n255\n255')
@@ -23,7 +21,6 @@ class TestEEPROM(object):
             mock_open.return_value = data
             eeprom = EEPROM('test.epr')
 
-        # pylint: disable=no-member
         assert eeprom._data.getvalue() == '\xff\xff\xff'
         assert eeprom.some == 'header'
 
@@ -33,7 +30,6 @@ class TestEEPROM(object):
             mock_open.return_value = data
             eeprom = EEPROM('test.epr')
 
-        # pylint: disable=no-member
         assert eeprom._data.getvalue() == '\xff\xff\xff'
         assert eeprom.some_bla == 'header'
 

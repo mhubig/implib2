@@ -1,10 +1,9 @@
-#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
 from struct import pack
 
 
-class MaximCRC(object):
+class MaximCRC:
     def __init__(self):
         self.table = make_table()
 

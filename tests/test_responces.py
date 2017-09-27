@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
 from binascii import a2b_hex as a2b
@@ -11,8 +10,7 @@ from implib2.imp_datatypes import DataTypes
 from implib2.imp_responces import Responce, ResponceError
 
 
-# pylint: disable=invalid-name, attribute-defined-outside-init
-class TestResponce(object):
+class TestResponce:
 
     def setup(self):
         self.res = Responce(Tables(), Package(), DataTypes())

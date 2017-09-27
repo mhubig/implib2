@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
 from binascii import a2b_hex as a2b
@@ -9,8 +8,7 @@ from implib2.imp_crc import MaximCRC
 from implib2.imp_packages import Package, PackageError
 
 
-# pylint: disable=invalid-name, attribute-defined-outside-init
-class TestPackage(object):
+class TestPackage:
 
     def setup(self):
         self.pkg = Package()

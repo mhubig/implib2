@@ -1,17 +1,15 @@
-#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
 from binascii import a2b_hex as a2b
 
 import pytest
-import serial  # noqa pylint: disable=unused-import
+import serial  # noqa
 from mock import patch, call
 
 from implib2.imp_device import Device, DeviceError
 
 
-# pylint: disable=invalid-name, attribute-defined-outside-init
-class TestPackage(object):
+class TestPackage:
 
     def setup(self):
         with patch('serial.Serial') as mock:

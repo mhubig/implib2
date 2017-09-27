@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
 import os
@@ -8,9 +7,8 @@ from mock import call, MagicMock
 from implib2.imp_modules import Module, ModuleError
 
 
-# pylint: disable=invalid-name, protected-access, too-many-lines
-# pylint: disable=too-many-public-methods, attribute-defined-outside-init
-class TestModule(object):
+class TestModule:
+
     def setup(self):
         self.serno = 31002
         self.bus = MagicMock()
@@ -18,30 +16,26 @@ class TestModule(object):
 
         self.protocols = {
             'IMPBUS': 0,
-            'SDI12':  1}
+            'SDI12': 1}
 
         self.event_modes = {
-            "NormalMeasure":    0x00,
-            "TRDScan":          0x01,
-            "AnalogOut":        0x02,
-            "ACIC_TC":          0x03,
-            "SelfTest":         0x04,
-            "MatTempSensor":    0x05}
+            "NormalMeasure": 0x00,
+            "TRDScan": 0x01,
+            "AnalogOut": 0x02,
+            "ACIC_TC": 0x03,
+            "SelfTest": 0x04,
+            "MatTempSensor": 0x05}
 
         self.measure_modes = {
-            "ModeA":            0x00,
-            "ModeB":            0x01,
-            "ModeC":            0x02}
+            "ModeA": 0x00,
+            "ModeB": 0x01,
+            "ModeC": 0x02}
 
         self.average_modes = {
-            "CA":               0x00,
-            "CK":               0x01,
-            "CS":               0x02,
-            "CF":               0x03}
-
-    #
-    # __init__() tests
-    #
+            "CA": 0x00,
+            "CK": 0x01,
+            "CS": 0x02,
+            "CF": 0x03}
 
     def test___init___protocols(self):
         assert self.mod.protocols == self.protocols
@@ -55,10 +49,6 @@ class TestModule(object):
     def test___init___average_modes(self):
         assert self.mod.average_modes == self.average_modes
 
-    #
-    # unlock() tests
-    #
-
     def test_unlock(self):
         table = 'ACTION_PARAMETER_TABLE'
         param = 'SupportPW'
@@ -67,10 +57,6 @@ class TestModule(object):
 
         assert self.mod.unlock()
         self.bus.set.assert_called_once_with(self.serno, table, param, [value])
-
-    #
-    # get_event_mode() tests
-    #
 
     @pytest.mark.parametrize("mode", [
         "NormalMeasure",
@@ -99,10 +85,6 @@ class TestModule(object):
             self.mod.get_event_mode()
         assert e.value.message == "Unknown event mode: %s" % value
         self.bus.get.assert_called_once_with(self.serno, table, param)
-
-    #
-    # set_event_mode() tests
-    #
 
     def test_set_event_mode_InvalidMode(self):
         mode = 'UNKNOWN'
@@ -223,10 +205,6 @@ class TestModule(object):
             self.mod.get_measure_mode()
         assert e.value.message == "Unknown measure mode: %s!" % value
 
-    #
-    # set_measure_mode() tests
-    #
-
     def test_set_measure_mode_InvalidMeasureMode(self):
         mode = "ModeD"
         with pytest.raises(ModuleError) as e:
@@ -257,10 +235,6 @@ class TestModule(object):
         self.mod.get_event_mode.assert_called_once_with()
         self.bus.set.assert_called_once_with(self.serno, table, param, [value])
 
-    #
-    # get_default_measure_mode() tests
-    #
-
     @pytest.mark.parametrize("mode", [
         "ModeA",
         "ModeB",
@@ -285,10 +259,6 @@ class TestModule(object):
             self.mod.get_default_measure_mode()
         assert e.value.message == "Unknown default measure mode: %s!" % value
         self.bus.get.assert_called_once_with(self.serno, table, param)
-
-    #
-    # set_default_measure_mode() tests
-    #
 
     def test_set_default_measure_mode_InvalidDefaultMeasureMode(self):
         mode = "ModeD"
@@ -320,10 +290,6 @@ class TestModule(object):
         self.mod.get_event_mode.assert_called_once_with()
         self.bus.set.assert_called_once_with(self.serno, table, param, [value])
 
-    #
-    # get_average_mode() tests
-    #
-
     @pytest.mark.parametrize("mode", ["CA", "CK", "CS", "CF"])
     def test_get_average_mode(self, mode):
         table = 'APPLICATION_PARAMETER_TABLE'
@@ -346,10 +312,6 @@ class TestModule(object):
         assert e.value.message == "Unknown average mode: %s!" % value
         self.bus.get.assert_called_once_with(self.serno, table, param)
 
-    #
-    # set_average_mode() tests
-    #
-
     def test_set_average_mode_InvalidAverageMode(self):
         mode = "CX"
         with pytest.raises(ModuleError) as e:
@@ -365,25 +327,13 @@ class TestModule(object):
         assert self.mod.set_average_mode(mode)
         self.bus.set.assert_called_once_with(self.serno, table, param, [value])
 
-    #
-    # get_table() tests
-    #
-
     def test_get_table(self):
         with pytest.raises(NotImplementedError):
             self.mod.get_table('TABLE')
 
-    #
-    # set_table() tests
-    #
-
     def test_set_table(self):
         with pytest.raises(NotImplementedError):
             self.mod.set_table('TABLE', None)
-
-    #
-    # get_serno() tests
-    #
 
     def test_get_serno(self):
         table = 'SYSTEM_PARAMETER_TABLE'
@@ -392,10 +342,6 @@ class TestModule(object):
 
         assert self.mod.get_serno() == self.serno
         self.bus.get.assert_called_once_with(self.serno, table, param)
-
-    #
-    # set_serno() tests
-    #
 
     def test_set_serno(self):
         table = 'SYSTEM_PARAMETER_TABLE'
@@ -410,17 +356,9 @@ class TestModule(object):
         self.mod.unlock.assert_called_once_with()
         self.bus.set.assert_called_once_with(self.serno, table, param, [value])
 
-    #
-    # read_eeprom() tests
-    #
-
     def test_read_eeprom(self):
         with pytest.raises(NotImplementedError):
             self.mod.read_eeprom()
-
-    #
-    # write_eeprom() tests
-    #
 
     def test_write_eeprom(self):
         head = os.urandom(250)
@@ -455,10 +393,6 @@ class TestModule(object):
             self.mod.write_eeprom(eeprom)
         assert e.value.message == "Writing EEPROM failed!"
 
-    #
-    # get_hw_version() tests
-    #
-
     def test_get_hw_version(self):
         table = 'SYSTEM_PARAMETER_TABLE'
         param = 'HWVersion'
@@ -467,10 +401,6 @@ class TestModule(object):
         assert self.mod.get_hw_version() == '1.12'
         self.bus.get.assert_called_once_with(self.serno, table, param)
 
-    #
-    # get_fw_version() tests
-    #
-
     def test_get_fw_version(self):
         table = 'SYSTEM_PARAMETER_TABLE'
         param = 'FWVersion'
@@ -478,10 +408,6 @@ class TestModule(object):
 
         assert self.mod.get_fw_version() == '1.111763'
         self.bus.get.assert_called_once_with(self.serno, table, param)
-
-    #
-    # start_measure() tests
-    #
 
     def test_start_measure_WrongEventMode(self):
         self.mod.get_event_mode = MagicMock()
@@ -544,10 +470,6 @@ class TestModule(object):
         self.mod.measure_running.assert_called_once_with()
         self.bus.set.assert_called_once_with(self.serno, table, param, [value])
 
-    #
-    # measure_running() tests
-    #
-
     def test_measure_running_YES(self):
         table = 'ACTION_PARAMETER_TABLE'
         param = 'StartMeasure'
@@ -566,10 +488,6 @@ class TestModule(object):
         assert not self.mod.measure_running()
         self.bus.get.assert_called_once_with(self.serno, table, param)
 
-    #
-    # get_measure() tests
-    #
-
     def test_get_measurement(self):
         table = 'MEASURE_PARAMETER_TABLE'
         param = 'Moist'
@@ -579,10 +497,6 @@ class TestModule(object):
 
         assert self.mod.get_measurement(quantity=param) == moist
         self.bus.get.assert_called_once_with(self.serno, table, param)
-
-    #
-    # get_moisture() tests
-    #
 
     def test_get_moisture(self):
         moist = 12.35
@@ -603,14 +517,6 @@ class TestModule(object):
         assert self.mod.measure_running.call_args_list == expected
         self.mod.get_measurement.assert_called_once_with(quantity='Moist')
 
-    ################################
-    # END of the Public API Testsv #
-    ################################
-
-    #
-    # _get_analog_output_mode() tests
-    #
-
     def test__get_analog_output_mode(self):
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
         param = 'AnalogOutputMode'
@@ -620,10 +526,6 @@ class TestModule(object):
 
         assert self.mod._get_analog_output_mode() == mode
         self.bus.get.assert_called_once_with(self.serno, table, param)
-
-    #
-    # _set_analog_output_mode() tests
-    #
 
     def test__set_analog_output_mode_WrongMode(self):
         with pytest.raises(ModuleError) as e:
@@ -640,10 +542,6 @@ class TestModule(object):
         assert self.mod._set_analog_output_mode(value)
         self.bus.set.assert_called_once_with(self.serno, table, param, [value])
 
-    #
-    # _get_moist_max_value() tests
-    #
-
     def test__get_moist_max_value(self):
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
         param = 'MoistMaxValue'
@@ -651,10 +549,6 @@ class TestModule(object):
 
         assert self.mod._get_moist_max_value() == 50
         self.bus.get.assert_called_once_with(self.serno, table, param)
-
-    #
-    # _get_moist_min_value() tests
-    #
 
     def test__get_moist_min_value(self):
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
@@ -664,10 +558,6 @@ class TestModule(object):
         assert self.mod._get_moist_min_value() == 0
         self.bus.get.assert_called_once_with(self.serno, table, param)
 
-    #
-    # _get_temp_max_value() tests
-    #
-
     def test__get_temp_max_value(self):
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
         param = 'TempMaxValue'
@@ -676,10 +566,6 @@ class TestModule(object):
         assert self.mod._get_temp_max_value() == 60
         self.bus.get.assert_called_once_with(self.serno, table, param)
 
-    #
-    # _get_temp_min_value() tests
-    #
-
     def test__get_temp_min_value(self):
         table = 'DEVICE_CONFIGURATION_PARAMETER_TABLE'
         param = 'TempMinValue'
@@ -687,10 +573,6 @@ class TestModule(object):
 
         assert self.mod._get_temp_min_value() == 0
         self.bus.get.assert_called_once_with(self.serno, table, param)
-
-    #
-    # _set_analog_moist() tests
-    #
 
     def test__set_analog_moist_ValueToLow(self):
         with pytest.raises(ModuleError) as e:
@@ -755,10 +637,6 @@ class TestModule(object):
         self.mod._get_moist_max_value.assert_called_once_with()
         self.bus.set.assert_called_once_with(self.serno, table, param, [value])
 
-    #
-    # _get_analog_moist() tests
-    #
-
     def test__get_analog_moist(self):
         table = 'MEASURE_PARAMETER_TABLE'
         param = 'Moist'
@@ -766,10 +644,6 @@ class TestModule(object):
 
         assert self.mod._get_analog_moist() == 0
         self.bus.get.assert_called_once_with(self.serno, table, param)
-
-    #
-    # _set_analog_temp() tests
-    #
 
     def test__set_analog_temp_ValueToLow(self):
         with pytest.raises(ModuleError) as e:
@@ -834,10 +708,6 @@ class TestModule(object):
         self.mod._get_temp_max_value.assert_called_once_with()
         self.bus.set.assert_called_once_with(self.serno, table, param, [value])
 
-    #
-    # _get_analog_temp() tests
-    #
-
     def test__get_analog_temp(self):
         table = 'MEASURE_PARAMETER_TABLE'
         param = 'CompTemp'
@@ -845,10 +715,6 @@ class TestModule(object):
 
         assert self.mod._get_analog_temp() == 0
         self.bus.get.assert_called_once_with(self.serno, table, param)
-
-    #
-    # _turn_asic_on() tests
-    #
 
     def test__turn_asic_on_WrongEventMode(self):
         self.mod.get_event_mode = MagicMock()
@@ -870,10 +736,6 @@ class TestModule(object):
         self.mod.get_event_mode.assert_called_once_with()
         self.bus.set.assert_called_once_with(self.serno, table, param, value)
 
-    #
-    # _turn_asic_off() tests
-    #
-
     def test__turn_asic_off_WrongEventMode(self):
         self.mod.get_event_mode = MagicMock()
         self.mod.get_event_mode.return_value = "NotSelfTest"
@@ -893,10 +755,6 @@ class TestModule(object):
         assert self.mod._turn_asic_off()
         self.mod.get_event_mode.assert_called_once_with()
         self.bus.set.assert_called_once_with(self.serno, table, param, value)
-
-    #
-    # _get_analog_moist() tests
-    #
 
     def test__get_transit_time_tdr_WrongEventMode(self):
         self.mod.get_event_mode = MagicMock()
@@ -937,10 +795,6 @@ class TestModule(object):
         assert self.bus.set.call_args_list == set_calls
         assert self.bus.get.call_args_list == get_calls
 
-    #
-    # _set_sdi12_address() tests
-    #
-
     def test__set_sdi12_address_WrongAddress(self):
         with pytest.raises(ModuleError) as e:
             self.mod._set_sdi12_address(2000)
@@ -953,10 +807,6 @@ class TestModule(object):
 
         self.mod._set_sdi12_address(value)
         self.bus.set.assert_called_once_with(self.serno, table, param, [value])
-
-    #
-    # _set_protocol() tests
-    #
 
     def test__set_protocol_WrongProtocol(self):
         value = 'chocolate_jesus'

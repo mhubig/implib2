@@ -1,12 +1,10 @@
-#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
 from binascii import a2b_hex as a2b
 from implib2.imp_crc import MaximCRC
 
 
-# pylint: disable=invalid-name, attribute-defined-outside-init
-class TestMaximCRC(object):
+class TestMaximCRC:
 
     def setup(self):
         self.crc = MaximCRC()

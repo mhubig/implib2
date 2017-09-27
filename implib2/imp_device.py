@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
 import time
@@ -11,7 +10,7 @@ class DeviceError(Exception):
     pass
 
 
-class Device(object):
+class Device:
 
     def __init__(self, port):
         self.ser = serial.serial_for_url(port, do_not_open=True)

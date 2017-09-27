@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
 import struct
@@ -8,7 +7,7 @@ class CommandError(Exception):
     pass
 
 
-class Command(object):
+class Command:
     def __init__(self, tables, package, datatypes):
         self.tbl = tables
         self.pkg = package

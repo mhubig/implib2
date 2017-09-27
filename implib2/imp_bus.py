@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
 import time
@@ -16,7 +15,7 @@ class BusError(Exception):
     pass
 
 
-class Bus(object):
+class Bus:
     """The Bus object represents the IMPBus2 master device. It is used to
     initialize the Bus, set the baudrate and find the connected probes. A
     simple example of how to initialize and search the bus would be::
@@ -119,7 +118,7 @@ class Bus(object):
         address = 16777215
         table = 'SYSTEM_PARAMETER_TABLE'
         param = 'Baudrate'
-        value = baudrate/100
+        value = baudrate//100
         ad_param = 0
 
         if value not in (12, 24, 48, 96):

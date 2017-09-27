@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
 import json
@@ -13,8 +12,7 @@ def pytest_generate_tests(metafunc):
         metafunc.parametrize("errno", [errno for errno in errors])
 
 
-# pylint: disable=protected-access, invalid-name, attribute-defined-outside-init
-class TestErrors(object):
+class TestErrors:
 
     def setup(self):
         with open('tests/test_errors.json') as js:
@@ -24,12 +22,10 @@ class TestErrors(object):
     def test_load_json(self):
         assert self.e._errors == self.j
 
-    # pylint: disable=no-self-use
     def test_load_json_no_file(self):
         with pytest.raises(IOError):
             Errors('dont_exists.json')
 
-    # pylint: disable=no-self-use
     def test_load_json_falty_file(self):
         with pytest.raises(ValueError):
             Errors('imp_errors.py')
