@@ -7,6 +7,7 @@ name = "pypi"
 pyserial = "*"
 
 
+
 [dev-packages]
 
 tox = "*"
@@ -14,14 +15,8 @@ sphinx = "*"
 "sphinx-rtd-theme" = "*"
 pytest = "*"
 "pytest-cov" = "*"
-mock = "*"
+mock = {version = "*", markers="python_version < '3.3'"}
 "flake8" = "*"
-funcsigs = "*"
-enum = "*"
-packaging = "*"
-bpython = "*"
 twine = "*"
-typing = "*"
-
-[requires]
-python_version = "2.7"
+packaging = "*"
+"autopep8" = "*"
