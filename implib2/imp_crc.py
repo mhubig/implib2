@@ -10,7 +10,10 @@ class MaximCRC:
     def calc_crc(self, byte_str):
         reg = 0x0
         for char in byte_str:
-            idx = (reg ^ ord(char)) & 0xff
+            if isinstance(char, str):
+                idx = (reg ^ ord(char)) & 0xff  # py27
+            else:
+                idx = (reg ^ char) & 0xff       # py33
             reg = ((reg >> 8) ^ self.table[idx]) & 255
         return pack('>B', reg)
 

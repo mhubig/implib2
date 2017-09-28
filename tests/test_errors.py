@@ -31,9 +31,8 @@ class TestErrors:
             Errors('imp_errors.py')
 
     def test_lookup_unknown_errno(self):
-        with pytest.raises(ErrorsError) as e:
+        with pytest.raises(ErrorsError, message="Unknown error number: 666"):
             self.e.lookup(666)
-        assert e.value.message == "Unknown error number: 666"
 
     def test_lookup_error(self, errno):
         err = self.j[str(errno)]

@@ -2,6 +2,7 @@
 
 import json
 import pytest
+
 from implib2.imp_tables import Tables, TablesError
 
 
@@ -37,15 +38,12 @@ class TestTables:
             Tables('imp_tables.py')
 
     def test_lookup_unknown_table(self):
-        with pytest.raises(TablesError) as e:
+        with pytest.raises(TablesError, message="Unknown param or table: UNKNOWN_TABLE!"):
             self.t.lookup('UNKNOWN_TABLE', 'UNKNOWN_PARAM')
-        assert e.value.message == "Unknown param or table: UNKNOWN_TABLE!"
 
     def test_lookup_unknown_param(self):
-        with pytest.raises(TablesError) as e:
-            self.t.lookup('DEVICE_CALIBRATION_PARAMETER_TABLE',
-                          'UNKNOWN_PARAM')
-        assert e.value.message == "Unknown param or table: UNKNOWN_PARAM!"
+        with pytest.raises(TablesError, message="Unknown param or table: UNKNOWN_PARAM!"):
+            self.t.lookup('DEVICE_CALIBRATION_PARAMETER_TABLE', 'UNKNOWN_PARAM')
 
     def test_lookup_value(self, table, param):
         row = self.j[table][param]

@@ -18,6 +18,6 @@ class Tables:
             cmd[u'Set'] = self._tables[table]["Table"]["Set"]
             cmd[u'Get'] = self._tables[table]["Table"]["Get"]
         except KeyError as err:
-            raise TablesError("Unknown param or table: {}!".format(err.message))
+            raise TablesError("Unknown param or table: {}!".format(err))
 
         return cmd

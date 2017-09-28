@@ -17,7 +17,7 @@ class TestEEPROM:
         with patch('implib2.imp_eeprom.open', create=True) as mock_open:
             mock_open.return_value = data
             eeprom = EEPROM('test.epr')
-        assert eeprom._data.getvalue() == '\xff\xff\xff'
+        assert eeprom._data.getvalue() == b'\xff\xff\xff'
 
     def test_init_ReadsDataWithHeader(self):
         data = io.StringIO(u'; some = header\n255\n255\n255')
@@ -25,7 +25,7 @@ class TestEEPROM:
             mock_open.return_value = data
             eeprom = EEPROM('test.epr')
 
-        assert eeprom._data.getvalue() == '\xff\xff\xff'
+        assert eeprom._data.getvalue() == b'\xff\xff\xff'
         assert eeprom.some == 'header'
 
     def test_init_ReadsDataWithHeaderHasSpace(self):
@@ -34,7 +34,7 @@ class TestEEPROM:
             mock_open.return_value = data
             eeprom = EEPROM('test.epr')
 
-        assert eeprom._data.getvalue() == '\xff\xff\xff'
+        assert eeprom._data.getvalue() == b'\xff\xff\xff'
         assert eeprom.some_bla == 'header'
 
     def test_iterating_OnePage(self):
@@ -45,7 +45,7 @@ class TestEEPROM:
 
         for no, page in enumerate(eeprom):
             assert len(page) == 250
-            assert page == '\xff' * 250
+            assert page == b'\xff' * 250
             assert no == 0
 
     def test_iterating_TwoAndaHalfePage(self):
@@ -58,7 +58,7 @@ class TestEEPROM:
             assert no in [0, 1, 2]
             if no in [0, 1]:
                 assert len(page) == 250
-                assert page == '\xff' * 250
+                assert page == b'\xff' * 250
             else:
                 assert len(page) == 125
-                assert page == '\xff' * 125
+                assert page == b'\xff' * 125

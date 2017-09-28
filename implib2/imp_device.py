@@ -61,7 +61,10 @@ class Device:
         if len(header) < 7:
             raise DeviceError('Timeout reading header!')
 
-        length = struct.unpack('<B', header[2])[0]
+        if isinstance(header, str):
+            length = struct.unpack('<B', header[2])[0]  # py27
+        else:
+            length = header[2]                          # py33
 
         if length == 0:
             return header

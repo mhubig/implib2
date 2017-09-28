@@ -68,7 +68,10 @@ class Responce:
             if not len(tuble) == 5:
                 raise ResponceError("Responce package has strange length!")
             scan_point = {}
-            scan_point['tdr'] = struct.unpack('<B', tuble[0])[0]
+            if isinstance(tuble, str):
+                scan_point['tdr'] = struct.unpack('<B', tuble[0])[0]
+            else:
+                scan_point['tdr'] = tuble[0]
             scan_point['time'] = struct.unpack('<f', tuble[1:5])[0]
             scan[point] = scan_point
 
@@ -76,10 +79,14 @@ class Responce:
 
     def get_epr_page(self, packet):
         responce = self.pkg.unpack(packet)
-        page = list()
+        data = responce['data']
 
-        for byte in responce['data']:
-            page.append(struct.unpack('<B', byte)[0])
+        if isinstance(data, str):
+            page = list()
+            for byte in data:
+                page.append(struct.unpack('<B', byte)[0])
+        else:
+                page = list(data)
 
         return page
 

@@ -39,10 +39,14 @@ class Package(object):
         return header
 
     def _unpack_head(self, header):
-        state = struct.unpack('<B', header[0])[0]
-        cmd = struct.unpack('<B', header[1])[0]
-        length = struct.unpack('<B', header[2])[0]
-        serno = struct.unpack('<I', header[3:6] + '\x00')[0]
+        if isinstance(header, str):  # py27
+            state = struct.unpack('<B', header[0])[0]
+            cmd = struct.unpack('<B', header[1])[0]
+            length = struct.unpack('<B', header[2])[0]
+        else:                        # py33
+            state, cmd, length = header[0], header[1], header[2]
+
+        serno = struct.unpack('<I', header[3:6] + b'\x00')[0]
 
         if not self.crc.check_crc(header):
             raise PackageError("Package with faulty header CRC!")
