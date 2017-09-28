@@ -15,8 +15,9 @@ sphinx = "*"
 "sphinx-rtd-theme" = "*"
 pytest = "*"
 "pytest-cov" = "*"
-mock = {version = "*", markers="python_version < '3.3'"}
 "flake8" = "*"
 twine = "*"
 packaging = "*"
 "autopep8" = "*"
+mock = {version = "*", markers="python_version < '3.3'"}
+funcsigs = {version = "*", markers="python_version < '3.3'"}
