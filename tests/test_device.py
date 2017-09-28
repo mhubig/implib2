@@ -1,10 +1,14 @@
 # -*- coding: UTF-8 -*-
 
-from binascii import a2b_hex as a2b
-
 import pytest
 import serial  # noqa
-from mock import patch, call
+
+try:
+    from unittest.mock import patch, call
+except ImportError:
+    from mock import patch, call
+
+from binascii import a2b_hex as a2b
 
 from implib2.imp_device import Device, DeviceError
 

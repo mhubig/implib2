@@ -57,6 +57,5 @@ class TestCommand:
 
     def test_set_epr_page_to_big(self):
         page = range(0, 251)
-        with pytest.raises(CommandError) as e:
+        with pytest.raises(CommandError, message="Page to big, exeeds 250 Bytes!"):
             self.cmd.set_epr_page(30001, 7, page)
-        assert e.value.message == "Page to big, exeeds 250 Bytes!"

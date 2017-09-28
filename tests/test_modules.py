@@ -3,7 +3,11 @@
 import os
 import pytest
 
-from mock import call, MagicMock
+try:
+    from unittest.mock import MagicMock
+except ImportError:
+    from mock import MagicMock
+
 from implib2.imp_modules import Module, ModuleError
 
 

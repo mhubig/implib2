@@ -23,7 +23,7 @@ class MaximCRC:
 
 
 def reflect(data, width):
-    """ Ceflect a data word, means revert the bit order. """
+    """Ceflect a data word, means revert the bit order."""
     reflected = data & 0x01
     for _ in range(width - 1):
         data >>= 1
@@ -32,7 +32,7 @@ def reflect(data, width):
 
 
 def make_table():
-    """ Create a traslation table for the MaximCRC algorithm"""
+    """Create a traslation table for the MaximCRC algorithm."""
     table = {}
     for i in range(1 << 8):
         register = reflect(i, 8)

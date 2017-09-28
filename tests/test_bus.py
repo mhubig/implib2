@@ -1,9 +1,12 @@
 # -*- coding: UTF-8 -*-
 
-from binascii import a2b_hex as a2b
-from mock import patch, call, MagicMock
-
 import pytest
+from binascii import a2b_hex as a2b
+
+try:
+    from unittest.mock import patch, call, MagicMock
+except ImportError:
+    from mock import patch, call, MagicMock
 
 from implib2.imp_bus import Bus, BusError
 from implib2.imp_device import Device, DeviceError  # noqa
@@ -98,9 +101,8 @@ class TestBus:
         assert self.manager.mock_calls == expected_calls
 
     def test_sync_WithWrongBaudrate(self):
-        with pytest.raises(BusError) as e:
+        with pytest.raises(BusError, message="Unknown baudrate!"):
             self.bus.sync(baudrate=6666)
-        assert e.value.message == "Unknown baudrate!"
 
     def test_scan_AndFindEverything(self):
         minserial = 0b0001  # 01
