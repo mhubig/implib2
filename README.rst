@@ -1,16 +1,22 @@
-IMPLib2 - Python implementation of the IMPBUS-2 data transmission protocol.
-===========================================================================
+IMPLib2: Python implementation of the IMPBUS-2 protocol.
+========================================================
 
-Travis-CI & Test Coverage
--------------------------
+.. image:: https://img.shields.io/pypi/v/implib2.svg
+    :target: https://pypi.python.org/pypi/implib2
 
-**Stable Branch (0.13.2)**
+.. image:: https://img.shields.io/pypi/pyversions/implib2.svg
+    :target: https://pypi.python.org/pypi/implib2
 
-|Build Status Master| |Test Coverage Master| |Dependecy CI Master|
+.. image:: https://img.shields.io/pypi/l/implib2.svg
+    :target: https://pypi.python.org/pypi/implib2
 
-**Development Branch**
+.. image:: https://travis-ci.org/mhubig/implib2.svg?branch=master
+    :target: https://travis-ci.org/mhubig/implib2
 
-|Build Status Develop| |Test Coverage Develop| |Dependecy CI Develop|
+.. image:: https://codecov.io/gh/mhubig/implib2/coverage.svg?branch=master
+    :target: https://codecov.io/gh/mhubig/implib2/branch/master
+
+---------------
 
 Requirements
 ------------
@@ -18,8 +24,8 @@ Requirements
 Before you can start using the IMPLib2 software you have to make sure,
 that you have at least the following software packages installed.
 
--  Python 2.7 (http://python.org)
--  PySerial (http://pyserial.sourceforge.net)
+- Python (http://python.org)
+- PySerial (http://pyserial.sourceforge.net)
 
 For instructions on how to get and install these packages on your OS
 please head over to the official project pages.
@@ -51,8 +57,8 @@ After successfully installing IMPLib2 and connecting, start the Python
 Shell within your terminal::
 
     $ python
-    Python 2.7.3 (default, Aug  1 2012, 05:14:39)
-    [GCC 4.6.3] on linux2
+    Python 3.6.2 (default, Jul 17 2017, 16:44:45)
+    [GCC 4.2.1 Compatible Apple LLVM 8.1.0 (clang-802.0.42)] on darwin
     Type "help", "copyright", "credits" or "license" for more information.
     >>>
 
@@ -90,7 +96,6 @@ If you came so far you should be able to easily build a little script
 which performs an measurement on all connected probes ones an hour::
 
     #!/usr/bin/env python
-    # -*- coding: UTF-8 -*-
 
     import time
     import implib2 as imp
@@ -107,8 +112,8 @@ which performs an measurement on all connected probes ones an hour::
         for module in modules:
             serno = module.get_serno()
             moist = module.get_moisture()
-            mtemp = module.get_measure(quantity='MeasTemp')
-            print "Module {}: Moist {}, Temp {}".format(serno, moist, mtemp)
+            temp = module.get_measure(quantity='MeasTemp')
+            print('Module {}: Moist {}, Temp {}'.format(serno, moist, mtemp))
 
         time.sleep(3600)  # for one hour
 
@@ -117,22 +122,3 @@ For more and in depth information please head over to the API-Documentation on
 
 .. include:: LICENSE.txt
    :literal:
-
-.. |Build Status Master|
-    image:: https://travis-ci.org/mhubig/implib2.svg?branch=master
-    :target: https://travis-ci.org/mhubig/implib2
-.. |Test Coverage Master|
-    image:: https://codecov.io/gh/mhubig/implib2/coverage.svg?branch=master
-    :target: https://codecov.io/gh/mhubig/implib2/branch/master
-.. |Dependecy CI Master|
-    image:: https://dependencyci.com/github/mhubig/implib2/badge
-    :target: https://dependencyci.com/github/mhubig/implib2
-.. |Build Status Develop|
-    image:: https://travis-ci.org/mhubig/implib2.svg?branch=develop
-    :target: https://travis-ci.org/mhubig/implib2
-.. |Test Coverage Develop|
-    image:: https://codecov.io/gh/mhubig/implib2/coverage.svg?branch=develop
-    :target: https://codecov.io/gh/mhubig/implib2/branch/develop
-.. |Dependecy CI Develop|
-    image:: https://dependencyci.com/github/mhubig/implib2/badge
-    :target: https://dependencyci.com/github/mhubig/implib2
