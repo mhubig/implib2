@@ -1,17 +1,19 @@
-#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
-from binascii import a2b_hex as a2b
-
 import pytest
-import serial  # noqa pylint: disable=unused-import
-from mock import patch, call
+import serial  # noqa
+
+try:
+    from unittest.mock import patch, call
+except ImportError:
+    from mock import patch, call
+
+from binascii import a2b_hex as a2b
 
 from implib2.imp_device import Device, DeviceError
 
 
-# pylint: disable=invalid-name, attribute-defined-outside-init
-class TestPackage(object):
+class TestPackage:
 
     def setup(self):
         with patch('serial.Serial') as mock:
@@ -54,25 +56,22 @@ class TestPackage(object):
     def test_write_pkg_FailsIfDeviceIsNotOpen(self):
         packet = a2b('ffffff')
         self.dev.is_open = False
-        with pytest.raises(DeviceError) as e:
+        with pytest.raises(DeviceError, message="Couldn't write packet, device is closed!"):
             self.dev.write_pkg(packet)
         self.ser.write.assert_not_called()
-        assert e.value.message == "Couldn't write packet, device is closed!"
 
     def test_write_pkg_ButNotAllBytes(self):
         packet = a2b('ffffff')
         self.ser.write.return_value = 2
-        with pytest.raises(DeviceError) as e:
+        with pytest.raises(DeviceError, message="Couldn't write all bytes!"):
             self.dev.is_open = True
             self.dev.write_pkg(packet)
-        assert e.value.message == "Couldn't write all bytes!"
 
     def test_read_pkg_FailsIfDeviceIsNotOpen(self):
-        with pytest.raises(DeviceError) as e:
+        with pytest.raises(DeviceError, message="Couldn't read packet, device is closed!"):
             self.dev.is_open = False
             self.dev.read_pkg()
         self.ser.read.assert_not_called()
-        assert e.value.message == "Couldn't read packet, device is closed!"
 
     def test_read_pkg_OnlyHeader(self):
         header = a2b('fd0200bb81002d')
@@ -83,10 +82,9 @@ class TestPackage(object):
         assert self.ser.read.call_args_list == [call(7)]
 
     def test_read_pkg_OnlyHeaderWithTimeout(self):
-        with pytest.raises(DeviceError) as e:
+        with pytest.raises(DeviceError, message='Timeout reading header!'):
             self.dev.is_open = True
             self.dev.read_pkg()
-        assert e.value.message == 'Timeout reading header!'
 
     def test_read_pkg_HeaderAndData(self):
         header = a2b('000a05bb8100aa')
@@ -100,19 +98,17 @@ class TestPackage(object):
     def test_read_pkg_HeaderAndDataWithTimeout(self):
         pkg = a2b('000a05bb8100aa')
         self.ser.read.side_effect = [pkg, b'']
-        with pytest.raises(DeviceError) as e:
+        with pytest.raises(DeviceError, message='Timeout reading data!'):
             self.dev.is_open = True
             self.dev.read_pkg()
 
-        assert e.value.message == 'Timeout reading data!'
         assert self.ser.read.call_args_list == [call(7), call(5)]
 
     def test_read_bytes_FailsIfDeviceIsNotOpen(self):
-        with pytest.raises(DeviceError) as e:
+        with pytest.raises(DeviceError, message="Couldn't read bytes, device is closed!"):
             self.dev.is_open = False
             self.dev.read_bytes(2)
         self.ser.read.assert_not_called()
-        assert e.value.message == "Couldn't read bytes, device is closed!"
 
     def test_read_bytes(self):
         pkg = a2b('ffff')
@@ -123,17 +119,15 @@ class TestPackage(object):
         self.ser.read.assert_called_once_with(2)
 
     def test_read_bytes_WithTimeout(self):
-        with pytest.raises(DeviceError) as e:
+        with pytest.raises(DeviceError, message='Timeout reading bytes!'):
             self.dev.is_open = True
             self.dev.read_bytes(1)
-        assert e.value.message == 'Timeout reading bytes!'
 
     def test_read_FailsIfDeviceIsNotOpen(self):
-        with pytest.raises(DeviceError) as e:
+        with pytest.raises(DeviceError, message="Couldn't read byte, device is closed!"):
             self.dev.is_open = False
             self.dev.read()
         self.ser.read.assert_not_called()
-        assert e.value.message == "Couldn't read byte, device is closed!"
 
     def test_read(self):
         pkg = a2b('ff')

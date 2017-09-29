@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
 from binascii import a2b_hex as a2b
@@ -9,8 +8,7 @@ from implib2.imp_crc import MaximCRC
 from implib2.imp_packages import Package, PackageError
 
 
-# pylint: disable=invalid-name, attribute-defined-outside-init
-class TestPackage(object):
+class TestPackage:
 
     def setup(self):
         self.pkg = Package()
@@ -40,10 +38,9 @@ class TestPackage(object):
         assert self.pkg.pack(serno=33211, cmd=11, data=data) == pkg
 
     def test__pack_data_ToLong(self):
-        data = '\xff' * 253
-        with pytest.raises(PackageError) as e:
+        data = b'\xff' * 253
+        with pytest.raises(PackageError, message="Data block bigger than 252Bytes!"):
             self.pkg.pack(serno=33211, cmd=11, data=data)
-        assert e.value.message == "Data block bigger than 252Bytes!"
 
     def test__unpack_head(self):
         # e.g. responce to probe_module_long(33211)
@@ -55,37 +52,33 @@ class TestPackage(object):
     def test__unpack_head_AndData(self):
         # e.g. responce to get_serial(33211)
         data = {'header': {'state': 0, 'cmd': 10, 'length': 5,
-                           'serno': 33211}, 'data': '\xbb\x81\x00\x00'}
+                           'serno': 33211}, 'data': b'\xbb\x81\x00\x00'}
         pkg = a2b('000a05bb8100aabb810000cc')
         assert self.pkg.unpack(pkg) == data
 
     def test__unpack_data_ToLong(self):
-        data = '\xff' * 253
+        data = b'\xff' * 253
         crc = self.crc.calc_crc(data)
         pkg = a2b('fd3cffbb8100e0') + data + crc
-        with pytest.raises(PackageError) as e:
+        with pytest.raises(PackageError, message="Data block bigger than 252Bytes!"):
             self.pkg.unpack(pkg)
-        assert e.value.message == "Data block bigger than 252Bytes!"
 
     def test__unpack_data_FaultyCRC(self):
-        data = '\xff' * 252
-        pkg = a2b('fd3cffbb8100e0') + data + '\xff'
-        with pytest.raises(PackageError) as e:
+        data = b'\xff' * 252
+        pkg = a2b('fd3cffbb8100e0') + data + b'\xff'
+        with pytest.raises(PackageError, message="Package with faulty data CRC!"):
             self.pkg.unpack(pkg)
-        assert e.value.message == "Package with faulty data CRC!"
 
     def test__unpack_head_FaultyCRC(self):
-        data = '\xff' * 252
+        data = b'\xff' * 252
         crc = self.crc.calc_crc(data)
         pkg = a2b('fd3cffbb8100f0') + data + crc
-        with pytest.raises(PackageError) as e:
+        with pytest.raises(PackageError, message="Package with faulty header CRC!"):
             self.pkg.unpack(pkg)
-        assert e.value.message == "Package with faulty header CRC!"
 
     def test__unpack_head_WithProbeErrorState(self):
-        data = '\xff' * 252
+        data = b'\xff' * 252
         crc = self.crc.calc_crc(data)
         pkg = a2b('853cffbb8100d9') + data + crc
-        with pytest.raises(PackageError) as e:
+        with pytest.raises(PackageError, message="actual moisture is too small in DAC"):
             self.pkg.unpack(pkg)
-        assert e.value.message == "actual moisture is too small in DAC"

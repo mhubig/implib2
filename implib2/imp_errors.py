@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
 from .imp_helper import _load_json
@@ -8,8 +7,7 @@ class ErrorsError(Exception):
     pass
 
 
-# pylint: disable=too-few-public-methods
-class Errors(object):
+class Errors:
 
     def __init__(self, filename='imp_errors.json'):
         self._errors = _load_json(filename)

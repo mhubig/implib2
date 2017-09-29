@@ -1,9 +1,7 @@
-#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
 
-# pylint: disable=too-few-public-methods
-class DataTypes(object):
+class DataTypes:
 
     def __init__(self):
         self._dtypes = {

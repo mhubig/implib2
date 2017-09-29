@@ -1,17 +1,19 @@
-#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
 from struct import pack
 
 
-class MaximCRC(object):
+class MaximCRC:
     def __init__(self):
         self.table = make_table()
 
     def calc_crc(self, byte_str):
         reg = 0x0
         for char in byte_str:
-            idx = (reg ^ ord(char)) & 0xff
+            if isinstance(char, str):
+                idx = (reg ^ ord(char)) & 0xff  # py27
+            else:
+                idx = (reg ^ char) & 0xff       # py33
             reg = ((reg >> 8) ^ self.table[idx]) & 255
         return pack('>B', reg)
 
@@ -24,7 +26,7 @@ class MaximCRC(object):
 
 
 def reflect(data, width):
-    """ Ceflect a data word, means revert the bit order. """
+    """Ceflect a data word, means revert the bit order."""
     reflected = data & 0x01
     for _ in range(width - 1):
         data >>= 1
@@ -33,7 +35,7 @@ def reflect(data, width):
 
 
 def make_table():
-    """ Create a traslation table for the MaximCRC algorithm"""
+    """Create a traslation table for the MaximCRC algorithm."""
     table = {}
     for i in range(1 << 8):
         register = reflect(i, 8)

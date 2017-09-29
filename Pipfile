@@ -6,22 +6,22 @@ name = "pypi"
 [packages]
 pyserial = "*"
 
-
 [dev-packages]
-
 tox = "*"
-sphinx = "*"
-"sphinx-rtd-theme" = "*"
 pytest = "*"
-"pytest-cov" = "*"
-mock = "*"
-"flake8" = "*"
-funcsigs = "*"
-enum = "*"
-packaging = "*"
-bpython = "*"
+pytest_cov = "*"
+flake8 = "*"
 twine = "*"
-typing = "*"
+packaging = "*"
+autopep8 = "*"
+sphinx = "*"
+sphinx_rtd_theme = "*"
+docutils = "*"
 
-[requires]
-python_version = "2.7"
+[dev-packages.mock]
+version = "*"
+markers = "python_version < '3.3'"
+
+[dev-packages.funcsigs]
+version = "*"
+markers = "python_version < '3.3'"

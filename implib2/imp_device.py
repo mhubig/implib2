@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
 import time
@@ -11,7 +10,7 @@ class DeviceError(Exception):
     pass
 
 
-class Device(object):
+class Device:
 
     def __init__(self, port):
         self.ser = serial.serial_for_url(port, do_not_open=True)
@@ -62,7 +61,10 @@ class Device(object):
         if len(header) < 7:
             raise DeviceError('Timeout reading header!')
 
-        length = struct.unpack('<B', header[2])[0]
+        if isinstance(header, str):
+            length = struct.unpack('<B', header[2])[0]  # py27
+        else:
+            length = header[2]                          # py33
 
         if length == 0:
             return header

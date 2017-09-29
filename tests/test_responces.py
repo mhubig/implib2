@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
 from binascii import a2b_hex as a2b
@@ -11,8 +10,7 @@ from implib2.imp_datatypes import DataTypes
 from implib2.imp_responces import Responce, ResponceError
 
 
-# pylint: disable=invalid-name, attribute-defined-outside-init
-class TestResponce(object):
+class TestResponce:
 
     def setup(self):
         self.res = Responce(Tables(), Package(), DataTypes())
@@ -23,9 +21,8 @@ class TestResponce(object):
 
     def test_get_long_ack_WrongSerno(self):
         pkg = a2b('0002001a7900a7')
-        with pytest.raises(ResponceError) as e:
+        with pytest.raises(ResponceError, message="Wrong serno in responce!"):
             self.res.get_long_ack(pkg, 31003)
-        assert e.value.message == "Wrong serno in responce!"
 
     def test_get_short_ack(self):
         pkg = a2b('24')
@@ -33,9 +30,8 @@ class TestResponce(object):
 
     def test_get_short_ack_WrongSerno(self):
         pkg = a2b('24')
-        with pytest.raises(ResponceError) as e:
+        with pytest.raises(ResponceError, message="Wrong CRC for serno!"):
             self.res.get_short_ack(pkg, 31003)
-        assert e.value.message == "Wrong CRC for serno!"
 
     def test_get_range_ack(self):
         pkg = a2b('24')
@@ -65,17 +61,15 @@ class TestResponce(object):
         pkg = a2b('0011001a790095')
         serno = 31002
         table = 'SYSTEM_PARAMETER_TABLE'
-        with pytest.raises(ResponceError) as e:
+        with pytest.raises(ResponceError, message="Wrong set command in responce!"):
             self.res.set_parameter(pkg, table, serno)
-        assert e.value.message == "Wrong set command in responce!"
 
     def test_set_parameter_WrongSerno(self):
         pkg = a2b('0011001a790095')
         serno = 31003
         table = 'PROBE_CONFIGURATION_PARAMETER_TABLE'
-        with pytest.raises(ResponceError) as e:
+        with pytest.raises(ResponceError, message="Wrong serial number in responce!"):
             self.res.set_parameter(pkg, table, serno)
-        assert e.value.message == "Wrong serial number in responce!"
 
     def test_do_tdr_scan(self):
         pkg = a2b('001e0b1a79006e112fc44e3702f3e7fb3dc5')
@@ -86,9 +80,8 @@ class TestResponce(object):
 
     def test_do_tdr_scan_StrangeLength(self):
         pkg = a2b('001e0c1a7900e811112fc44e3702f3e7fb3df5')
-        with pytest.raises(ResponceError) as e:
+        with pytest.raises(ResponceError, message="Responce package has strange length!"):
             self.res.do_tdr_scan(pkg)
-        assert e.value.message == "Responce package has strange length!"
 
     def test_get_epr_page(self):
         pkg = a2b('003c0b1a790015112fc44e3702f3e7fb3dc5')
@@ -101,6 +94,5 @@ class TestResponce(object):
 
     def test_set_epr_page_WrongCMD(self):
         pkg = a2b('003e001a790002')
-        with pytest.raises(ResponceError) as e:
+        with pytest.raises(ResponceError, message="Responce command doesn't match!"):
             self.res.set_epr_page(pkg)
-        assert e.value.message == "Responce command doesn't match!"

@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # encoding: utf-8
 
 import io
@@ -6,7 +5,6 @@ import re
 import struct
 
 
-# pylint: disable=too-few-public-methods
 class EEPROM(object):
     """This Class represents a simple data structure to hold an EEPROM
     image. It can be used with :func:`Module.write_eeprom` to update the

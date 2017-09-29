@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
 import struct
@@ -8,7 +7,7 @@ class ResponceError(Exception):
     pass
 
 
-class Responce(object):
+class Responce:
     def __init__(self, tables, package, datatypes):
         self.tbl = tables
         self.pkg = package
@@ -44,7 +43,7 @@ class Responce(object):
         cmd = self.tbl.lookup(table, param)
 
         fmt = self.dts.lookup(cmd['Type'] % 0x80)
-        length = len(data)/struct.calcsize(fmt.format(1))
+        length = len(data) // struct.calcsize(fmt.format(1))
 
         return struct.unpack(fmt.format(length), data)
 
@@ -62,14 +61,17 @@ class Responce(object):
 
     def do_tdr_scan(self, packet):
         data = self.pkg.unpack(packet)['data']
-        data = [data[i:i+5] for i in range(0, len(data), 5)]
+        data = [data[i:i + 5] for i in range(0, len(data), 5)]
         scan = {}
 
         for point, tuble in enumerate(data):
             if not len(tuble) == 5:
                 raise ResponceError("Responce package has strange length!")
             scan_point = {}
-            scan_point['tdr'] = struct.unpack('<B', tuble[0])[0]
+            if isinstance(tuble, str):
+                scan_point['tdr'] = struct.unpack('<B', tuble[0])[0]
+            else:
+                scan_point['tdr'] = tuble[0]
             scan_point['time'] = struct.unpack('<f', tuble[1:5])[0]
             scan[point] = scan_point
 
@@ -77,10 +79,14 @@ class Responce(object):
 
     def get_epr_page(self, packet):
         responce = self.pkg.unpack(packet)
-        page = list()
+        data = responce['data']
 
-        for byte in responce['data']:
-            page.append(struct.unpack('<B', byte)[0])
+        if isinstance(data, str):
+            page = list()
+            for byte in data:
+                page.append(struct.unpack('<B', byte)[0])
+        else:
+                page = list(data)
 
         return page
 

@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
 import time
@@ -12,8 +11,7 @@ class ModuleError(Exception):
     pass
 
 
-# pylint: disable=too-many-public-methods
-class Module(object):
+class Module:
     """The Module object represents a IMPBus2 probe. It is used to provide a
     easy to use interface for the probe specific commands. It is mostly just a
     small wrapper around the much more general :func:`Bus.set` and
@@ -731,10 +729,9 @@ class Module(object):
         table = 'SYSTEM_PARAMETER_TABLE'
         param = 'ModuleInfo1'
 
-        sdi12_address_rage = (range(0, 9) + [c for c in string.lowercase] +
-                              [C for C in string.uppercase])
+        sdi12_address_range = (list(range(0, 9)) + [c for c in string.ascii_letters])
 
-        if address not in sdi12_address_rage:
+        if address not in sdi12_address_range:
             raise ModuleError("SDI12 address out of range!")
 
         value = address

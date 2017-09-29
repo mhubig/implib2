@@ -1,20 +1,20 @@
-#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
-from binascii import a2b_hex as a2b
-from mock import patch, call, MagicMock
-
 import pytest
+from binascii import a2b_hex as a2b
+
+try:
+    from unittest.mock import patch, call, MagicMock
+except ImportError:
+    from mock import patch, call, MagicMock
 
 from implib2.imp_bus import Bus, BusError
-from implib2.imp_device import Device, DeviceError  # noqa pylint: disable=unused-import
-from implib2.imp_commands import Command            # noqa pylint: disable=unused-import
-from implib2.imp_responces import Responce          # noqa pylint: disable=unused-import
+from implib2.imp_device import Device, DeviceError  # noqa
+from implib2.imp_commands import Command            # noqa
+from implib2.imp_responces import Responce          # noqa
 
 
-# pylint: disable=invalid-name, too-many-instance-attributes
-# pylint: disable=attribute-defined-outside-init
-class TestBus(object):
+class TestBus:
 
     def setup(self):
         self.patcher1 = patch('implib2.imp_bus.Device')
@@ -66,7 +66,7 @@ class TestBus(object):
         table = 'SYSTEM_PARAMETER_TABLE'
         param = 'Baudrate'
         baudrate = 9600
-        value = baudrate/100
+        value = baudrate // 100
         ad_param = 0
         package = a2b('fd0b05ffffffaf0400600054')
 
@@ -101,9 +101,8 @@ class TestBus(object):
         assert self.manager.mock_calls == expected_calls
 
     def test_sync_WithWrongBaudrate(self):
-        with pytest.raises(BusError) as e:
+        with pytest.raises(BusError, message="Unknown baudrate!"):
             self.bus.sync(baudrate=6666)
-        assert e.value.message == "Unknown baudrate!"
 
     def test_scan_AndFindEverything(self):
         minserial = 0b0001  # 01
@@ -326,7 +325,7 @@ class TestBus(object):
     def test_probe_range_AndFindNothing(self):
         broadcast = 0b111100000000000000000000
         package = a2b('fd06000000f0d0')
-        bytes_recv = str()
+        bytes_recv = bytes()
 
         expected_calls = [
             call.cmd.get_range_ack(broadcast),

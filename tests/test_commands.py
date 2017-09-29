@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
 from binascii import a2b_hex as a2b
@@ -11,8 +10,7 @@ from implib2.imp_datatypes import DataTypes
 from implib2.imp_commands import Command, CommandError
 
 
-# pylint: disable=invalid-name, attribute-defined-outside-init
-class TestCommand(object):
+class TestCommand:
 
     def setup(self):
         self.cmd = Command(Tables(), Package(), DataTypes())
@@ -59,6 +57,5 @@ class TestCommand(object):
 
     def test_set_epr_page_to_big(self):
         page = range(0, 251)
-        with pytest.raises(CommandError) as e:
+        with pytest.raises(CommandError, message="Page to big, exeeds 250 Bytes!"):
             self.cmd.set_epr_page(30001, 7, page)
-        assert e.value.message == "Page to big, exeeds 250 Bytes!"

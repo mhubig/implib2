@@ -1,12 +1,10 @@
-#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
 import pytest
 from implib2.imp_datatypes import DataTypes
 
 
-# pylint: disable=invalid-name, attribute-defined-outside-init
-class TestDataTypes(object):
+class TestDataTypes:
 
     def setup(self):
         self._dict = {
