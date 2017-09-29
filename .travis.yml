@@ -1,8 +1,5 @@
 sudo: false
 language: python
-os:
-  - linux
-  - osx
 python:
   - 2.7
   - 3.3
@@ -19,10 +16,8 @@ script: tox
 matrix:
   fast_finish: true
   include:
-  - python: 3.6
-    env: TOXENV=flake8
-  - python: 3.6
-    env: TOXENV=docs
+    - env: TOXENV=flake8
+    - env: TOXENV=docs
 
 after_success:
   - codecov
