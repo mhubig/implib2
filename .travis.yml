@@ -8,8 +8,8 @@ python:
   - 3.6
 
 install:
-  - pip install --user tox-travis
-  - pip install --user codecov
+  - pip install tox-travis
+  - pip install codecov
 
 script: tox
 
