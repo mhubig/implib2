@@ -20,12 +20,6 @@ function update_version_readme () {
         README.rst > .README.new
 }
 
-function update_version_sphinx () {
-    sed -e "s/version = .*$/version = '$1'/g" \
-        -e "s/release = .*$/release = '$1'/g" \
-        docs/conf.py > .conf.new
-}
-
 if [ $# -ne 1 ]; then
     usage
     exit 1
@@ -43,13 +37,6 @@ if ! update_version_readme $1; then
     exit 2
 else
     mv .README.new README.rst
-fi
-
-if ! update_version_sphinx $1; then
-    echo "Could not replace version in 'docs/conf.py'!" >&2
-    exit 2
-else
-    mv .conf.new docs/conf.py
 fi
 
 commit_hint $1
