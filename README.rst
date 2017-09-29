@@ -64,12 +64,12 @@ Shell within your terminal::
 
 Import the IMPLib2 module::
 
-    >>> import implib2 as imp
+    >>> import implib2
 
 Now initialize the IMPBus, sync and scan for connected Modules. Replace
 the USB Interface with the one your SM-USB uses::
 
-    >>> bus = imp.Bus('/dev/ttyUSB0')
+    >>> bus = implib2.Bus('/dev/ttyUSB0')
     >>> bus.sync()
     >>> bus.scan()
     (10010, 10011)
@@ -77,8 +77,8 @@ the USB Interface with the one your SM-USB uses::
 As you can see we found two connected modules with the serial numbers
 10010 and 10011. Now we can instantiate the module objects::
 
-    >>> mod10 = imp.Module(bus, 10010)
-    >>> mod11 = imp.Module(bus, 10011)
+    >>> mod10 = implib2.Module(bus, 10010)
+    >>> mod11 = implib2.Module(bus, 10011)
 
 Using the handy module objects we can now perform various higher
 operations, like doing a measurement or requesting the serial number::
@@ -98,14 +98,14 @@ which performs an measurement on all connected probes ones an hour::
     #!/usr/bin/env python
 
     import time
-    import implib2 as imp
+    import implib2
 
     # Initialize the IMPBus2
-    bus = imp.Bus('/dev/ttyUSB0')
+    bus = implib2.Bus('/dev/ttyUSB0')
     bus.sync()
 
     # Search the bus for connected modules
-    modules = [imp.Module(bus, serno) for serno in bus.scan()]
+    modules = [implib2.Module(bus, serno) for serno in bus.scan()]
 
     # Start a measurement and show the results once an hour
     while True:

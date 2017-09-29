@@ -15,7 +15,6 @@ twine = "*"
 packaging = "*"
 autopep8 = "*"
 sphinx = "*"
-sphinx_rtd_theme = "*"
 docutils = "*"
 
 [dev-packages.mock]

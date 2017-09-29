@@ -15,41 +15,11 @@ function update_version_implib () {
         implib2/__version__.py > .__version__.new
 }
 
-function update_version_readme () {
-    sed -e "/\*\*Stable Branch/s/(.*)\*\*/($1)**/g" \
-        README.rst > .README.new
-}
-
-function update_version_sphinx () {
-    sed -e "s/version = .*$/version = '$1'/g" \
-        -e "s/release = .*$/release = '$1'/g" \
-        docs/conf.py > .conf.new
-}
-
-if [ $# -ne 1 ]; then
-    usage
-    exit 1
-fi
-
 if ! update_version_implib $1; then
     echo "Could not replace version in '__version__.py'!" >&2
     exit 2
 else
     mv .__version__.new implib2/__version__.py
-fi
-
-if ! update_version_readme $1; then
-    echo "Could not replace version in 'README.rst'!" >&2
-    exit 2
-else
-    mv .README.new README.rst
-fi
-
-if ! update_version_sphinx $1; then
-    echo "Could not replace version in 'docs/conf.py'!" >&2
-    exit 2
-else
-    mv .conf.new docs/conf.py
 fi
 
 commit_hint $1
