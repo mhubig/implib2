@@ -1,5 +1,8 @@
 sudo: false
 language: python
+os:
+  - linux
+  - osx
 python:
   - 2.7
   - 3.3
@@ -13,6 +16,14 @@ install:
 
 script: tox
 
+matrix:
+  fast_finish: true
+  include:
+  - python: 3.6
+    env: TOXENV=flake8
+  - python: 3.6
+    env: TOXENV=docs
+
 after_success:
   - codecov
 
@@ -21,8 +32,10 @@ deploy:
   user: mhubig
   password:
     secure: V3FcCr361MDnurFXx02+oZVLOBEJaPnmhK0Pm5jnh9S2RkH5b75uNkqwbx5oWB9SrEpPjy5A+wnTAntSGjfeDt1CxXBLZmcxHXHPfoiiiPAyVzI7OVL9K69G9ff1LU4lYRDEWnSKnnYDcviBwdXSZr4QRyefReeIDF6I9CAbO2c=
-  distributions: "sdist bdist_wheel"
   on:
     tags: true
     branch: master
     repo: mhubig/implib2
+    python: 3.6
+    condition: $TOXENV != flake8 && $TOXENV != docs
+  distributions: "sdist bdist_wheel"
