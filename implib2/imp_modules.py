@@ -297,7 +297,6 @@ class Module:
         :rtype: json
 
         """
-        # pylint: disable=unused-argument, no-self-use
         raise NotImplementedError()
 
     def set_table(self, table, data):
@@ -316,7 +315,6 @@ class Module:
 
         :rtype: bool
         """
-        # pylint: disable=unused-argument, no-self-use
         raise NotImplementedError()
 
     def get_serno(self):
@@ -357,7 +355,6 @@ class Module:
             does not match the length value from the probe table.
 
         """
-        # pylint: disable=fixme
         # TODO: add methode to create a EEPROM file.
         raise NotImplementedError()
 
@@ -727,7 +724,7 @@ class Module:
 
         """
         table = 'SYSTEM_PARAMETER_TABLE'
-        param = 'ModuleInfo1'
+        param = 'SDI12Address'
 
         sdi12_address_range = (list(range(0, 9)) + [c for c in string.ascii_letters])
 

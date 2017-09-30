@@ -31,7 +31,6 @@ class Responce:
         return True
 
     def get_range_ack(self, packet):
-        # pylint: disable=no-self-use
         return len(packet) == 1
 
     def get_negative_ack(self, packet):

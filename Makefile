@@ -17,7 +17,7 @@ MKDIR_P  = mkdir -p
 TRASH_FILES  = .coverage coverage.xml unittests.xml
 TRASH_FILES += *.pyc */*.pyc
 TRASH_DIRS   = .tox/ .cache/ build/ dist/ docs/_build/
-TRASH_DIRS  += .eggs/ IMPLib2.egg-info/ */__pycache__
+TRASH_DIRS  += .eggs/ implib2.egg-info/ */__pycache__
 
 .PHONY: pytest flake8 docs clean help
 

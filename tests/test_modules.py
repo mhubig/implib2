@@ -777,7 +777,7 @@ class TestModule:
 
     def test__set_sdi12_address(self):
         table = 'SYSTEM_PARAMETER_TABLE'
-        param = 'ModuleInfo1'
+        param = 'SDI12Address'
         value = 0
 
         self.mod._set_sdi12_address(value)

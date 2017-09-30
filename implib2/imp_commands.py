@@ -34,7 +34,6 @@ class Command:
         package = self.pkg.pack(serno=serno, cmd=cmd['Get'], data=data)
         return package
 
-    # pylint: disable=too-many-arguments
     def set_parameter(self, serno, table, param, values, ad_param=0):
         cmd = self.tbl.lookup(table, param)
         fmt = self.dts.lookup(cmd['Type'] % 0x80)
@@ -47,7 +46,6 @@ class Command:
         package = self.pkg.pack(serno=serno, cmd=cmd['Set'], data=data)
         return package
 
-    # pylint: disable=too-many-arguments
     def do_tdr_scan(self, serno, scan_start, scan_end, scan_span, scan_count):
         scan_start = struct.pack('<B', scan_start)
         scan_end = struct.pack('<B', scan_end)

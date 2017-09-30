@@ -387,7 +387,6 @@ class Bus:
         :rtype: :const:`bool`
 
         """
-        # pylint: disable=too-many-arguments
         package = self.cmd.set_parameter(serno, table, param,
                                          value, ad_param)
         self.dev.write_pkg(package)
