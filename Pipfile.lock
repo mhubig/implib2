@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "ae1cf308a087d86b1763b8d558ef3183f25bfc171846dfde5b1c6aa6b2232fd5"
+            "sha256": "3f8c1b597230606b1a3e7a5fbc4b81411d75b7bf038f3325d10c079dd79e15f3"
         },
         "host-environment-markers": {
             "implementation_name": "cpython",
@@ -140,7 +140,7 @@
                 "sha256:330cc27ccbf7f1e992e69fef78261dc7c6569012cf397db8d3de0234e6c937ca",
                 "sha256:a7bb0f2cf3a3fd1ab2732cb49eba4252c2af4240442415b4abce3b87022a8f50"
             ],
-            "markers": "python_version < '3.3'",
+            "markers": "python_version < '3.4'",
             "version": "==1.0.2"
         },
         "idna": {
@@ -182,7 +182,7 @@
                 "sha256:5ce3c71c5545b472da17b72268978914d0252980348636840bd34a00b5cc96c1",
                 "sha256:b158b6df76edd239b8208d481dc46b6afd45a846b7812ff0ce58971cf5bc8bba"
             ],
-            "markers": "python_version < '3.3'",
+            "markers": "python_version < '3.4'",
             "version": "==2.0.0"
         },
         "packaging": {
@@ -324,17 +324,17 @@
         },
         "tox": {
             "hashes": [
-                "sha256:b38ec36d3b7854464c3c1c8cdcc0bcf5691dcf1725fc2790a930acf949792053",
-                "sha256:adb44732982b207424b42f9a2d1e3f80240ecfbba0e374a27ae3779a5a934d0a"
+                "sha256:8af30fd835a11f3ff8e95176ccba5a4e60779df4d96a9dfefa1a1704af263225",
+                "sha256:752f5ec561c6c08c5ecb167d3b20f4f4ffc158c0ab78855701a75f5cef05f4b8"
             ],
-            "version": "==2.9.0"
+            "version": "==2.9.1"
         },
         "tqdm": {
             "hashes": [
-                "sha256:97b17848f09f3eb6d98fea081d06e8adcc70fd3f4ce0ee73365eaee616aaee7b",
-                "sha256:02dd7f244d91539352f908667e4d904fddf1b8c434a22b838d3f53ae4dffdd2f"
+                "sha256:8c281e644b62dee309259a6fe49e2d7eb3d6fefea978855394aeb3c099b13201",
+                "sha256:5e6db2f1f73b97139da33268838966337d19baf539926ca3f7116620aacb7a00"
             ],
-            "version": "==4.17.1"
+            "version": "==4.19.1.post1"
         },
         "twine": {
             "hashes": [
