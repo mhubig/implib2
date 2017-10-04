@@ -12,12 +12,26 @@ class Tables:
     def __init__(self, filename='imp_tables.json'):
         self._tables = _load_json(filename)
 
-    def lookup(self, table, param):
+    def _lookup_param(self, table, param):
         try:
-            cmd = self._tables[table][param]
-            cmd[u'Set'] = self._tables[table]["Table"]["Set"]
-            cmd[u'Get'] = self._tables[table]["Table"]["Get"]
+            return table[param]
         except KeyError as err:
-            raise TablesError("Unknown param or table: {}!".format(err))
+            raise TablesError("Unknown param: {}!".format(err))
 
-        return cmd
+    def _lookup_table(self, table):
+        try:
+            return self._tables[table]
+        except KeyError as err:
+            raise TablesError("Unknown table: {}!".format(err))
+
+    def lookup(self, table, param=None):
+        result = self._lookup_table(table)
+
+        if not param:
+            return result
+
+        result = self._lookup_param(result, param)
+        result['Set'] = self._tables[table]["Table"]["Set"]
+        result['Get'] = self._tables[table]["Table"]["Get"]
+
+        return result

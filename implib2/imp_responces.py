@@ -44,7 +44,7 @@ class Responce:
         fmt = self.dts.lookup(cmd['Type'] % 0x80)
         length = len(data) // struct.calcsize(fmt.format(1))
 
-        return struct.unpack(fmt.format(length), data)
+        return struct.unpack('<' + fmt.format(length), data)
 
     def set_parameter(self, packet, table, serno):
         responce = self.pkg.unpack(packet)
@@ -57,6 +57,21 @@ class Responce:
             raise ResponceError("Wrong serial number in responce!")
 
         return True
+
+    def get_table(self, packet, table):
+        data = self.pkg.unpack(packet)['data']
+        table = self.tbl.lookup(table)
+
+        fmtstr = '<'
+        for field in table.values():
+            if 'Type' not in field or 'Length' not in field:
+                continue
+            fmt = self.dts.lookup(field['Type'] % 0x80)
+            length = field['Length'] // struct.calcsize(fmt.format(1))
+            fmtstr += fmt.format(length)
+
+        print(fmtstr, struct.calcsize(fmtstr), len(data))
+        return struct.unpack(fmtstr, data)
 
     def do_tdr_scan(self, packet):
         data = self.pkg.unpack(packet)['data']

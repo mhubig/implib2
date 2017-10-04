@@ -71,6 +71,34 @@ class TestResponce:
         with pytest.raises(ResponceError, message="Wrong serial number in responce!"):
             self.res.set_parameter(pkg, table, serno)
 
+    def test_get_table(self):
+        table = 'SYSTEM_PARAMETER_TABLE'
+        pkg = (b'\x00'           # Status        0
+               b'\n'             # Command       10
+               b','              # Length        44
+               b'\x1ay\x00'      # Serialnumber  31002
+               b'\xfb'           # CRC
+               b'\x00\x00'       # ConfigID      0
+               b'\x00\x00'       # TableSize     0
+               b'\x00\x00'       # DataSize      0
+               b'\x00\x00'       # GetParam      0
+               b'\x00\x00'       # GetData       0
+               b'\x1ay\x00\x00'  # SerialNum:    31002
+               b')\\\x8f?'       # HWVersion:    1.12
+               b'\x85\xeb\x91?'  # FWVersion:    1.14
+               b'`\x00'          # Baudrate:     96
+               b'TRIME\x00\x00'  # ModuleName:   Trime
+               b'\x00\x00\x00'   # ###################
+               b'\x00\x00\x00'   # ###################
+               b'\x00\x00\x00'   # ###################
+               b'd\x00'          # ModuleCode:   100
+               b'0'              # SDI12Address: 0
+               b'1'              # ModuleInfo2:  1
+               b'\xc9')          # CRC
+        expected = (0, 0, 0, 0, 0, 31002, 1.1200000047683716, 1.1399999856948853, 96,
+                    84, 82, 73, 77, 69, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 48, 49)
+        assert self.res.get_table(pkg, table) == expected
+
     def test_do_tdr_scan(self):
         pkg = a2b('001e0b1a79006e112fc44e3702f3e7fb3dc5')
         point0 = {'tdr': 17, 'time': 1.232423437613761e-05}

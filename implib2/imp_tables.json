@@ -6,7 +6,7 @@
     "DataSize":     {"No": 254, "Type":   2, "Status": "OR", "Length":  2},
     "GetParam":     {"No": 253, "Type":   2, "Status": "OR", "Length":  2},
     "GetData":      {"No": 255, "Type":   2, "Status": "OR", "Length":  2},
-    "SerialNum":    {"No":   1, "Type":   4, "Status": "OR", "Length":  4},
+    "SerialNum":    {"No":   1, "Type":   4, "Status": "OR", "Length":  4}, 
     "HWVersion":    {"No":   2, "Type":   6, "Status": "OR", "Length":  4},
     "FWVersion":    {"No":   3, "Type":   6, "Status": "OR", "Length":  4},
     "Baudrate":     {"No":   4, "Type":   2, "Status": "WR", "Length":  2},
