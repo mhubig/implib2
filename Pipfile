@@ -19,8 +19,8 @@ docutils = "*"
 
 [dev-packages.mock]
 version = "*"
-markers = "python_version < '3.3'"
+markers = "python_version < '3.4'"
 
 [dev-packages.funcsigs]
 version = "*"
-markers = "python_version < '3.3'"
+markers = "python_version < '3.4'"
