@@ -32,4 +32,4 @@ The EEPRom Class
 .. Place the link targets here.
 
 .. _IMPBUS2 Developers Manual:
-    https://www.dropbox.com/s/2ex3to8vpuw7x0i/IMPBus2-Protocol-Pico_0-24.pdf
+    https://www.dropbox.com/s/1y4626z4pe1we3c/IMPBus2-Protocol-Pico_0-25.pdf?dl=0
