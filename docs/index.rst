@@ -20,7 +20,7 @@ probes. It is tested for Python 2.7 - 3.6 running on Linux, Windows and MacOSX.
 
 .. include:: ../README.rst
     :start-line: 20
-    :end-line: 122
+    :end-line: 119
 
 The API Documentation
 ---------------------
