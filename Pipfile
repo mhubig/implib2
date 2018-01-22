@@ -1,26 +1,28 @@
 [[source]]
+
 url = "https://pypi.python.org/simple"
 verify_ssl = true
 name = "pypi"
 
+
 [packages]
+
 pyserial = "*"
+"e1839a8" = {path = ".", editable = true}
+
 
 [dev-packages]
+
 tox = "*"
 pytest = "*"
-pytest_cov = "*"
-flake8 = "*"
+pytest-cov = "*"
+"flake8" = "*"
 twine = "*"
 packaging = "*"
-autopep8 = "*"
+"autopep8" = "*"
 sphinx = "*"
 docutils = "*"
-
-[dev-packages.mock]
-version = "*"
-markers = "python_version < '3.4'"
-
-[dev-packages.funcsigs]
-version = "*"
-markers = "python_version < '3.4'"
+mock = { version = "*", markers = "python_version < '3.4'" }
+funcsigs = { version = "*", markers = "python_version < '3.4'" }
+"flake8-import-order" = "*"
+ipython = "*"
